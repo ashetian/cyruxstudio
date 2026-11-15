@@ -8,6 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 // ============================================================================
@@ -21,7 +22,8 @@ export const LENIS_CONFIG = {
   gestureOrientation: "vertical" as const,
   smoothWheel: true,
   wheelMultiplier: 1.0,
-  touchMultiplier: 2.0,
+  touchMultiplier: 1.0,
+  syncTouch: false,
 };
 
 export const GSAP_REVEAL_CONFIG = {
@@ -134,6 +136,7 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
 
     const lenis = lenisRef.current?.lenis;
     if (lenis) {
+      (window as unknown as { __lenis?: unknown }).__lenis = lenis;
       lenis.on("scroll", ScrollTrigger.update);
     }
 
@@ -141,6 +144,9 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
       gsap.ticker.remove(updateTicker);
       if (lenis) {
         lenis.off("scroll", ScrollTrigger.update);
+        if ((window as unknown as { __lenis?: unknown }).__lenis === lenis) {
+          (window as unknown as { __lenis?: unknown }).__lenis = null;
+        }
       }
     };
   }, [prefersReduced]);

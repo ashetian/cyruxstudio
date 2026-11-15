@@ -2,22 +2,22 @@ import React from "react";
 import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { resolveEditorialAssets } from "@/lib/editorial";
-import { getActiveDrop, getDropsSync } from "@/lib/drops";
+import { getDrops } from "@/lib/drops";
 import { StorefrontContainer } from "@/components/storefront/storefront-container";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [products, settings] = await Promise.all([
+  const [products, settings, allDrops] = await Promise.all([
     prisma.product.findMany({
       where: { isBestseller: true },
       orderBy: { createdAt: "desc" },
     }),
     prisma.storeSettings.findFirst(),
+    getDrops(),
   ]);
 
-  const activeDrop = getActiveDrop();
-  const allDrops = getDropsSync();
+  const activeDrop = allDrops.find((d) => d.status === "active") || allDrops[0];
 
   if (settings && typeof settings.brandMetadata === "object" && settings.brandMetadata !== null) {
     const rawMeta = settings.brandMetadata as Record<string, unknown>;

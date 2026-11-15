@@ -9,6 +9,7 @@ import { useLanguage } from "@/components/providers/language-provider";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 export interface AboutSectionProps {
@@ -64,17 +65,9 @@ export function AboutSection({
           );
         }
 
-        // 2. Image inside zooms in smoothly
+        // 2. Image inside remains steady without aggressive zoom
         if (imageRef.current) {
-          tl.fromTo(
-            imageRef.current,
-            { scale: 1 },
-            {
-              scale: 1.25,
-              ease: "none",
-            },
-            0
-          );
+          tl.set(imageRef.current, { scale: 1 }, 0);
         }
 
         // 3. Text overlay slides and fades in over image
@@ -96,7 +89,7 @@ export function AboutSection({
         }
       });
 
-      // Mobile (max-width: 767px): Vertical portrait aspect ~4:5 expands to full-screen 100vw x 100svh
+      // Mobile (max-width: 767px): Visual stays completely steady at full bleed without zooming
       mm.add("(max-width: 767px)", () => {
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -107,34 +100,9 @@ export function AboutSection({
           },
         });
 
-        // 1. Frame expands from portrait box to fill entire mobile screen (strictly sharp/unrounded)
-        if (frameRef.current) {
-          tl.fromTo(
-            frameRef.current,
-            {
-              width: "88vw",
-              height: "68svh",
-            },
-            {
-              width: "100vw",
-              height: "100svh",
-              ease: "power2.inOut",
-            },
-            0
-          );
-        }
-
-        // 2. Image inside zooms in smoothly
+        // 1. Image inside remains completely steady on mobile (no zoom effect)
         if (imageRef.current) {
-          tl.fromTo(
-            imageRef.current,
-            { scale: 1 },
-            {
-              scale: 1.25,
-              ease: "none",
-            },
-            0
-          );
+          tl.set(imageRef.current, { scale: 1 }, 0);
         }
 
         // 3. Text overlay slides and fades in over image
@@ -168,19 +136,18 @@ export function AboutSection({
       className="relative w-full h-[220vh] bg-black select-none"
     >
       {/* Pinned Sticky Viewport Window */}
-      <div className="sticky top-0 w-full h-screen h-[100svh] overflow-hidden flex items-center justify-center bg-black">
+      <div className="sticky top-0 w-full h-screen h-[100dvh] overflow-hidden flex items-center justify-center bg-black">
         {/*
           Expanding Visual Container:
-          - Starts framed in natural aspect ratio (portrait on mobile, widescreen on desktop)
-          - Borderless, zero frames
-          - Grows on scroll to fill 100% of the screen
+          - Mobile: Stable full-bleed portrait
+          - Desktop: Frames in 16:9 and expands smoothly
         */}
         <div
           ref={frameRef}
-          className={`relative overflow-hidden shadow-2xl rounded-none will-change-[width,height] ${
+          className={`relative overflow-hidden shadow-2xl rounded-none ${
             prefersReducedMotion
               ? "w-full h-full"
-              : "w-[88vw] h-[68svh] md:w-[74vw] md:h-[68vh]"
+              : "w-full h-full md:w-[74vw] md:h-[68vh] md:will-change-[width,height]"
           }`}
         >
           {/* Zooming Image Layer (Dynamic Desktop & Mobile) */}

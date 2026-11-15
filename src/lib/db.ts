@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import {
   SEED_PRODUCTS,
   INITIAL_STORE_SETTINGS,
+  INITIAL_DROPS,
   type ProductVariant,
 } from "./seed-data";
 
@@ -40,6 +41,12 @@ export const MOCK_STORE_SETTINGS = {
   ...INITIAL_STORE_SETTINGS,
   updatedAt: new Date("2026-01-01T00:00:00Z"),
 };
+
+export const MOCK_DROPS = INITIAL_DROPS.map((d) => ({
+  ...d,
+  createdAt: new Date("2026-01-01T00:00:00Z"),
+  updatedAt: new Date("2026-01-01T00:00:00Z"),
+}));
 
 // ============================================================================
 // Environment & Health Check Helpers
@@ -106,6 +113,7 @@ const mockStore = {
   settings: { ...MOCK_STORE_SETTINGS },
   elevenLabsAssets: [] as MockElevenLabsAsset[],
   creditLogs: [] as MockCreditLog[],
+  drops: [...MOCK_DROPS],
 };
 
 type MockHandlerFn = (...args: never[]) => Promise<unknown>;
@@ -388,6 +396,128 @@ const mockHandlers: Record<string, Record<string, MockHandlerFn>> = {
       return created;
     },
     findMany: async () => [...mockStore.creditLogs],
+  },
+  drop: {
+    findMany: async (args?: {
+      where?: { status?: string; slug?: string; id?: string };
+      orderBy?: unknown;
+    }) => {
+      let list = [...mockStore.drops];
+      if (args?.where) {
+        if (args.where.status) {
+          list = list.filter((d) => d.status === args.where!.status);
+        }
+        if (args.where.slug) {
+          list = list.filter((d) => d.slug === args.where!.slug);
+        }
+        if (args.where.id) {
+          list = list.filter((d) => d.id === args.where!.id);
+        }
+      }
+      return list;
+    },
+    findUnique: async (args: { where: { slug?: string; id?: string } }) => {
+      if (args?.where?.slug) {
+        return mockStore.drops.find((d) => d.slug === args.where.slug) || null;
+      }
+      if (args?.where?.id) {
+        return mockStore.drops.find((d) => d.id === args.where.id) || null;
+      }
+      return null;
+    },
+    findFirst: async (args?: {
+      where?: {
+        status?: string;
+        slug?: string;
+        id?: string;
+        OR?: Array<{ id?: string; slug?: string; number?: string }>;
+      };
+    }) => {
+      if (!args?.where) return mockStore.drops[0] || null;
+      let list = [...mockStore.drops];
+      if (args.where.status) {
+        list = list.filter((d) => d.status === args.where!.status);
+      }
+      if (args.where.slug) {
+        list = list.filter((d) => d.slug === args.where!.slug);
+      }
+      if (args.where.id) {
+        list = list.filter((d) => d.id === args.where!.id);
+      }
+      if (args.where.OR && Array.isArray(args.where.OR)) {
+        list = list.filter((d) =>
+          args.where!.OR!.some(
+            (c) =>
+              (c.id && d.id === c.id) ||
+              (c.slug && d.slug === c.slug) ||
+              (c.number && d.number === c.number)
+          )
+        );
+      }
+      return list[0] || null;
+    },
+    create: async (args: { data: Record<string, unknown> }) => {
+      const created = {
+        id: (args.data.id as string) || `drop-${Date.now()}`,
+        slug: (args.data.slug as string) || `drop-${Date.now()}`,
+        number: (args.data.number as string) || "01",
+        chapter: (args.data.chapter as string) || "CHAPTER 01",
+        title: (args.data.title as string) || "UNTITLED DROP",
+        status: (args.data.status as string) || "upcoming",
+        releaseDate: args.data.releaseDate || { tr: "YAKINDA", en: "COMING SOON" },
+        edition: args.data.edition || { tr: "LİMİTLİ", en: "LIMITED" },
+        description: args.data.description || { tr: "", en: "" },
+        productSlugs: (args.data.productSlugs as string[]) || [],
+        bannerImage: (args.data.bannerImage as string) || "/assets/editorial/hero-desktop.jpg",
+        totalPieces: Number(args.data.totalPieces) || 100,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockStore.drops.push(created as unknown as (typeof mockStore.drops)[number]);
+      return created;
+    },
+    update: async (args: {
+      where: { id?: string; slug?: string };
+      data: Record<string, unknown>;
+    }) => {
+      const idx = mockStore.drops.findIndex(
+        (d) =>
+          (args.where.id && d.id === args.where.id) ||
+          (args.where.slug && d.slug === args.where.slug)
+      );
+      if (idx === -1) throw new Error("Drop not found");
+      mockStore.drops[idx] = {
+        ...mockStore.drops[idx],
+        ...args.data,
+        updatedAt: new Date(),
+      };
+      return mockStore.drops[idx];
+    },
+    updateMany: async (args: {
+      where?: { status?: string };
+      data: Record<string, unknown>;
+    }) => {
+      let count = 0;
+      mockStore.drops = mockStore.drops.map((d) => {
+        if (!args.where?.status || d.status === args.where.status) {
+          count++;
+          return { ...d, ...args.data, updatedAt: new Date() };
+        }
+        return d;
+      });
+      return { count };
+    },
+    delete: async (args: { where: { id?: string; slug?: string } }) => {
+      const idx = mockStore.drops.findIndex(
+        (d) =>
+          (args.where.id && d.id === args.where.id) ||
+          (args.where.slug && d.slug === args.where.slug)
+      );
+      if (idx === -1) throw new Error("Drop not found");
+      const [deleted] = mockStore.drops.splice(idx, 1);
+      return deleted;
+    },
+    count: async () => mockStore.drops.length,
   },
 };
 

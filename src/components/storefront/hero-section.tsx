@@ -51,6 +51,7 @@ export interface HeroSectionProps {
   products?: Product[];
   productImages?: Record<string, string>;
   currency?: string;
+  announcement?: string;
 }
 
 /**
@@ -83,6 +84,7 @@ export function HeroSection({
   products = [],
   productImages = {},
   currency = "USD",
+  announcement,
 }: HeroSectionProps) {
   const router = useRouter();
   const { lang, toggleLang, t } = useLanguage();
@@ -92,6 +94,36 @@ export function HeroSection({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const titleContainerRef = useRef<HTMLHeadingElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const touchMovedRef = useRef(false);
+  const [lockedHeroHeight, setLockedHeroHeight] = useState<number | null>(null);
+
+  // Lock mobile hero height on client mount to prevent browser address bar collapse/expand from jittering hero size
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const measure = () => {
+      if (window.innerWidth < 768) {
+        setLockedHeroHeight(window.innerHeight);
+      } else {
+        setLockedHeroHeight(null);
+      }
+    };
+
+    measure();
+
+    let lastWidth = window.innerWidth;
+    const handleResize = () => {
+      // Only recalculate when horizontal width changes (orientation flip or desktop window resize)
+      // Never recalculate on mobile address bar collapse/expand which only alters vertical height
+      if (Math.abs(window.innerWidth - lastWidth) > 50) {
+        lastWidth = window.innerWidth;
+        measure();
+      }
+    };
+
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Sync internal search input with external prop if controlled
   useEffect(() => {
@@ -183,22 +215,36 @@ export function HeroSection({
     <section
       id="hero"
       aria-label="Cyrux Studio Hero"
-      className="relative min-h-[100svh] w-full overflow-hidden flex flex-col justify-between selection:bg-white selection:text-black"
-      style={{ backgroundColor: BRAND_TOKENS.DARK_HERO }}
+      className="relative w-full overflow-hidden flex flex-col justify-between selection:bg-white selection:text-black min-h-[100dvh] md:h-auto md:min-h-screen"
+      style={{
+        backgroundColor: BRAND_TOKENS.DARK_HERO,
+        ...(lockedHeroHeight
+          ? {
+              height: `${lockedHeroHeight}px`,
+              minHeight: `${lockedHeroHeight}px`,
+              maxHeight: `${lockedHeroHeight}px`,
+            }
+          : {}),
+      }}
     >
       {/* 1. High-Contrast Cyber-Noir Background Image (Dynamic Desktop & Mobile) */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Mobile View: Vertical Portrait */}
-        <div className="block md:hidden absolute inset-0 w-full h-full">
+        {/* Mobile View: Vertical Portrait - locked without zoom or stretch */}
+        <div className="block md:hidden absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
           <Image
             src={heroMobileImage || heroImage}
             alt="Cyrux Studio Cyberpunk Editorial Model"
             fill
-            loading="lazy"
+            priority
             unoptimized
             quality={100}
             sizes="100vw"
-            className="object-cover object-center opacity-100 scale-100 transition-transform duration-1000 ease-out"
+            className="object-cover object-center transform-none transition-none"
+            style={{
+              transform: "translate3d(0, 0, 0)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+            }}
           />
         </div>
         {/* Desktop View: Widescreen Landscape */}
@@ -207,17 +253,33 @@ export function HeroSection({
             src={heroDesktopImage || heroImage}
             alt="Cyrux Studio Cyberpunk Editorial Model"
             fill
-            loading="lazy"
+            priority
             unoptimized
             quality={100}
             sizes="100vw"
-            className="object-cover object-center opacity-100 scale-100 transition-transform duration-1000 ease-out"
+            className="object-cover object-center transform-none transition-none"
+            style={{
+              transform: "translate3d(0, 0, 0)",
+              backfaceVisibility: "hidden",
+            }}
           />
         </div>
         {/* Cinematic Vignette & Bottom Fade to Dark */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#0A0A0A] to-transparent pointer-events-none" />
       </div>
+
+      {/* Top Dynamic Store Announcement Ribbon */}
+      {announcement && (
+        <aside
+          aria-label="Store Announcement"
+          className="relative z-40 w-full bg-black/85 backdrop-blur-md border-b border-neutral-800/80 py-2 px-3 text-center"
+        >
+          <p className="font-mono text-[9px] sm:text-[10px] md:text-[11px] tracking-widest text-[#FAF8F3] uppercase font-bold">
+            [ {announcement} ]
+          </p>
+        </aside>
+      )}
 
       {/* 2. Top Header Navigation Bar (F04.5 Contract) */}
       <header className="relative z-30 w-full flex items-center justify-between gap-2 px-3 sm:px-8 md:px-12 py-3.5 sm:py-5 md:py-7">
@@ -256,12 +318,20 @@ export function HeroSection({
               role="searchbox"
               value={internalQuery}
               onChange={handleInputChange}
+              onTouchStart={() => {
+                touchMovedRef.current = false;
+              }}
+              onTouchMove={() => {
+                touchMovedRef.current = true;
+              }}
               onClick={() => {
+                if (touchMovedRef.current) return;
                 if (typeof window !== "undefined" && window.innerWidth < 640) {
                   openSearch(internalQuery);
                 }
               }}
               onFocus={() => {
+                if (touchMovedRef.current) return;
                 if (typeof window !== "undefined" && window.innerWidth < 640) {
                   openSearch(internalQuery);
                 } else if (internalQuery.trim()) {
@@ -505,10 +575,10 @@ export function HeroSection({
       </header>
 
       {/* 3. Middle Ambient Space */}
-      <div className="flex-1 min-h-[18svh] sm:min-h-[28vh]" />
+      <div className="flex-1 min-h-[80px] sm:min-h-[180px]" />
 
       {/* 4. Monumental Display Typography ("CYRUX" - Sekuya with Horizontal Overflow Bleed) */}
-      <div className="relative z-10 w-full overflow-visible select-none pb-16 sm:pb-20 md:pb-24">
+      <div className="relative z-10 w-full overflow-hidden select-none pb-16 sm:pb-20 md:pb-24">
         <div className="flex justify-center overflow-hidden pb-3 sm:pb-6" aria-hidden="true">
           <span className="char-split inline-block will-change-transform">
             <span className="relative block w-[clamp(3.75rem,13vw,10rem)] aspect-square">

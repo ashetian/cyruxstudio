@@ -13,16 +13,33 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({ where: { slug } });
-  if (!product) return { title: "Product not found | cyrux studio" };
-  const image = resolveEditorialAssets([product]).productImages[product.slug];
+  if (!product) return { title: "Product Not Found" };
+  const image = resolveEditorialAssets([product]).productImages[product.slug] || "/og-image.jpg";
   const description = product.description.slice(0, 160);
+
   return {
-    title: `${product.name} | cyrux studio`,
+    title: product.name,
     description,
+    alternates: {
+      canonical: `/products/${product.slug}`,
+    },
     openGraph: {
-      title: product.name,
+      title: `${product.name} | CYRUX STUDIO`,
       description,
-      images: image ? [{ url: image }] : undefined,
+      url: `/products/${product.slug}`,
+      type: "website",
+      images: [
+        {
+          url: image,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} | CYRUX STUDIO`,
+      description,
+      images: [image],
     },
   };
 }
@@ -40,7 +57,10 @@ export default async function ProductPage({ params }: PageProps) {
   ]);
   if (!product) notFound();
 
-  const editorial = resolveEditorialAssets([product, ...others]);
+  const editorial = resolveEditorialAssets(
+    [product, ...others],
+    settings?.brandMetadata as Record<string, unknown> | null
+  );
 
   return (
     <ProductDetail

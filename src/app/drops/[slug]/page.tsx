@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/db";
-import { getDropBySlug } from "@/lib/drops";
+import { getDropBySlugAsync } from "@/lib/drops";
 import { resolveEditorialAssets } from "@/lib/editorial";
 import { DropDetail } from "@/components/storefront/drop-detail";
 
@@ -14,23 +14,43 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const drop = getDropBySlug(slug);
-  if (!drop) return { title: "Drop not found | cyrux studio" };
+  const drop = await getDropBySlugAsync(slug);
+  if (!drop) return { title: "Drop Not Found" };
+
+  const title = `Drop ${drop.number}: ${drop.title}`;
+  const description = `${drop.chapter} • ${drop.edition.en}. Cyprus atelier engineered archival collection.`;
+  const image = drop.bannerImage || "/og-image.jpg";
 
   return {
-    title: `Drop ${drop.number}: ${drop.title} | cyrux studio`,
-    description: `${drop.chapter} • ${drop.edition.en}. Cyprus atelier engineered archival collection.`,
+    title,
+    description,
+    alternates: {
+      canonical: `/drops/${drop.slug}`,
+    },
     openGraph: {
-      title: `Drop ${drop.number}: ${drop.title} | cyrux studio`,
-      description: drop.description.en,
-      images: [{ url: drop.bannerImage }],
+      title: `${title} | CYRUX STUDIO`,
+      description: drop.description.en || description,
+      url: `/drops/${drop.slug}`,
+      type: "website",
+      images: [
+        {
+          url: image,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | CYRUX STUDIO`,
+      description: drop.description.en || description,
+      images: [image],
     },
   };
 }
 
 export default async function DropDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const drop = getDropBySlug(slug);
+  const drop = await getDropBySlugAsync(slug);
   if (!drop) notFound();
 
   const [allProducts, settings] = await Promise.all([
@@ -45,7 +65,10 @@ export default async function DropDetailPage({ params }: PageProps) {
       ? allProducts.filter((p) => drop.productSlugs.includes(p.slug))
       : allProducts;
 
-  const editorial = resolveEditorialAssets(products);
+  const editorial = resolveEditorialAssets(
+    products,
+    settings?.brandMetadata as Record<string, unknown> | null
+  );
 
   return (
     <DropDetail

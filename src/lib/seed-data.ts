@@ -145,3 +145,106 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
     mediaUrls: ["/assets/products/eyes-never-lie.png"],
   },
 ];
+
+export interface InitialDropInput {
+  id: string;
+  slug: string;
+  number: string;
+  chapter: string;
+  title: string;
+  status: "active" | "archived" | "upcoming";
+  releaseDate: {
+    tr: string;
+    en: string;
+  };
+  edition: {
+    tr: string;
+    en: string;
+  };
+  description: {
+    tr: string;
+    en: string;
+  };
+  productSlugs: string[];
+  bannerImage: string;
+  totalPieces: number;
+}
+
+export const INITIAL_DROPS: InitialDropInput[] = [
+  {
+    id: "drop-01",
+    slug: "first-ascent",
+    number: "01",
+    chapter: "CHAPTER 00",
+    title: "FIRST ASCENT",
+    status: "active",
+    releaseDate: {
+      tr: "KASIM 2026",
+      en: "NOVEMBER 2026",
+    },
+    edition: {
+      tr: "5 MODEL • ÖZEL ARŞİV DROPU",
+      en: "5 GARMENTS • ARCHIVAL DROP",
+    },
+    description: {
+      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
+      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our Cyprus atelier. Never restocked.",
+    },
+    productSlugs: [
+      "pretty-chaos-tee",
+      "first-ascent-tee-white",
+      "first-ascent-tee-black",
+      "cyrux-099-orbital-tee",
+      "eyes-never-lie-tee",
+    ],
+    bannerImage: "/assets/editorial/hero-desktop.jpg",
+    totalPieces: 168,
+  },
+  {
+    id: "drop-00",
+    slug: "prototype-zero",
+    number: "00",
+    chapter: "GENESIS",
+    title: "PROTOTYPE ZERO",
+    status: "archived",
+    releaseDate: {
+      tr: "EKİM 2025",
+      en: "OCTOBER 2025",
+    },
+    edition: {
+      tr: "50 PARÇA (KASADA SAKLANDI / TÜKENDİ)",
+      en: "50 PIECES (VAULTED / SOLD OUT)",
+    },
+    description: {
+      tr: "Cyrux Studio'nun fiziksel giysi formlarını ve siber-noir silüetlerini test ettiği ilk prototip serisi. Tüm drop tükenmiş ve stüdyo kasasına kaldırılmıştır.",
+      en: "The experimental genesis run testing Cyrux Studio's brutalist silhouettes and cyber-noir garments. Entire run vaulted in the permanent studio archive.",
+    },
+    productSlugs: [],
+    bannerImage: "/assets/brand/hero-cyber-portrait.webp",
+    totalPieces: 50,
+  },
+  {
+    id: "drop-02",
+    slug: "neon-predator",
+    number: "02",
+    chapter: "CHAPTER 01",
+    title: "NEON PREDATOR",
+    status: "upcoming",
+    releaseDate: {
+      tr: "OCAK 2027",
+      en: "JANUARY 2027",
+    },
+    edition: {
+      tr: "ATÖLYE PROTOTİP AŞAMASINDA",
+      en: "IN ATELIER PROTOTYPING",
+    },
+    description: {
+      tr: "Ağır bomber ceketler, modüler fermuarlı kargo pantolonlar ve 3D yansıtıcı mikro-aplikeler. Kıbrıs atölyemizde prototip üretimi devam etmektedir.",
+      en: "Heavyweight technical puffers, modular cargo trousers, and specular 3D chrome details. Currently in atelier prototyping in Cyprus.",
+    },
+    productSlugs: [],
+    bannerImage: "/assets/campaign/campaign-card-puffer.webp",
+    totalPieces: 120,
+  },
+];
+

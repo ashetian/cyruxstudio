@@ -448,7 +448,7 @@ export function ProductDetail({
       {/* Transparent Curtain Reveal Runway (Scrolling into this lifts the product page up to expose /) */}
       <div
         ref={runwayRef}
-        className="relative z-10 h-[100svh] pointer-events-none"
+        className="relative z-10 h-screen h-[100dvh] pointer-events-none"
         aria-hidden="true"
       />
 

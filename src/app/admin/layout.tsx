@@ -4,6 +4,10 @@ import React from "react";
 export const metadata: Metadata = {
   title: "CYRUX STUDIO — ADMIN CONSOLE",
   description: "Restricted administrative terminal for cyrux studio operations.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function AdminLayout({

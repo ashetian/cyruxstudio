@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, Search } from "lucide-react";
 import { BRAND_TOKENS } from "@/lib/constants";
 import { useLanguage } from "@/components/providers/language-provider";
@@ -53,7 +52,6 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
   const { lang } = useLanguage();
   const { openSearch } = useSearch();
   const [activeSection, setActiveSection] = useState<NavSection>("hero");
-  const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
 
   // High-performance scrollspy to sync active link and handle footer visibility
@@ -68,15 +66,16 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
           const scrollY = window.scrollY;
           const windowHeight = window.innerHeight;
 
-          // 1. Scrolled past hero detection for search button
-          setIsScrolledPastHero(scrollY > 200);
-
-          // 2. Hide floating nav only when user has scrolled deeply into footer
+          // 2. Hide floating nav only when user has scrolled deeply into footer with hysteresis
           const footerEl = document.querySelector("footer");
           if (footerEl) {
             const footerRect = footerEl.getBoundingClientRect();
-            // Hide only when footer top is well inside the lower part of viewport
-            setIsFooterVisible(footerRect.top <= windowHeight * 0.75);
+            setIsFooterVisible((prev) => {
+              if (prev) {
+                return footerRect.top <= windowHeight * 0.92;
+              }
+              return footerRect.top <= windowHeight * 0.82;
+            });
           }
 
           // 3. Robust Scrollspy Section Detection (works reliably regardless of section height)
@@ -129,7 +128,15 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
     const targetEl = document.getElementById(targetId);
 
     if (targetEl) {
-      targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      const lenis =
+        typeof window !== "undefined"
+          ? (window as unknown as { __lenis?: { scrollTo: (target: HTMLElement | string, options?: object) => void } }).__lenis
+          : undefined;
+      if (lenis) {
+        lenis.scrollTo(targetEl, { duration: 1.2, offset: targetId === "hero" ? 0 : -20 });
+      } else {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
       setActiveSection(getActiveNav(targetId));
       if (typeof window !== "undefined") {
         window.history.pushState(null, "", href);
@@ -204,32 +211,19 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
         );
       })}
 
-      {/* Global Dynamic Search Trigger with Spring Slide-in Animation */}
-      <AnimatePresence initial={false}>
-        {isScrolledPastHero && (
-          <motion.div
-            key="floating-search-spring"
-            initial={{ width: 0, opacity: 0, scale: 0.8 }}
-            animate={{ width: "auto", opacity: 1, scale: 1 }}
-            exit={{ width: 0, opacity: 0, scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 450, damping: 30 }}
-            className="flex items-center overflow-hidden shrink-0"
-          >
-            <span className="text-neutral-500/40 select-none text-[9px] sm:text-[10px] px-0.5 sm:px-1 shrink-0">
-              |
-            </span>
-            <button
-              type="button"
-              onClick={() => openSearch()}
-              aria-label="Open search (⌘K)"
-              title="Dinamik Arama (⌘K)"
-              className="relative shrink-0 p-1.5 sm:p-2 rounded-full text-neutral-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center"
-            >
-              <Search className="w-3.5 h-3.5" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Global Dynamic Search Trigger - Permanent fixed width to eliminate scroll jumping */}
+      <span className="text-neutral-500/40 select-none text-[9px] sm:text-[10px] px-0.5 sm:px-1 shrink-0">
+        |
+      </span>
+      <button
+        type="button"
+        onClick={() => openSearch()}
+        aria-label="Open search (⌘K)"
+        title="Dinamik Arama (⌘K)"
+        className="relative shrink-0 p-1.5 sm:p-2 rounded-full text-neutral-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center"
+      >
+        <Search className="w-3.5 h-3.5" />
+      </button>
 
       {onOpenCart && (
         <>

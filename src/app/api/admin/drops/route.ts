@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getDropsSync,
-  getActiveDrop,
+  getDrops,
+  getActiveDropAsync,
   saveDrop,
   setActiveDrop,
   deleteDrop,
@@ -11,8 +11,8 @@ import prisma from "@/lib/db";
 
 export async function GET() {
   try {
-    const drops = getDropsSync();
-    const activeDrop = getActiveDrop();
+    const drops = await getDrops();
+    const activeDrop = await getActiveDropAsync();
 
     return NextResponse.json({
       success: true,
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: `Drop ${updated.number} (${updated.title}) is now active on storefront`,
         activeDrop: updated,
-        drops: getDropsSync(),
+        drops: await getDrops(),
       });
     }
 
@@ -96,32 +96,11 @@ export async function POST(request: NextRequest) {
 
     const saved = await saveDrop(body as Partial<DropData> & { title: string; number: string; chapter: string });
 
-    // If marked active, sync to StoreSettings
-    if (saved.status === "active") {
-      try {
-        const settings = await prisma.storeSettings.findFirst();
-        if (settings) {
-          const meta = (settings.brandMetadata as Record<string, unknown>) || {};
-          await prisma.storeSettings.update({
-            where: { id: settings.id },
-            data: {
-              brandMetadata: {
-                ...meta,
-                activeDropSlug: saved.slug,
-                activeDropNumber: saved.number,
-                activeDropTitle: saved.title,
-              },
-            },
-          });
-        }
-      } catch {}
-    }
-
     return NextResponse.json({
       success: true,
       drop: saved,
-      activeDrop: getActiveDrop(),
-      drops: getDropsSync(),
+      activeDrop: await getActiveDropAsync(),
+      drops: await getDrops(),
     });
   } catch (error) {
     console.error("[Admin Drops POST Error]:", error);
@@ -154,8 +133,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      drops: getDropsSync(),
-      activeDrop: getActiveDrop(),
+      drops: await getDrops(),
+      activeDrop: await getActiveDropAsync(),
     });
   } catch (error) {
     console.error("[Admin Drops DELETE Error]:", error);

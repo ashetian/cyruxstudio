@@ -38,6 +38,8 @@ function StorefrontInner({
 
   const currency = settings?.currency || "USD";
   const whatsappNumber = settings?.whatsappNumber || "+905551234567";
+  const brandMeta = (settings?.brandMetadata as Record<string, unknown>) || {};
+  const announcement = typeof brandMeta.announcement === "string" ? brandMeta.announcement : undefined;
 
   // Real live filtering based on search pill input
   const displayedProducts = useMemo(() => {
@@ -66,6 +68,7 @@ function StorefrontInner({
           products={initialProducts}
           productImages={editorial?.productImages}
           currency={currency}
+          announcement={announcement}
         />
 
         {/* 2. Asymmetric 4-Column Bestseller Grid on Ecru Canvas */}

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getDropsSync, getActiveDrop } from "@/lib/drops";
+import { getDrops, getActiveDropAsync } from "@/lib/drops";
 
 export async function GET() {
   try {
-    const drops = getDropsSync();
-    const activeDrop = getActiveDrop();
+    const drops = await getDrops();
+    const activeDrop = await getActiveDropAsync();
 
     return NextResponse.json({
       success: true,

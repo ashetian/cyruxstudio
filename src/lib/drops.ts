@@ -1,3 +1,6 @@
+import prisma from "@/lib/db";
+import { INITIAL_DROPS as SEED_DROPS } from "@/lib/seed-data";
+
 export interface DropData {
   id: string;
   slug: string;
@@ -24,168 +27,121 @@ export interface DropData {
   updatedAt?: string;
 }
 
-function getNodeModules() {
-  if (typeof window === "undefined") {
-    try {
-      const fs = eval("require")("fs");
-      const path = eval("require")("path");
-      const dataFile = path.join(process.cwd(), "data", "drops.json");
-      return { fs, path, dataFile };
-    } catch {
-      return null;
-    }
-  }
-  return null;
+export const INITIAL_DROPS: DropData[] = SEED_DROPS as DropData[];
+
+let memoryCache: DropData[] = [...INITIAL_DROPS];
+
+function mapPrismaDrop(d: {
+  id: string;
+  slug: string;
+  number: string;
+  chapter: string;
+  title: string;
+  status: string;
+  releaseDate: unknown;
+  edition: unknown;
+  description: unknown;
+  productSlugs: string[];
+  bannerImage: string;
+  totalPieces: number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}): DropData {
+  return {
+    id: d.id,
+    slug: d.slug,
+    number: d.number,
+    chapter: d.chapter,
+    title: d.title,
+    status: (d.status as "active" | "archived" | "upcoming") || "upcoming",
+    releaseDate:
+      typeof d.releaseDate === "object" && d.releaseDate !== null
+        ? (d.releaseDate as { tr: string; en: string })
+        : { tr: "YAKINDA", en: "COMING SOON" },
+    edition:
+      typeof d.edition === "object" && d.edition !== null
+        ? (d.edition as { tr: string; en: string })
+        : { tr: "LİMİTLİ", en: "LIMITED" },
+    description:
+      typeof d.description === "object" && d.description !== null
+        ? (d.description as { tr: string; en: string })
+        : { tr: "", en: "" },
+    productSlugs: Array.isArray(d.productSlugs) ? d.productSlugs : [],
+    bannerImage: d.bannerImage || "/assets/editorial/hero-desktop.jpg",
+    totalPieces: Number(d.totalPieces) || 100,
+    createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : new Date().toISOString(),
+    updatedAt: d.updatedAt ? new Date(d.updatedAt).toISOString() : new Date().toISOString(),
+  };
 }
 
-export const INITIAL_DROPS: DropData[] = [
-  {
-    id: "drop-01",
-    slug: "first-ascent",
-    number: "01",
-    chapter: "CHAPTER 00",
-    title: "FIRST ASCENT",
-    status: "active",
-    releaseDate: {
-      tr: "KASIM 2026",
-      en: "NOVEMBER 2026",
-    },
-    edition: {
-      tr: "5 MODEL • ÖZEL ARŞİV DROPU",
-      en: "5 GARMENTS • ARCHIVAL DROP",
-    },
-    description: {
-      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
-      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our Cyprus atelier. Never restocked.",
-    },
-    productSlugs: [
-      "pretty-chaos-tee",
-      "first-ascent-tee-white",
-      "first-ascent-tee-black",
-      "cyrux-099-orbital-tee",
-      "eyes-never-lie-tee",
-    ],
-    bannerImage: "/assets/editorial/hero-desktop.jpg",
-    totalPieces: 168,
-  },
-  {
-    id: "drop-00",
-    slug: "prototype-zero",
-    number: "00",
-    chapter: "GENESIS",
-    title: "PROTOTYPE ZERO",
-    status: "archived",
-    releaseDate: {
-      tr: "EKİM 2025",
-      en: "OCTOBER 2025",
-    },
-    edition: {
-      tr: "50 PARÇA (KASADA SAKLANDI / TÜKENDİ)",
-      en: "50 PIECES (VAULTED / SOLD OUT)",
-    },
-    description: {
-      tr: "Cyrux Studio'nun fiziksel giysi formlarını ve siber-noir silüetlerini test ettiği ilk prototip serisi. Tüm drop tükenmiş ve stüdyo kasasına kaldırılmıştır.",
-      en: "The experimental genesis run testing Cyrux Studio's brutalist silhouettes and cyber-noir garments. Entire run vaulted in the permanent studio archive.",
-    },
-    productSlugs: [],
-    bannerImage: "/assets/brand/hero-cyber-portrait.webp",
-    totalPieces: 50,
-  },
-  {
-    id: "drop-02",
-    slug: "neon-predator",
-    number: "02",
-    chapter: "CHAPTER 01",
-    title: "NEON PREDATOR",
-    status: "upcoming",
-    releaseDate: {
-      tr: "OCAK 2027",
-      en: "JANUARY 2027",
-    },
-    edition: {
-      tr: "ATÖLYE PROTOTİP AŞAMASINDA",
-      en: "IN ATELIER PROTOTYPING",
-    },
-    description: {
-      tr: "Ağır bomber ceketler, modüler fermuarlı kargo pantolonlar ve 3D yansıtıcı mikro-aplikeler. Kıbrıs atölyemizde prototip üretimi devam etmektedir.",
-      en: "Heavyweight technical puffers, modular cargo trousers, and specular 3D chrome details. Currently in atelier prototyping in Cyprus.",
-    },
-    productSlugs: [],
-    bannerImage: "/assets/campaign/campaign-card-puffer.webp",
-    totalPieces: 120,
-  },
-];
-
-let memoryCache: DropData[] | null = null;
-
 export function getDropsSync(): DropData[] {
-  const node = getNodeModules();
-  if (node) {
-    try {
-      if (node.fs.existsSync(node.dataFile)) {
-        const content = node.fs.readFileSync(node.dataFile, "utf-8");
-        const parsed = JSON.parse(content);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          memoryCache = parsed;
-          return parsed;
-        }
-      }
-    } catch (err) {
-      console.error("[Drops Storage Error]:", err);
-    }
-  }
-
-  if (memoryCache && memoryCache.length > 0) {
-    return memoryCache;
-  }
-
-  if (node) {
-    try {
-      const dir = node.path.dirname(node.dataFile);
-      if (!node.fs.existsSync(dir)) {
-        node.fs.mkdirSync(dir, { recursive: true });
-      }
-      node.fs.writeFileSync(node.dataFile, JSON.stringify(INITIAL_DROPS, null, 2), "utf-8");
-    } catch {}
-  }
-
-  memoryCache = [...INITIAL_DROPS];
   return memoryCache;
 }
 
-export function writeDropsSync(drops: DropData[]): void {
-  const node = getNodeModules();
-  if (node) {
-    try {
-      const dir = node.path.dirname(node.dataFile);
-      if (!node.fs.existsSync(dir)) {
-        node.fs.mkdirSync(dir, { recursive: true });
-      }
-      node.fs.writeFileSync(node.dataFile, JSON.stringify(drops, null, 2), "utf-8");
-      memoryCache = drops;
-    } catch (err) {
-      console.error("[Drops Write Error]:", err);
-      memoryCache = drops;
+export async function getDrops(): Promise<DropData[]> {
+  try {
+    const records = await prisma.drop.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (records && records.length > 0) {
+      memoryCache = records.map(mapPrismaDrop);
+      return memoryCache;
     }
-  } else {
-    memoryCache = drops;
+
+    // Seed database if empty
+    for (const d of INITIAL_DROPS) {
+      await prisma.drop.create({
+        data: {
+          id: d.id,
+          slug: d.slug,
+          number: d.number,
+          chapter: d.chapter,
+          title: d.title,
+          status: d.status,
+          releaseDate: d.releaseDate,
+          edition: d.edition,
+          description: d.description,
+          productSlugs: d.productSlugs,
+          bannerImage: d.bannerImage,
+          totalPieces: d.totalPieces,
+        },
+      });
+    }
+
+    const reloaded = await prisma.drop.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+    memoryCache = reloaded.map(mapPrismaDrop);
+    return memoryCache;
+  } catch (err) {
+    console.warn("[Drops DB Query Warning]: Failed to fetch drops from DB, serving memory cache:", err);
+    return memoryCache;
   }
 }
 
-export async function getDrops(): Promise<DropData[]> {
-  return getDropsSync();
+export function getActiveDrop(): DropData {
+  return memoryCache.find((d) => d.status === "active") || memoryCache[0] || INITIAL_DROPS[0];
 }
 
-export function getActiveDrop(): DropData {
-  const drops = getDropsSync();
-  return drops.find((d) => d.status === "active") || drops[0] || INITIAL_DROPS[0];
+export async function getActiveDropAsync(): Promise<DropData> {
+  try {
+    const record = await prisma.drop.findFirst({
+      where: { status: "active" },
+    });
+    if (record) {
+      return mapPrismaDrop(record);
+    }
+  } catch (err) {
+    console.warn("[Drops DB getActiveDrop Warning]:", err);
+  }
+  return getActiveDrop();
 }
 
 export function getDropBySlug(slug: string): DropData | undefined {
   if (!slug) return undefined;
   const normalized = slug.toLowerCase().trim();
-  const drops = getDropsSync();
-  return drops.find(
+  return memoryCache.find(
     (d) =>
       d.slug.toLowerCase() === normalized ||
       d.id.toLowerCase() === normalized ||
@@ -193,24 +149,47 @@ export function getDropBySlug(slug: string): DropData | undefined {
   );
 }
 
-export async function saveDrop(data: Partial<DropData> & { title: string; number: string; chapter: string }): Promise<DropData> {
-  const drops = getDropsSync();
-  const now = new Date().toISOString();
+export async function getDropBySlugAsync(slug: string): Promise<DropData | undefined> {
+  if (!slug) return undefined;
+  const normalized = slug.toLowerCase().trim();
+  try {
+    const record = await prisma.drop.findFirst({
+      where: {
+        OR: [
+          { slug: normalized },
+          { id: slug },
+          { number: slug },
+        ],
+      },
+    });
+    if (record) {
+      return mapPrismaDrop(record);
+    }
+  } catch (err) {
+    console.warn("[Drops DB getDropBySlug Warning]:", err);
+  }
+  return getDropBySlug(slug);
+}
 
+export async function saveDrop(
+  data: Partial<DropData> & { title: string; number: string; chapter: string }
+): Promise<DropData> {
   let dropId = data.id?.trim();
   if (!dropId) {
     dropId = `drop-${Date.now().toString().slice(-6)}`;
   }
 
-  const generatedSlug = (data.slug?.trim() || data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")).replace(/^-|-$/g, "");
+  const generatedSlug = (
+    data.slug?.trim() || data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+  ).replace(/^-|-$/g, "");
 
-  const newDrop: DropData = {
+  const dropPayload = {
     id: dropId,
     slug: generatedSlug,
     number: data.number.trim(),
     chapter: data.chapter.trim(),
     title: data.title.trim().toUpperCase(),
-    status: data.status || "upcoming",
+    status: (data.status as "active" | "archived" | "upcoming") || "upcoming",
     releaseDate: {
       tr: data.releaseDate?.tr?.trim() || "YAKINDA",
       en: data.releaseDate?.en?.trim() || "COMING SOON",
@@ -226,60 +205,174 @@ export async function saveDrop(data: Partial<DropData> & { title: string; number
     productSlugs: Array.isArray(data.productSlugs) ? data.productSlugs : [],
     bannerImage: data.bannerImage?.trim() || "/assets/editorial/hero-desktop.jpg",
     totalPieces: Number(data.totalPieces) || 100,
-    createdAt: data.createdAt || now,
-    updatedAt: now,
   };
 
-  const existingIdx = drops.findIndex((d) => d.id === dropId || d.slug === newDrop.slug);
+  // If this drop is becoming active, archive existing active drops in DB
+  if (dropPayload.status === "active") {
+    try {
+      await prisma.drop.updateMany({
+        where: { status: "active" },
+        data: { status: "archived" },
+      });
+    } catch {}
+  }
 
-  if (newDrop.status === "active") {
-    drops.forEach((d) => {
+  // Upsert into PostgreSQL with resilient fallback
+  let saved: DropData;
+  try {
+    const savedRecord = await prisma.drop.upsert({
+      where: { id: dropId },
+      create: dropPayload,
+      update: dropPayload,
+    });
+    saved = mapPrismaDrop(savedRecord);
+  } catch {
+    saved = {
+      id: dropId,
+      slug: dropPayload.slug,
+      number: dropPayload.number,
+      chapter: dropPayload.chapter,
+      title: dropPayload.title,
+      status: dropPayload.status as "active" | "archived" | "upcoming",
+      releaseDate: dropPayload.releaseDate as { tr: string; en: string },
+      edition: dropPayload.edition as { tr: string; en: string },
+      description: dropPayload.description as { tr: string; en: string },
+      productSlugs: dropPayload.productSlugs,
+      bannerImage: dropPayload.bannerImage,
+      totalPieces: dropPayload.totalPieces,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  // Update memory cache
+  const idx = memoryCache.findIndex((d) => d.id === saved.id || d.slug === saved.slug);
+  if (dropPayload.status === "active") {
+    memoryCache.forEach((d) => {
       if (d.status === "active") d.status = "archived";
     });
   }
-
-  if (existingIdx !== -1) {
-    drops[existingIdx] = {
-      ...drops[existingIdx],
-      ...newDrop,
-      createdAt: drops[existingIdx].createdAt || now,
-      updatedAt: now,
-    };
+  if (idx !== -1) {
+    memoryCache[idx] = saved;
   } else {
-    drops.unshift(newDrop);
+    memoryCache.unshift(saved);
   }
 
-  writeDropsSync(drops);
-  return newDrop;
+  // Synchronize active drop into StoreSettings brandMetadata
+  if (saved.status === "active") {
+    try {
+      const settings = await prisma.storeSettings.findFirst();
+      if (settings) {
+        const meta = (settings.brandMetadata as Record<string, unknown>) || {};
+        await prisma.storeSettings.update({
+          where: { id: settings.id },
+          data: {
+            brandMetadata: {
+              ...meta,
+              activeDropSlug: saved.slug,
+              activeDropNumber: saved.number,
+              activeDropTitle: saved.title,
+            },
+          },
+        });
+      }
+    } catch {}
+  }
+
+  return saved;
 }
 
 export async function setActiveDrop(id: string): Promise<DropData | null> {
-  const drops = getDropsSync();
-  const target = drops.find((d) => d.id === id || d.slug === id);
-  if (!target) return null;
+  const memTarget = memoryCache.find((d) => d.id === id || d.slug === id);
+  if (memTarget) {
+    memoryCache.forEach((d) => {
+      d.status = d.id === memTarget.id || d.slug === memTarget.slug ? "active" : "archived";
+    });
+  }
 
-  drops.forEach((d) => {
-    d.status = d.id === target.id ? "active" : "archived";
-    d.updatedAt = new Date().toISOString();
-  });
+  try {
+    const target = await prisma.drop.findFirst({
+      where: {
+        OR: [{ id }, { slug: id }],
+      },
+    });
 
-  writeDropsSync(drops);
-  return target;
+    if (target) {
+      // Archive all active
+      await prisma.drop.updateMany({
+        where: { status: "active" },
+        data: { status: "archived" },
+      });
+
+      // Set target active
+      const updated = await prisma.drop.update({
+        where: { id: target.id },
+        data: { status: "active" },
+      });
+
+      const mapped = mapPrismaDrop(updated);
+
+      // Update memory cache with fresh DB record
+      memoryCache.forEach((d) => {
+        d.status = d.id === mapped.id ? "active" : "archived";
+      });
+
+      // Synchronize to StoreSettings
+      try {
+        const settings = await prisma.storeSettings.findFirst();
+        if (settings) {
+          const meta = (settings.brandMetadata as Record<string, unknown>) || {};
+          await prisma.storeSettings.update({
+            where: { id: settings.id },
+            data: {
+              brandMetadata: {
+                ...meta,
+                activeDropSlug: mapped.slug,
+                activeDropNumber: mapped.number,
+                activeDropTitle: mapped.title,
+              },
+            },
+          });
+        }
+      } catch {}
+
+      return mapped;
+    }
+  } catch {
+    // If DB pooler fails or is offline, return memory target
+  }
+
+  return memTarget || null;
 }
 
 export async function deleteDrop(id: string): Promise<boolean> {
-  const drops = getDropsSync();
-  const idx = drops.findIndex((d) => d.id === id || d.slug === id);
-  if (idx === -1) return false;
-
-  drops.splice(idx, 1);
-
-  if (!drops.some((d) => d.status === "active") && drops.length > 0) {
-    drops[0].status = "active";
+  const memIdx = memoryCache.findIndex((d) => d.id === id || d.slug === id);
+  let removed = false;
+  if (memIdx !== -1) {
+    const deletedStatus = memoryCache[memIdx].status;
+    memoryCache = memoryCache.filter((d) => d.id !== id && d.slug !== id);
+    if (deletedStatus === "active" && memoryCache.length > 0) {
+      setActiveDrop(memoryCache[0].id).catch(() => {});
+    }
+    removed = true;
   }
 
-  writeDropsSync(drops);
-  return true;
+  try {
+    const target = await prisma.drop.findFirst({
+      where: {
+        OR: [{ id }, { slug: id }],
+      },
+    });
+
+    if (target) {
+      await prisma.drop.delete({
+        where: { id: target.id },
+      });
+      return true;
+    }
+  } catch {}
+
+  return removed;
 }
 
 export const CURRENT_ACTIVE_DROP: DropData = new Proxy({} as DropData, {

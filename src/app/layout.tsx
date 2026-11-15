@@ -24,7 +24,7 @@ const fontSans = Archivo({
 const fontSekuya = localFont({
   src: [
     {
-      path: "../../public/fonts/sekuya-latin.woff2",
+      path: "../../public/fonts/sekuya.woff2",
       weight: "400",
       style: "normal",
     },
@@ -40,10 +40,76 @@ export const viewport: Viewport = {
   themeColor: "#0A0A0A",
 };
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://cyruxstudio.com";
+
 export const metadata: Metadata = {
-  title: "cyrux studio | Wearable Art & Brutalist Streetwear",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
+    template: "%s | CYRUX STUDIO",
+  },
   description:
-    "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments.",
+    "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our Cyprus atelier.",
+  applicationName: "CYRUX STUDIO",
+  authors: [{ name: "CYRUX STUDIO", url: "https://instagram.com/ashetian_" }],
+  creator: "ashetian_",
+  publisher: "CYRUX STUDIO",
+  category: "Fashion & Apparel",
+  keywords: [
+    "cyrux studio",
+    "cyrux",
+    "wearable art",
+    "brutalist streetwear",
+    "cyberpunk fashion",
+    "avant-garde streetwear",
+    "cyprus atelier",
+    "monochrome fashion",
+    "heavyweight cotton tee",
+    "limited drops",
+    "luxury streetwear",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    alternateLocale: ["en_US"],
+    url: siteUrl,
+    siteName: "CYRUX STUDIO",
+    title: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
+    description:
+      "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our Cyprus atelier.",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "CYRUX STUDIO - Wearable Art & Brutalist Streetwear",
+        type: "image/jpeg",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
+    description:
+      "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments.",
+    creator: "@ashetian_",
+    site: "@cyruxstudio",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },

@@ -76,3 +76,28 @@ model CreditUsageLog {
   @@index([timestamp])
   @@map("credit_usage_logs")
 }
+
+// -----------------------------------------------------------------------------
+// 5. Drop Model (Atelier Drop System & Release Lifecycle)
+// -----------------------------------------------------------------------------
+model Drop {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  number       String
+  chapter      String
+  title        String
+  status       String   @default("upcoming") // "active" | "archived" | "upcoming"
+  releaseDate  Json     // { tr: string, en: string }
+  edition      Json     // { tr: string, en: string }
+  description  Json     // { tr: string, en: string }
+  productSlugs String[] // Native Postgres string array
+  bannerImage  String
+  totalPieces  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([slug])
+  @@map("drops")
+}
+
