@@ -10,8 +10,8 @@ export interface StoreSettingsFormProps {
 const CURRENCIES = ["USD", "EUR", "TRY", "GBP"] as const;
 
 export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSettingsFormProps) {
-  const [whatsappNumber, setWhatsappNumber] = useState("+905320000000");
-  const [currency, setCurrency] = useState<string>("USD");
+  const [whatsappNumber, setWhatsappNumber] = useState("+905338737712");
+  const [currency, setCurrency] = useState<string>("EUR");
   const [storeName, setStoreName] = useState("cyrux studio");
   const [brandBio, setBrandBio] = useState("wearable art & brutalist luxury");
   const [announcement, setAnnouncement] = useState("GLOBAL EXPRESS DISPATCH • CYPRUS • PARIS • TOKYO");
@@ -43,7 +43,6 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
           if (s.whatsappNumber) setWhatsappNumber(s.whatsappNumber);
           if (s.currency) {
             setCurrency(s.currency);
-            if (onCurrencyChange) onCurrencyChange(s.currency);
           }
           if (s.storeName) setStoreName(s.storeName);
           if (s.brandBio) setBrandBio(s.brandBio);
@@ -77,7 +76,7 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
       }
     }
     load();
-  }, [onCurrencyChange]);
+  }, []);
 
   const handlePhoneChange = (val: string) => {
     // Keep + and digits
@@ -183,22 +182,18 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
   ].join("\n");
   const sampleOrderUrl = `https://wa.me/${sampleOrderPhone}?text=${encodeURIComponent(sampleOrderLines)}`;
 
-  if (loading) {
-    return (
-      <div className="py-16 text-center text-[#666666] font-mono text-xs tracking-widest uppercase">
-        [ LOADING STORE SETTINGS ENGINE... ]
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6 sm:gap-8 font-mono max-w-4xl pb-16 md:pb-0">
       {/* Status banner */}
       <div className="bg-[#121212] border border-[#222222] p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
+          <span
+            className={`inline-block w-2 h-2 rounded-full ${
+              loading ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+            }`}
+          />
           <span className="text-[#FAF8F3] font-bold uppercase tracking-wider text-[11px] sm:text-xs">
-            STORE ENGINE • PERSISTENCE PIPELINE
+            {loading ? "STORE ENGINE • SYNCHRONIZING..." : "STORE ENGINE • PERSISTENCE PIPELINE"}
           </span>
         </div>
         {syncTimestamp && (

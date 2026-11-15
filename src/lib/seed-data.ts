@@ -27,8 +27,8 @@ export interface StoreSettingsInput {
 
 export const INITIAL_STORE_SETTINGS: StoreSettingsInput = {
   id: "default",
-  whatsappNumber: "+905551234567",
-  currency: "USD",
+  whatsappNumber: "+905338737712",
+  currency: "EUR",
   brandMetadata: {
     title: "cyrux studio",
     brandName: "cyrux studio",
@@ -47,7 +47,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettingsInput = {
       tiktok: "https://tiktok.com/@cyruxstudio",
     },
     supportEmail: "contact@cyruxstudio.com",
-    whatsappFormatted: "+90 (555) 123 45 67",
+    whatsappFormatted: "+90 (533) 873 77 12",
     location: "Cyprus • Global Express Dispatch",
     announcement: "FREE WORLDWIDE EXPRESS DISPATCH ON ALL CHAPTER00 ORDERS",
     heroDesktopImage: "/assets/editorial/hero-desktop.jpg",

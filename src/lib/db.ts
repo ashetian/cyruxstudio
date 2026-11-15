@@ -560,7 +560,14 @@ function createResilientPrismaClient(client: PrismaClient): PrismaClient {
                 }
                 // When configured, try real query, fallback if network or connection drops
                 try {
-                  return await originalMethod.apply(mTarget, args);
+                  const result = await originalMethod.apply(mTarget, args);
+                  if (prop === "storeSettings" && result && typeof result === "object") {
+                    mockStore.settings = {
+                      ...mockStore.settings,
+                      ...(result as Record<string, unknown>),
+                    };
+                  }
+                  return result;
                 } catch (err: unknown) {
                   const errorMsg =
                     err instanceof Error ? err.message : "connection error";

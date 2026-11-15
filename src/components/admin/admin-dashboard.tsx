@@ -133,6 +133,14 @@ export function AdminDashboard() {
     fetchStats();
   }, [fetchStats]);
 
+  const handleCurrencyChange = useCallback((newCurr: string) => {
+    setCurrency(newCurr);
+  }, []);
+
+  const handleSettingsSaveSuccess = useCallback(() => {
+    fetchStats();
+  }, [fetchStats]);
+
   const currencySymbol =
     currency === "EUR" ? "€" : currency === "TRY" ? "₺" : currency === "GBP" ? "£" : "$";
 
@@ -279,11 +287,8 @@ export function AdminDashboard() {
               </p>
             </div>
             <StoreSettingsForm
-              onCurrencyChange={(newCurr) => {
-                setCurrency(newCurr);
-                fetchStats();
-              }}
-              onSaveSuccess={fetchStats}
+              onCurrencyChange={handleCurrencyChange}
+              onSaveSuccess={handleSettingsSaveSuccess}
             />
           </div>
         )}

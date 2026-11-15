@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Search, ArrowRight, ShieldCheck, ArrowLeft, MessageSquare } from "lucide-react";
+import { ShoppingBag, Search } from "lucide-react";
 import type { Product } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import type { DropData } from "@/lib/drops";
@@ -35,19 +35,8 @@ export function DropDetail({
   const { openSearch } = useSearch();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const isArchived = drop.status === "archived";
-  const isUpcoming = drop.status === "upcoming";
-  const isActive = drop.status === "active";
-
   const imageFor = (p: Product): string =>
     productImages[p.slug] || p.mediaUrls[0] || "/assets/brand/logo-emblem-dark.png";
-
-  const waInquiryUrl = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
-    t({
-      tr: `Merhaba Cyrux Studio, Drop ${drop.number}: ${drop.title} (${drop.chapter}) hakkında bilgi almak istiyorum.`,
-      en: `Hello Cyrux Studio, I am inquiring about Drop ${drop.number}: ${drop.title} (${drop.chapter}).`,
-    })
-  )}`;
 
   return (
     <div className="min-h-screen bg-[#FAF8F3] text-brand-black flex flex-col justify-between selection:bg-black selection:text-white">
@@ -111,243 +100,77 @@ export function DropDetail({
         </div>
       </header>
 
-      {/* 2. Main Content Container */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 md:px-12 py-10 sm:py-16">
-        {/* Back Link */}
-        <div className="mb-6">
-          <Link
-            href="/drops"
-            className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-widest text-neutral-600 hover:text-black hover:underline"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t({ tr: "Tüm Droplara Dön", en: "Back to All Drops" })}</span>
-          </Link>
+      {/* 2. Main Products Grid: Sadece Ürünler (Mobile 2'li, PC 3'lü Grid) */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-12 py-5 sm:py-8 md:py-10">
+        {/* Minimalist Drop Title & Counter */}
+        <div className="mb-4 sm:mb-6 md:mb-8 flex items-baseline justify-between border-b border-black/10 pb-3 sm:pb-4">
+          <h1 className="font-mono text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-black">
+            DROP {drop.number}: {drop.title}
+          </h1>
+          <span className="font-mono text-[10px] sm:text-xs text-neutral-500 uppercase tracking-widest font-semibold">
+            {products.length} {t({ tr: "PARÇA", en: "GARMENTS" })}
+          </span>
         </div>
 
-        {/* Hero Editorial Header */}
-        <section aria-label="Drop Overview" className="mb-14 md:mb-16">
-          <div className="flex items-baseline justify-between gap-4 mb-3 font-mono text-xs text-neutral-500 uppercase tracking-widest">
-            <span>DROP {drop.number} • {drop.chapter}</span>
-            <span>{drop.releaseDate[lang]}</span>
-          </div>
-
-          <h1 className="font-mono text-3xl sm:text-5xl md:text-6xl font-bold uppercase tracking-tight text-black">
-            {drop.title}
-          </h1>
-          <p className="font-mono text-sm sm:text-base text-neutral-600 font-semibold tracking-wider uppercase mt-2">
-            {drop.chapter} — {drop.edition[lang]}
+        {products.length === 0 ? (
+          <p className="font-mono text-xs sm:text-sm text-neutral-500 py-16 text-center uppercase tracking-widest">
+            {t({ tr: "Bu drop'a ait parça bulunamadı.", en: "No pieces found for this drop." })}
           </p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 md:gap-6">
+            {products.map((product) => {
+              const isOutOfStock = product.stock <= 0;
 
-          {/* Boxless Minimalist Technical Spec Table (Kutusuz / Sıfır Yeşil / Sıfır Slash) */}
-          <div className="my-8 py-5 border-y border-black/15 grid grid-cols-2 sm:grid-cols-4 gap-6 font-mono text-xs">
-            <div>
-              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "DURUM", en: "STATUS" })}
-              </span>
-              <span className="font-bold text-black uppercase tracking-wider">
-                {isActive
-                  ? t({ tr: "CANLI DROP", en: "ACTIVE RELEASE" })
-                  : isArchived
-                  ? t({ tr: "ARŞİV", en: "VAULTED" })
-                  : t({ tr: "ATÖLYE PROTOTİPİ", en: "ATELIER PROTOTYPE" })}
-              </span>
-            </div>
+              return (
+                <article
+                  key={product.id}
+                  className="group relative flex flex-col justify-between overflow-hidden bg-[#EDEDEB] border border-black/15 transition-all duration-300 hover:border-black select-none"
+                >
+                  <Link
+                    href={`/products/${product.slug}`}
+                    aria-label={`View ${product.name}`}
+                    className="absolute inset-0 z-[1] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  />
 
-            <div>
-              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "TARİH", en: "RELEASE DATE" })}
-              </span>
-              <span className="font-bold text-black uppercase">
-                {drop.releaseDate[lang]}
-              </span>
-            </div>
+                  {/* Sold Out Ribbon */}
+                  {isOutOfStock && (
+                    <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                      <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest bg-black text-white px-2.5 sm:px-3 py-1 font-bold">
+                        {t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
+                      </span>
+                    </div>
+                  )}
 
-            <div>
-              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "PARÇA", en: "GARMENTS" })}
-              </span>
-              <span className="font-bold text-black uppercase">
-                {products.length > 0
-                  ? `${products.length} ${t({ tr: "ÖZEL MODEL", en: "PIECES" })}`
-                  : t({ tr: "ÖZEL SERİ", en: "STUDIO RUN" })}
-              </span>
-            </div>
-
-            <div>
-              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "ATÖLYE", en: "ORIGIN" })}
-              </span>
-              <span className="font-bold text-black uppercase">
-                CYPRUS ATELIER
-              </span>
-            </div>
-          </div>
-
-          {/* Visual Showcase Banner */}
-          <div className="relative aspect-[21/9] sm:aspect-[2.6/1] w-full my-8 overflow-hidden bg-black/5 border border-black/20">
-            <Image
-              src={drop.bannerImage}
-              alt={drop.title}
-              fill
-              priority
-              sizes="(max-width: 1280px) 100vw, 1200px"
-              className={cn(
-                "object-cover object-center",
-                isArchived && "filter grayscale opacity-75"
-              )}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 flex items-end justify-between text-white font-mono text-xs">
-              <span className="tracking-widest uppercase">
-                CYPRUS ATELIER ARCHIVE • DROP #{drop.number}
-              </span>
-              <span className="hidden sm:inline opacity-70">
-                CYRUX STUDIO
-              </span>
-            </div>
-          </div>
-
-          {/* Editorial Narrative Manifesto */}
-          <div className="max-w-3xl pt-2">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-2">
-              {t({ tr: "DROP MANİFESTOSU", en: "DROP MANIFESTO" })}
-            </h2>
-            <p className="font-mono text-sm sm:text-base text-neutral-800 leading-relaxed">
-              {drop.description[lang]}
-            </p>
-          </div>
-        </section>
-
-        {/* 3. Drop Garments Section (Active Drop) */}
-        {isActive && (
-          <section aria-label="Drop Products" className="mb-16">
-            <div className="border-b border-black/10 pb-4 mb-8 flex items-baseline justify-between">
-              <div>
-                <h2 className="font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight text-black">
-                  {t({ tr: "Drop Parçaları", en: "Garments in this Drop" })}
-                </h2>
-                <p className="font-mono text-xs text-neutral-500 mt-1 uppercase tracking-wider">
-                  {products.length} {t({ tr: "Özel Tasarım Giyilebilir Sanat Eseri", en: "Engineered Art Pieces" })}
-                </p>
-              </div>
-            </div>
-
-            {products.length === 0 ? (
-              <p className="font-mono text-sm text-neutral-500 py-12 text-center uppercase tracking-widest">
-                {t({ tr: "Bu drop'a ait parça bulunamadı.", en: "No pieces found for this drop." })}
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                {products.map((product) => {
-                  const isOutOfStock = product.stock <= 0;
-
-                  return (
-                    <article
-                      key={product.id}
-                      className="group relative flex flex-col justify-between overflow-hidden bg-[#EDEDEB] border border-black/15 transition-all duration-300 hover:border-black select-none"
-                    >
-                      <Link
-                        href={`/products/${product.slug}`}
-                        aria-label={`View ${product.name}`}
-                        className="absolute inset-0 z-[1] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
-                      />
-
-                      {/* Sold Out Ribbon */}
-                      {isOutOfStock && (
-                        <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                          <span className="font-mono text-xs uppercase tracking-widest bg-black text-white px-3 py-1 font-bold">
-                            {t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
-                          </span>
-                        </div>
+                  {/* Product Image: Responsive aspect-[3/4] */}
+                  <div className="relative aspect-[3/4] w-full overflow-hidden flex items-center justify-center p-3 sm:p-6 md:p-8">
+                    <Image
+                      src={imageFor(product)}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className={cn(
+                        "transition-transform duration-700 ease-out group-hover:scale-105",
+                        imageFor(product).includes("/assets/editorial/")
+                          ? "object-cover object-center"
+                          : "object-contain object-center mix-blend-multiply",
+                        isOutOfStock && "grayscale opacity-60"
                       )}
+                    />
+                  </div>
 
-                      {/* Product Image: 100% Uncropped & Razor-Sharp */}
-                      <div className="relative aspect-[3/4] w-full min-h-[320px] overflow-hidden flex items-center justify-center">
-                        <Image
-                          src={imageFor(product)}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className={cn(
-                            "transition-transform duration-700 ease-out group-hover:scale-105",
-                            imageFor(product).includes("/assets/editorial/")
-                              ? "object-cover object-center"
-                              : "object-contain object-center p-8 mix-blend-multiply",
-                            isOutOfStock && "grayscale opacity-60"
-                          )}
-                        />
-                      </div>
-
-                      {/* Bottom Info Strip */}
-                      <div className="relative z-[2] border-t border-black/10 bg-white/50 backdrop-blur-xs px-4 py-3 flex items-center justify-between shrink-0">
-                        <h3 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-black truncate pr-2">
-                          {product.name}
-                        </h3>
-                        <span className="font-mono text-xs sm:text-sm font-bold text-black shrink-0">
-                          {formatProductPrice(product.price, currency)}
-                        </span>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* 4. Vaulted / Archived Notice Section */}
-        {isArchived && (
-          <section className="mb-16 border border-neutral-900 bg-black text-white p-8 sm:p-12 max-w-3xl">
-            <div className="flex items-center gap-3 font-mono text-xs text-neutral-400 mb-4 uppercase tracking-widest">
-              <ShieldCheck className="w-4 h-4 text-neutral-300" />
-              <span>ARŞİV KASASI PROTOKOLÜ (VAULT PERMANENT ARCHIVE)</span>
-            </div>
-            <h3 className="font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight text-white mb-3">
-              {t({ tr: "Bu Drop'un Tüm Parçaları Tükenmiştir", en: "All Pieces from This Drop Are Vaulted" })}
-            </h3>
-            <p className="font-mono text-xs sm:text-sm text-neutral-300 leading-relaxed">
-              {t({
-                tr: `${drop.chapter} ${drop.title} dropunun tüm parçaları stüdyo koleksiyoncuları tarafından rezerve edildi. Cyrux Studio felsefesi gereği geçmiş droplar asla tekrar üretilmez.`,
-                en: `All pieces from the ${drop.chapter} ${drop.title} drop were reserved by studio collectors. Per Cyrux Studio philosophy, archived runs are vaulted permanently and never reissued.`,
-              })}
-            </p>
-            <div className="mt-6 pt-6 border-t border-neutral-800 flex items-center gap-4">
-              <Link
-                href="/drops"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black font-mono text-xs uppercase tracking-wider font-bold hover:bg-neutral-200 transition-colors"
-              >
-                <span>{t({ tr: "TÜM DROPLARI GÖR", en: "VIEW ALL DROPS" })}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </section>
-        )}
-
-        {/* 5. Upcoming Atelier Prototyping Section */}
-        {isUpcoming && (
-          <section className="mb-16 border border-black/20 bg-[#FAF8F3] p-8 sm:p-12 max-w-3xl">
-            <div className="font-mono text-xs text-neutral-500 mb-4 uppercase tracking-widest font-bold">
-              [ {t({ tr: "ATÖLYE DROP TAKVİMİ", en: "ATELIER ROADMAP" })} ]
-            </div>
-            <h3 className="font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight text-black mb-3">
-              {t({ tr: "Prototipleme Devam Ediyor", en: "Currently Under Atelier Prototyping" })}
-            </h3>
-            <p className="font-mono text-xs sm:text-sm text-neutral-700 leading-relaxed mb-6">
-              {drop.description[lang] || t({
-                tr: "Kıbrıs atölyemizde prototip üretimi devam etmektedir. Drop tarihi duyurusu ve VIP parça rezervasyonu için WhatsApp üzerinden iletişime geçebilirsiniz.",
-                en: "Currently under atelier prototyping at Cyprus studio. Inquire via WhatsApp for VIP reservation list and release updates.",
-              })}
-            </p>
-            <a
-              href={waInquiryUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-mono text-xs uppercase tracking-wider font-bold hover:bg-neutral-800 transition-colors"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>{t({ tr: "WHATSAPP VIP BİLDİRİM LİSTESİ", en: "WHATSAPP VIP INQUIRY" })}</span>
-            </a>
-          </section>
+                  {/* Bottom Info Strip */}
+                  <div className="relative z-[2] border-t border-black/10 bg-white/50 backdrop-blur-xs px-2.5 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 shrink-0">
+                    <h3 className="font-mono text-[11px] sm:text-xs md:text-sm font-bold uppercase tracking-wider text-black truncate">
+                      {product.name}
+                    </h3>
+                    <span className="font-mono text-[11px] sm:text-xs md:text-sm font-bold text-black shrink-0">
+                      {formatProductPrice(product.price, currency)}
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         )}
       </main>
 
