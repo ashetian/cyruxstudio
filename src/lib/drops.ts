@@ -84,35 +84,10 @@ export async function getDrops(): Promise<DropData[]> {
       orderBy: { createdAt: "asc" },
     });
 
-    if (records && records.length > 0) {
+    if (records) {
       memoryCache = records.map(mapPrismaDrop);
       return memoryCache;
     }
-
-    // Seed database if empty
-    for (const d of INITIAL_DROPS) {
-      await prisma.drop.create({
-        data: {
-          id: d.id,
-          slug: d.slug,
-          number: d.number,
-          chapter: d.chapter,
-          title: d.title,
-          status: d.status,
-          releaseDate: d.releaseDate,
-          edition: d.edition,
-          description: d.description,
-          productSlugs: d.productSlugs,
-          bannerImage: d.bannerImage,
-          totalPieces: d.totalPieces,
-        },
-      });
-    }
-
-    const reloaded = await prisma.drop.findMany({
-      orderBy: { createdAt: "asc" },
-    });
-    memoryCache = reloaded.map(mapPrismaDrop);
     return memoryCache;
   } catch (err) {
     console.warn("[Drops DB Query Warning]: Failed to fetch drops from DB, serving memory cache:", err);

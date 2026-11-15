@@ -11,12 +11,8 @@
     "test": "tsx tests/runner.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push || echo '[db:push] Notice: DATABASE_URL is not set or remote DB unreachable. App is configured with resilient in-memory fallback.'",
-    "db:seed": "tsx prisma/seed.ts",
     "assets:prepare": "bash scripts/prepare-assets.sh",
     "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.78.0",
