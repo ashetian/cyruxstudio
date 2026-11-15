@@ -40,6 +40,7 @@ const config: Config = {
           "monospace",
         ],
         display: ["var(--font-display)", "var(--font-sans)", "sans-serif"],
+        sekuya: ["var(--font-sekuya)", "Sekuya", "serif"],
       },
     },
   },

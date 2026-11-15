@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Space_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll";
 import { CartProvider } from "@/components/storefront/cart-provider";
@@ -20,6 +21,18 @@ const fontSans = Archivo({
   display: "swap",
 });
 
+const fontSekuya = localFont({
+  src: [
+    {
+      path: "../../public/fonts/sekuya-latin.woff2",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-sekuya",
+  display: "swap",
+});
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -32,9 +45,18 @@ export const metadata: Metadata = {
   description:
     "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments.",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/assets/brand/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
   },
+  manifest: "/site.webmanifest",
 };
 
 import { SearchProvider } from "@/components/providers/search-provider";
@@ -45,7 +67,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`dark ${fontMono.variable} ${fontSans.variable}`}>
+    <html lang="tr" className={`dark ${fontMono.variable} ${fontSans.variable} ${fontSekuya.variable}`}>
       <body className="min-h-screen bg-canvas font-sans text-brand-black antialiased selection:bg-black selection:text-white">
         <LanguageProvider>
           <CustomCursor />

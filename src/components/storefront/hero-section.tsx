@@ -507,8 +507,8 @@ export function HeroSection({
       {/* 3. Middle Ambient Space */}
       <div className="flex-1 min-h-[18svh] sm:min-h-[28vh]" />
 
-      {/* 4. Monumental Edge-to-Edge Display Typography ("cyrux") (F04.3 & F09.2) */}
-      <div className="relative z-10 w-full overflow-hidden select-none pb-20 sm:pb-20 md:pb-24">
+      {/* 4. Monumental Display Typography ("CYRUX" - Sekuya with Horizontal Overflow Bleed) */}
+      <div className="relative z-10 w-full overflow-visible select-none pb-16 sm:pb-20 md:pb-24">
         <div className="flex justify-center overflow-hidden pb-3 sm:pb-6" aria-hidden="true">
           <span className="char-split inline-block will-change-transform">
             <span className="relative block w-[clamp(3.75rem,13vw,10rem)] aspect-square">
@@ -525,17 +525,17 @@ export function HeroSection({
         <h1
           ref={titleContainerRef}
           aria-label="cyrux"
-          className="w-full text-center flex justify-between px-1.5 sm:px-2 font-black tracking-tighter leading-[0.74] pointer-events-none"
+          className="relative left-1/2 -translate-x-1/2 w-[110vw] sm:w-[114vw] md:w-[118vw] text-center flex justify-between px-0 font-sekuya uppercase font-normal tracking-tight leading-[0.8] pointer-events-none select-none"
           style={{
             color: BRAND_TOKENS.CREAM_DISPLAY,
-            fontSize: "clamp(3.75rem, 23.5vw, 30rem)",
+            fontSize: "clamp(4.25rem, 25vw, 32rem)",
           }}
         >
           {characters.map((char, index) => (
             <span
               key={`${char}-${index}`}
-              className="inline-block overflow-hidden"
-              style={{ lineHeight: "0.8" }}
+              className="inline-block overflow-hidden py-1"
+              style={{ lineHeight: "0.85" }}
             >
               <span className="char-split inline-block will-change-transform">
                 {char}

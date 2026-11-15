@@ -2,6 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { Heart } from "lucide-react";
 import { useLanguage } from "@/components/providers/language-provider";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +53,7 @@ export function StudioFooter({
             <span className="font-mono text-xs sm:text-sm text-neutral-600 group-hover:text-black/60 transition-colors">
               [01]
             </span>
-            <span className="font-sans text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none">
+            <span className="font-sekuya text-2xl sm:text-4xl md:text-6xl lg:text-7xl uppercase tracking-tight leading-none">
               {t({ tr: "MAĞAZA", en: "SHOP" })}
             </span>
           </div>
@@ -69,7 +71,7 @@ export function StudioFooter({
             <span className="font-mono text-xs sm:text-sm text-neutral-600 group-hover:text-black/60 transition-colors">
               [02]
             </span>
-            <span className="font-sans text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none">
+            <span className="font-sekuya text-2xl sm:text-4xl md:text-6xl lg:text-7xl uppercase tracking-tight leading-none">
               {t({ tr: "DROPLAR", en: "DROPS" })}
             </span>
           </div>
@@ -89,7 +91,7 @@ export function StudioFooter({
             <span className="font-mono text-xs sm:text-sm text-neutral-600 group-hover:text-black/60 transition-colors">
               [03]
             </span>
-            <span className="font-sans text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-none">
+            <span className="font-sekuya text-2xl sm:text-4xl md:text-6xl lg:text-7xl uppercase tracking-tight leading-none">
               WHATSAPP
             </span>
           </div>
@@ -99,15 +101,40 @@ export function StudioFooter({
         </a>
       </nav>
 
-      {/* 3. Massive Edge-to-Edge Monumental Brandmark (Clean mobile safe-area spacing) */}
-      <div className="w-full select-none pointer-events-none pt-8 sm:pt-12 pb-4 sm:pb-6 overflow-hidden">
-        <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 pb-2 font-mono text-[9px] sm:text-[11px] text-neutral-600 uppercase tracking-widest">
-          <span>CYRUX STUDIO © {new Date().getFullYear()}</span>
-          <span>ALL RIGHTS RESERVED</span>
+      {/* 3. Center Brand Logo Emblem */}
+      <div className="w-full flex justify-center items-center py-10 sm:py-16 md:py-20 select-none">
+        <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-44 md:h-44 opacity-90 hover:opacity-100 transition-opacity duration-300">
+          <Image
+            src="/assets/brand/logo-emblem-white.webp"
+            alt="Cyrux Studio"
+            fill
+            sizes="(max-width: 768px) 128px, 176px"
+            className="object-contain"
+          />
         </div>
-        <h2 className="font-sans text-[20vw] sm:text-[22vw] font-black uppercase tracking-tighter leading-[0.76] text-[#FAF8F3] text-center w-full block m-0 p-0 transform translate-y-[4%]">
-          cyrux
-        </h2>
+      </div>
+
+      {/* 4. Bottom Legal & Credits Bar */}
+      <div className="w-full border-t border-neutral-900/80 px-5 sm:px-8 md:px-12 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-2.5 font-mono text-[10px] sm:text-[11px] text-neutral-500 uppercase tracking-wider">
+        <div>
+          <span>CYRUX STUDIO © {new Date().getFullYear()}</span>
+          <span className="hidden sm:inline mx-2 text-neutral-700">•</span>
+          <span className="hidden sm:inline">ALL RIGHTS RESERVED</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 lowercase">
+          <span>made with</span>
+          <Heart className="w-3 h-3 text-rose-500 fill-rose-500 inline-block animate-pulse" />
+          <span>by</span>
+          <a
+            href="https://instagram.com/ashetian_"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-neutral-300 hover:text-white underline underline-offset-4 decoration-neutral-600 hover:decoration-white transition-colors"
+          >
+            ashetian_
+          </a>
+        </div>
       </div>
     </footer>
   );

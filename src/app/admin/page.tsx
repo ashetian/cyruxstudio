@@ -21,14 +21,14 @@ export default function AdminDashboardPage() {
       />
 
       {/* Main Content Surface */}
-      <main className="flex-1 px-4 md:px-8 py-8 max-w-7xl w-full mx-auto">
+      <main className="flex-1 px-3 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 max-w-7xl w-full mx-auto">
         {activeTab === "products" && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1 pb-2 border-b border-[#1E1E1E]">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col gap-0.5 sm:gap-1 pb-2 border-b border-[#1E1E1E]">
+              <h2 className="text-base sm:text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
                 [ 01. PRODUCT CATALOG & INVENTORY ]
               </h2>
-              <p className="text-xs text-[#777777] uppercase tracking-wider">
+              <p className="text-[10px] sm:text-xs text-[#777777] uppercase tracking-wider">
                 LIFECYCLE MANAGEMENT • PRICING, INVENTORY STEPPERS, VARIANTS & BESTSELLER PROMOTIONS
               </p>
             </div>
@@ -37,12 +37,12 @@ export default function AdminDashboardPage() {
         )}
 
         {activeTab === "settings" && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1 pb-2 border-b border-[#1E1E1E]">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col gap-0.5 sm:gap-1 pb-2 border-b border-[#1E1E1E]">
+              <h2 className="text-base sm:text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
                 [ 02. STORE ARCHITECTURE & REDIRECTION ]
               </h2>
-              <p className="text-xs text-[#777777] uppercase tracking-wider">
+              <p className="text-[10px] sm:text-xs text-[#777777] uppercase tracking-wider">
                 WHATSAPP ORDERING PARAMETERS • E.164 VALIDATION, CURRENCY PROTOCOL & BRAND ESSENCE
               </p>
             </div>
@@ -51,12 +51,12 @@ export default function AdminDashboardPage() {
         )}
 
         {activeTab === "media" && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1 pb-2 border-b border-[#1E1E1E]">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col gap-0.5 sm:gap-1 pb-2 border-b border-[#1E1E1E]">
+              <h2 className="text-base sm:text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
                 [ 03. VERCEL BLOB ASSET VAULT ]
               </h2>
-              <p className="text-xs text-[#777777] uppercase tracking-wider">
+              <p className="text-[10px] sm:text-xs text-[#777777] uppercase tracking-wider">
                 HIGH-AVAILABILITY CLOUD ASSET STORAGE • DRAG-AND-DROP INGESTION, MIME WHITELIST & EXPIRY CONTROLS
               </p>
             </div>
@@ -65,12 +65,12 @@ export default function AdminDashboardPage() {
         )}
 
         {activeTab === "drops" && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1 pb-2 border-b border-[#1E1E1E]">
-              <h2 className="text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col gap-0.5 sm:gap-1 pb-2 border-b border-[#1E1E1E]">
+              <h2 className="text-base sm:text-xl font-bold uppercase tracking-tight text-[#FAF8F3]">
                 [ 04. ATELIER DROP SYSTEM & ARCHIVE ]
               </h2>
-              <p className="text-xs text-[#777777] uppercase tracking-wider">
+              <p className="text-[10px] sm:text-xs text-[#777777] uppercase tracking-wider">
                 DROP LIFECYCLE MANAGEMENT • ACTIVE / UPCOMING / ARCHIVED RELEASES, PIECE ALLOCATIONS & EDITIONS
               </p>
             </div>

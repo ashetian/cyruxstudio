@@ -108,8 +108,8 @@ export function BestsellerGrid({
           </h2>
           <p className="font-mono text-xs text-neutral-500 uppercase tracking-widest mt-1">
             {t({
-              tr: "Kıbrıs Stüdyo Seçkisi • Sınırlı Üretim Parçalar",
-              en: "Cyprus Atelier Selection • Limited Production Pieces",
+              tr: "Stüdyo Seçkisi • Koleksiyon Parçaları",
+              en: "Studio Selection • Collection Pieces",
             })}
           </p>
         </div>
@@ -119,7 +119,6 @@ export function BestsellerGrid({
           href={`/drops/${drop.slug}`}
           className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-neutral-600 hover:text-black transition-colors self-start sm:self-auto cursor-pointer"
         >
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse group-hover:bg-emerald-400" />
           <span className="font-bold tracking-wider">
             DROP {drop.number}: {drop.title}
           </span>
@@ -393,7 +392,7 @@ export function BestsellerGrid({
                             {product.name}
                           </h3>
                           <p className="font-mono text-[11px] text-neutral-500 uppercase tracking-wider mt-0.5">
-                            {((product as Record<string, unknown>).category as string) || "GARMENT"} • {t({ tr: "Kıbrıs Atölye", en: "Cyprus Atelier" })}
+                            {((product as Record<string, unknown>).category as string) || "GARMENT"} • {t({ tr: "Atölye Tasarımı", en: "Atelier Edition" })}
                           </p>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
