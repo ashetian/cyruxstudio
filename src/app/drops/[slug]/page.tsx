@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `Drop ${drop.number}: ${drop.title} | cyrux studio`,
-    description: `${drop.chapter} • ${drop.edition.en}. Cyprus atelier engineered limited drop piece run.`,
+    description: `${drop.chapter} • ${drop.edition.en}. Cyprus atelier engineered archival collection.`,
     openGraph: {
       title: `Drop ${drop.number}: ${drop.title} | cyrux studio`,
       description: drop.description.en,

@@ -144,10 +144,14 @@ export function DropDetail({
             <span className="font-mono text-xs text-neutral-500">
               {drop.releaseDate[lang]}
             </span>
-            <span className="font-mono text-xs text-neutral-400">•</span>
-            <span className="font-mono text-xs text-neutral-500">
-              {drop.totalPieces} {t({ tr: "Numaralı Limitli Döküm", en: "Numbered Atelier Run" })}
-            </span>
+            {products.length > 0 && (
+              <>
+                <span className="font-mono text-xs text-neutral-400">•</span>
+                <span className="font-mono text-xs text-neutral-500">
+                  {products.length} {t({ tr: "Model", en: "Garments" })}
+                </span>
+              </>
+            )}
           </div>
 
           <h1 className="font-mono text-3xl sm:text-5xl md:text-6xl font-bold uppercase tracking-tight text-black">
@@ -281,8 +285,8 @@ export function DropDetail({
             </h3>
             <p className="font-mono text-xs sm:text-sm text-neutral-300 leading-relaxed">
               {t({
-                tr: `${drop.chapter} ${drop.title} dropu ${drop.totalPieces} adet ile sınırlıydı ve tamamı stüdyo koleksiyoncuları tarafından rezerve edildi. Cyrux Studio felsefesi gereği geçmiş droplar asla tekrar üretilmez.`,
-                en: `The ${drop.chapter} ${drop.title} edition was strictly limited to ${drop.totalPieces} numbered pieces. Per Cyrux Studio philosophy, archived runs are vaulted permanently and never reissued.`,
+                tr: `${drop.chapter} ${drop.title} dropunun tüm parçaları stüdyo koleksiyoncuları tarafından rezerve edildi. Cyrux Studio felsefesi gereği geçmiş droplar asla tekrar üretilmez.`,
+                en: `All pieces from the ${drop.chapter} ${drop.title} drop were reserved by studio collectors. Per Cyrux Studio philosophy, archived runs are vaulted permanently and never reissued.`,
               })}
             </p>
             <div className="mt-6 pt-6 border-t border-neutral-800 flex items-center gap-4">

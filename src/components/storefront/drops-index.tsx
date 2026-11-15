@@ -127,8 +127,8 @@ export function DropsIndex({
           </h1>
           <p className="mt-3 text-sm sm:text-base text-neutral-600 max-w-2xl font-mono leading-relaxed">
             {t({
-              tr: "Cyrux Studio'nun sınırlı adetli, numaralandırılmış giyilebilir sanat serileri. Her parça tek seferlik üretilir ve asla tekrar basılmaz.",
-              en: "Cyrux Studio's strictly numbered, limited wearable art editions. Hand-finished at our Cyprus atelier. Never restocked.",
+              tr: "Cyrux Studio'nun giyilebilir sanat serileri. Her parça tek seferlik üretilir ve asla tekrar basılmaz.",
+              en: "Cyrux Studio's wearable art collections. Hand-finished at our Cyprus atelier. Never restocked.",
             })}
           </p>
         </div>
@@ -180,12 +180,9 @@ export function DropsIndex({
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="font-mono text-xs text-neutral-400 flex flex-wrap items-center gap-2">
+                  <div className="font-mono text-xs text-neutral-400 flex items-center gap-2">
                     <span className="text-white font-bold">{activeProducts.length}</span>{" "}
-                    <span>{t({ tr: "Tasarım Model", en: "Garments" })}</span>
-                    <span className="text-neutral-600">•</span>
-                    <span className="text-white font-bold">{activeDrop.totalPieces}</span>{" "}
-                    <span>{t({ tr: "Numaralı Limitli Döküm", en: "Numbered Atelier Run" })}</span>
+                    <span>{t({ tr: "Model", en: "Garments" })}</span>
                   </div>
 
                   <Link
@@ -306,7 +303,14 @@ export function DropsIndex({
                   {/* Card Bottom Action */}
                   <div className="p-6 pt-0 border-t border-black/10 flex items-center justify-between mt-4">
                     <span className="font-mono text-xs text-neutral-600">
-                      {drop.totalPieces} {t({ tr: "Parça Drop", en: "Pieces Run" })}
+                      {drop.productSlugs.length > 0 ? (
+                        <>
+                          <span className="font-bold text-black">{drop.productSlugs.length}</span>{" "}
+                          {t({ tr: "Model", en: "Garments" })}
+                        </>
+                      ) : (
+                        t({ tr: "Özel Drop", en: "Studio Drop" })
+                      )}
                     </span>
                     <Link
                       href={`/drops/${drop.slug}`}

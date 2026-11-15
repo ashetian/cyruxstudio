@@ -10,11 +10,11 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Drops & Archive | cyrux studio",
   description:
-    "Cyrux Studio numbered limited archival runs. Avant-garde wearable art and brutalist fashion drops engineered at our Cyprus atelier.",
+    "Cyrux Studio archival garment drops. Avant-garde wearable art and brutalist streetwear engineered at our Cyprus atelier.",
   openGraph: {
     title: "Drops & Archive | cyrux studio",
     description:
-      "Cyrux Studio numbered limited archival runs. Avant-garde wearable art and brutalist fashion drops.",
+      "Cyrux Studio archival garment drops. Avant-garde wearable art and brutalist streetwear.",
   },
 };
 

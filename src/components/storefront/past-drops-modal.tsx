@@ -111,8 +111,8 @@ export function PastDropsModal({
             <div className="overflow-y-auto p-5 sm:p-8 space-y-6 [scrollbar-width:thin]">
               <p className="text-xs text-neutral-400 leading-relaxed font-sans max-w-2xl">
                 {t({
-                  tr: "Cyrux Studio dropları sınırlı sayıda, numaralandırılmış partiler halinde üretilir. Bir drop tükendiğinde kalıplar ve serigrafi baskı şablonları stüdyo kasasına kaldırılır; seri üretim asla tekrarlanmaz.",
-                  en: "Cyrux Studio drops operate as strictly numbered, limited allocations. Once a drop is exhausted, screens and garment cuts are permanently vaulted; designs are never restocked.",
+                  tr: "Cyrux Studio dropları bağımsız koleksiyon serileri halinde üretilir. Bir drop tükendiğinde kalıplar ve serigrafi baskı şablonları stüdyo kasasına kaldırılır; üretim asla tekrarlanmaz.",
+                  en: "Cyrux Studio drops operate as standalone atelier collections. Once a drop is exhausted, screens and garment cuts are permanently vaulted; designs are never restocked.",
                 })}
               </p>
 

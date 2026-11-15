@@ -51,12 +51,12 @@ export const INITIAL_DROPS: DropData[] = [
       en: "NOVEMBER 2026",
     },
     edition: {
-      tr: "168 PARÇA • NUMARALI ARŞİV DROPU",
-      en: "168 NUMBERED PIECES • ARCHIVAL RUN",
+      tr: "5 MODEL • ÖZEL ARŞİV DROPU",
+      en: "5 GARMENTS • ARCHIVAL DROP",
     },
     description: {
       tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
-      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our Cyprus atelier. Strictly numbered. Never restocked.",
+      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our Cyprus atelier. Never restocked.",
     },
     productSlugs: [
       "pretty-chaos-tee",
