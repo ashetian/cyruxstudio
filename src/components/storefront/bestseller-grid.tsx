@@ -391,9 +391,6 @@ export function BestsellerGrid({
                           <h3 className="font-mono text-sm xl:text-base font-bold uppercase tracking-tight text-black truncate">
                             {product.name}
                           </h3>
-                          <p className="font-mono text-[11px] text-neutral-500 uppercase tracking-wider mt-0.5">
-                            {((product as Record<string, unknown>).category as string) || "GARMENT"} • {t({ tr: "Atölye Tasarımı", en: "Atelier Edition" })}
-                          </p>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
                           <span className="font-mono text-sm xl:text-base font-bold text-black">
