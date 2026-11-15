@@ -46,7 +46,7 @@ export function MenuDrawer({
           setDropsList(data.drops);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       mounted = false;
     };
@@ -172,7 +172,7 @@ export function MenuDrawer({
                 >
                   <span className="flex items-center gap-2">
                     <Search className="w-4 h-4 text-neutral-400" />
-                    <span>{t({ tr: "Dinamik Arama", en: "Dynamic Search" })}</span>
+                    <span>{t({ tr: "Ara", en: "Search" })}</span>
                   </span>
                   <span className="text-[10px] text-neutral-400 bg-neutral-800 px-1.5 py-0.5 rounded border border-neutral-700">
                     ⌘K

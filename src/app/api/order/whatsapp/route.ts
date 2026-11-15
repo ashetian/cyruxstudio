@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { productId, productName, variant, price, currency, customerNotes } =
+    const { productId, productName, variant, price, currency, customerNotes, lang } =
       parsed.data;
 
     const trimmedId = productId.trim();
@@ -122,6 +122,7 @@ export async function POST(request: Request) {
       currency: activeCurrency,
       customerNotes: sanitizedNotes,
       timestamp: new Date().toISOString(),
+      lang,
     });
 
     return NextResponse.json({

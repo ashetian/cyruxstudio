@@ -74,21 +74,26 @@ export interface WhatsAppOrderInput {
   price: number;
   currency: string;
   customerNotes?: string;
+  timestamp?: string | Date;
+  lang?: "tr" | "en";
 }
 
 export function generateWhatsAppOrderUrl(
   whatsappNumber: string,
   order: WhatsAppOrderInput
 ): string {
+  const isTr = order.lang === "tr";
   const cleanPhone = sanitizePhoneNumber(whatsappNumber);
   const cleanNotes = order.customerNotes ? sanitizeCustomerText(order.customerNotes) : '';
 
   const lines = [
-    `*NEW ORDER - CYRUX STUDIO*`,
-    `Product: ${order.productName.trim()}`,
-    order.variant ? `Variant: ${order.variant.trim()}` : null,
-    `Price: ${order.price.toFixed(2)} ${order.currency.toUpperCase()}`,
-    cleanNotes ? `Notes: ${cleanNotes}` : null,
+    isTr ? `*YENİ SİPARİŞ - CYRUX STUDIO*` : `*NEW ORDER - CYRUX STUDIO*`,
+    isTr ? `Ürün: ${order.productName.trim()}` : `Product: ${order.productName.trim()}`,
+    order.variant ? (isTr ? `Beden: ${order.variant.trim()}` : `Variant: ${order.variant.trim()}`) : null,
+    isTr
+      ? `Fiyat: ${order.price.toFixed(2)} ${order.currency.toUpperCase()}`
+      : `Price: ${order.price.toFixed(2)} ${order.currency.toUpperCase()}`,
+    cleanNotes ? (isTr ? `Not: ${cleanNotes}` : `Notes: ${cleanNotes}`) : null,
     `Ref ID: ${order.productId}`,
   ].filter(Boolean);
 

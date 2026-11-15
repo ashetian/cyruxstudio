@@ -32,6 +32,7 @@ export interface WhatsAppOrderInput {
   currency: string;
   customerNotes?: string;
   timestamp?: string | Date;
+  lang?: "tr" | "en";
 }
 
 export interface ResolvedStoreConfig {
@@ -66,6 +67,7 @@ export function generateWhatsAppOrderUrl(
   whatsappNumber: string,
   order: WhatsAppOrderInput
 ): string {
+  const isTr = order.lang === "tr";
   const cleanPhone = sanitizePhoneNumber(whatsappNumber);
   const cleanNotes = order.customerNotes
     ? sanitizeCustomerText(order.customerNotes)
@@ -81,12 +83,14 @@ export function generateWhatsAppOrderUrl(
     : null;
 
   const lines = [
-    `*NEW ORDER - CYRUX STUDIO*`,
-    `Product: ${order.productName.trim()}`,
-    cleanVariant ? `Variant: ${cleanVariant}` : null,
-    `Price: ${order.price.toFixed(2)} ${order.currency.toUpperCase()}`,
-    formattedTime ? `Time: ${formattedTime}` : null,
-    cleanNotes ? `Notes: ${cleanNotes}` : null,
+    isTr ? `*YENİ SİPARİŞ - CYRUX STUDIO*` : `*NEW ORDER - CYRUX STUDIO*`,
+    isTr ? `Ürün: ${order.productName.trim()}` : `Product: ${order.productName.trim()}`,
+    cleanVariant ? (isTr ? `Beden: ${cleanVariant}` : `Variant: ${cleanVariant}`) : null,
+    isTr
+      ? `Fiyat: ${order.price.toFixed(2)} ${order.currency.toUpperCase()}`
+      : `Price: ${order.price.toFixed(2)} ${order.currency.toUpperCase()}`,
+    formattedTime ? (isTr ? `Tarih: ${formattedTime}` : `Time: ${formattedTime}`) : null,
+    cleanNotes ? (isTr ? `Not: ${cleanNotes}` : `Notes: ${cleanNotes}`) : null,
     `Ref ID: ${order.productId}`,
   ].filter(Boolean);
 
@@ -123,8 +127,15 @@ export interface WhatsAppCartLine {
  */
 export function generateWhatsAppCartUrl(
   whatsappNumber: string,
-  cart: { lines: WhatsAppCartLine[]; currency: string; customerNotes?: string; timestamp?: string }
+  cart: {
+    lines: WhatsAppCartLine[];
+    currency: string;
+    customerNotes?: string;
+    timestamp?: string;
+    lang?: "tr" | "en";
+  }
 ): string {
+  const isTr = cart.lang === "tr";
   const cleanPhone = sanitizePhoneNumber(whatsappNumber);
   const currency = cart.currency.toUpperCase();
   let total = 0;
@@ -136,11 +147,11 @@ export function generateWhatsAppCartUrl(
   });
   const cleanNotes = cart.customerNotes ? sanitizeCustomerText(cart.customerNotes) : "";
   const lines = [
-    `*NEW ORDER - CYRUX STUDIO*`,
+    isTr ? `*YENİ SİPARİŞ - CYRUX STUDIO*` : `*NEW ORDER - CYRUX STUDIO*`,
     ...lineTexts,
-    `*Total: ${total.toFixed(2)} ${currency}*`,
-    cart.timestamp ? `Time: ${cart.timestamp}` : null,
-    cleanNotes ? `Notes: ${cleanNotes}` : null,
+    isTr ? `*Toplam: ${total.toFixed(2)} ${currency}*` : `*Total: ${total.toFixed(2)} ${currency}*`,
+    cart.timestamp ? (isTr ? `Tarih: ${cart.timestamp}` : `Time: ${cart.timestamp}`) : null,
+    cleanNotes ? (isTr ? `Not: ${cleanNotes}` : `Notes: ${cleanNotes}`) : null,
   ].filter(Boolean);
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(lines.join("\n"))}`;

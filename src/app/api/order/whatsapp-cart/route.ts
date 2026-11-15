@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return fail(parsed.error.errors[0]?.message || "Invalid request payload", 400);
     }
-    const { items, customerNotes } = parsed.data;
+    const { items, customerNotes, lang } = parsed.data;
 
     const ids = Array.from(new Set(items.map((i) => i.productId)));
     const products = await prisma.product.findMany({ where: { id: { in: ids } } });

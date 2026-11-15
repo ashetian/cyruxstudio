@@ -74,6 +74,7 @@ export const whatsAppOrderInputSchema = z.object({
     .optional(),
 
   timestamp: z.union([z.string(), z.date()]).optional(),
+  lang: z.enum(["tr", "en"]).optional(),
 });
 
 export type WhatsAppOrderInput = z.infer<typeof whatsAppOrderInputSchema>;
@@ -138,6 +139,8 @@ export const whatsAppOrderApiRequestSchema = z.object({
       return cleaned === "" ? undefined : cleaned;
     })
     .optional(),
+
+  lang: z.enum(["tr", "en"]).optional(),
 });
 
 export type WhatsAppOrderApiRequest = z.infer<typeof whatsAppOrderApiRequestSchema>;
@@ -564,6 +567,7 @@ export const whatsAppCartApiRequestSchema = z.object({
     .max(500, "customerNotes cannot exceed 500 characters")
     .optional()
     .transform((v) => (v ? sanitizeCustomerText(v) || undefined : undefined)),
+  lang: z.enum(["tr", "en"]).optional(),
 });
 
 export type WhatsAppCartApiRequest = z.infer<typeof whatsAppCartApiRequestSchema>;
