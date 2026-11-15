@@ -39,7 +39,10 @@ function StorefrontInner({
   const currency = settings?.currency || "USD";
   const whatsappNumber = settings?.whatsappNumber || "+905551234567";
   const brandMeta = (settings?.brandMetadata as Record<string, unknown>) || {};
-  const announcement = typeof brandMeta.announcement === "string" ? brandMeta.announcement : undefined;
+  const announcement =
+    typeof brandMeta.announcement === "string" && brandMeta.announcement.trim().length > 0
+      ? brandMeta.announcement.trim()
+      : undefined;
 
   // Real live filtering based on search pill input
   const displayedProducts = useMemo(() => {

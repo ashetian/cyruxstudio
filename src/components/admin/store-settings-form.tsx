@@ -45,7 +45,11 @@ export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) 
           }
           if (s.storeName) setStoreName(s.storeName);
           if (s.brandBio) setBrandBio(s.brandBio);
-          if (s.brandMetadata?.announcement) setAnnouncement(s.brandMetadata.announcement);
+          if (typeof s.announcement === "string") {
+            setAnnouncement(s.announcement);
+          } else if (typeof s.brandMetadata?.announcement === "string") {
+            setAnnouncement(s.brandMetadata.announcement);
+          }
           if (s.socialLinks?.instagram) setInstagram(s.socialLinks.instagram);
           if (s.socialLinks?.twitter) setTwitter(s.socialLinks.twitter);
           if (s.heroDesktopImage || s.brandMetadata?.heroDesktopImage) {
@@ -126,6 +130,7 @@ export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) 
           currency,
           storeName,
           brandBio,
+          announcement,
           socialLinks: {
             instagram,
             twitter,

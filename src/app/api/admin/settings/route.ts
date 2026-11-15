@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 import { INITIAL_STORE_SETTINGS } from "@/lib/seed-data";
 import { adminSettingsUpdateSchema } from "@/lib/validations";
 
-function formatStoreSettings(record: {
+export function formatStoreSettings(record: {
   id: string;
   whatsappNumber: string;
   currency: string;
@@ -30,6 +30,10 @@ function formatStoreSettings(record: {
       (brandMeta.brandBio as string) ||
       (brandMeta.description as string) ||
       "wearable art & brutalist luxury",
+    announcement:
+      typeof brandMeta.announcement === "string"
+        ? (brandMeta.announcement as string)
+        : ((INITIAL_STORE_SETTINGS.brandMetadata.announcement as string) || ""),
     socialLinks: (brandMeta.socialLinks as Record<string, string>) ||
       (brandMeta.socialHandles as Record<string, string>) || {
         instagram: "https://instagram.com/cyruxstudio",
@@ -105,6 +109,7 @@ async function handleUpdateSettings(request: NextRequest) {
       currency,
       storeName,
       brandBio,
+      announcement,
       socialLinks,
       brandMetadata,
       heroDesktopImage,
@@ -126,6 +131,7 @@ async function handleUpdateSettings(request: NextRequest) {
       ...(brandBio
         ? { tagline: brandBio, brandBio, description: brandBio }
         : {}),
+      ...(announcement !== undefined ? { announcement } : {}),
       ...(socialLinks
         ? {
             socialLinks: {
@@ -140,6 +146,10 @@ async function handleUpdateSettings(request: NextRequest) {
       ...(aboutMobileImage !== undefined ? { aboutMobileImage } : {}),
       ...(brandMetadata || {}),
     };
+
+    if (announcement !== undefined) {
+      mergedMeta.announcement = announcement;
+    }
 
     const updated = await prisma.storeSettings.upsert({
       where: { id: existing?.id || "default" },

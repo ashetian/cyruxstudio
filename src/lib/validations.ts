@@ -427,6 +427,7 @@ export const adminSettingsUpdateSchema = z.object({
 
   storeName: z.string().trim().max(100).optional(),
   brandBio: z.string().trim().max(500).optional(),
+  announcement: z.string().trim().max(300).optional(),
   socialLinks: z.record(z.string()).optional(),
   brandMetadata: z.record(z.unknown()).optional(),
   heroDesktopImage: z.string().trim().optional(),
