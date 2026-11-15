@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import {
   adminProductCreateSchema,
@@ -32,6 +33,8 @@ export async function GET(request: NextRequest) {
       where.stock = 0;
     }
 
+    const sortParam = searchParams.get("sort")?.toLowerCase();
+
     const rawProducts = await prisma.product.findMany({
       where,
       take: limit,
@@ -43,7 +46,11 @@ export async function GET(request: NextRequest) {
       normalizeProductResponse(p as unknown as Parameters<typeof normalizeProductResponse>[0])
     );
 
-    if (category) {
+    if (stockFilter === "low_stock") {
+      products = products.filter((p) => p.stock > 0 && p.stock <= 3);
+    }
+
+    if (category && category !== "all") {
       products = products.filter(
         (p) =>
           p.category.toLowerCase() === category ||
@@ -58,6 +65,28 @@ export async function GET(request: NextRequest) {
           p.slug.toLowerCase().includes(term) ||
           p.description.toLowerCase().includes(term)
       );
+    }
+
+    if (sortParam) {
+      if (sortParam === "price_desc") {
+        products.sort((a, b) => b.price - a.price);
+      } else if (sortParam === "price_asc") {
+        products.sort((a, b) => a.price - b.price);
+      } else if (sortParam === "stock_desc") {
+        products.sort((a, b) => b.stock - a.stock);
+      } else if (sortParam === "stock_asc") {
+        products.sort((a, b) => a.stock - b.stock);
+      } else if (sortParam === "name_asc") {
+        products.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortParam === "oldest") {
+        products.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      } else if (sortParam === "newest") {
+        products.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
     }
 
     return NextResponse.json({
@@ -108,6 +137,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const categoryToStore = data.category || "outerwear";
+    const rawVariants = Array.isArray(data.variants) ? data.variants : [];
+    const cleanVariants = rawVariants.filter(
+      (v) => !(v && typeof v === "object" && "_metadata" in v)
+    );
+    const variantsWithCategory = [
+      ...cleanVariants,
+      { _metadata: { category: categoryToStore } },
+    ];
+
     const created = await prisma.product.create({
       data: {
         name: data.name,
@@ -115,7 +154,7 @@ export async function POST(request: NextRequest) {
         description: data.description || "",
         price: data.price,
         stock: data.stock,
-        variants: data.variants || [],
+        variants: variantsWithCategory as unknown as Prisma.InputJsonValue,
         mediaUrls: data.mediaUrls || [],
         isBestseller: Boolean(data.isBestseller),
       },

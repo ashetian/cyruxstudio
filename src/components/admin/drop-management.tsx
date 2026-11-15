@@ -14,7 +14,11 @@ interface ProductMinimal {
   mediaUrls: string[];
 }
 
-export function DropManagement() {
+export interface DropManagementProps {
+  onDropMutated?: () => void;
+}
+
+export function DropManagement({ onDropMutated }: DropManagementProps = {}) {
   const [drops, setDrops] = useState<DropData[]>([]);
   const [products, setProducts] = useState<ProductMinimal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +30,7 @@ export function DropManagement() {
   const [editingDrop, setEditingDrop] = useState<DropData | null>(null);
   const [selectedDropForAction, setSelectedDropForAction] = useState<DropData | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -143,6 +148,7 @@ export function DropManagement() {
           setSelectedDropForAction({ ...selectedDropForAction, status: "active" });
         }
         fetchDrops();
+        onDropMutated?.();
       } else {
         setError(data.error || "Failed to activate drop");
       }
@@ -165,6 +171,7 @@ export function DropManagement() {
         setConfirmDeleteId(null);
         setSelectedDropForAction(null);
         fetchDrops();
+        onDropMutated?.();
       } else {
         setError(data.error || "Failed to delete drop");
       }
@@ -226,6 +233,7 @@ export function DropManagement() {
         showFeedback(editingDrop ? "DROP UPDATED SUCCESSFULLY" : "NEW DROP INITIALIZED");
         setModalOpen(false);
         fetchDrops();
+        onDropMutated?.();
       } else {
         setError(data.error || "Failed to save drop");
       }
@@ -800,18 +808,69 @@ export function DropManagement() {
                 </div>
               </div>
 
-              {/* Row 3: Banner Image */}
-              <div>
-                <label className="block text-[10px] text-[#888888] uppercase mb-1">
-                  BANNER IMAGE URL (VAULT / ASSET)
-                </label>
-                <input
-                  type="text"
-                  value={formData.bannerImage}
-                  onChange={(e) => setFormData({ ...formData, bannerImage: e.target.value })}
-                  placeholder="/assets/editorial/hero-desktop.jpg"
-                  className="w-full bg-[#141414] border border-[#2A2A2A] text-white px-3.5 py-3 md:py-2 text-base md:text-xs outline-none focus:border-white font-mono"
-                />
+              {/* Row 3: Banner Image with Direct Upload & Preview */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] text-[#888888] uppercase">
+                    BANNER IMAGE URL (VAULT / ASSET) *
+                  </label>
+                  <label className="text-[10px] text-amber-300 hover:text-white uppercase font-bold cursor-pointer flex items-center gap-1">
+                    <span>
+                      {uploadingBanner ? "[ UPLOADING BANNER ASSET... ]" : "[ UPLOAD NEW BANNER ↑ ]"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingBanner}
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingBanner(true);
+                        setError(null);
+                        try {
+                          const fd = new FormData();
+                          fd.append("file", file);
+                          const res = await fetch("/api/admin/blob/upload", {
+                            method: "POST",
+                            body: fd,
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (res.ok && data.success && data.url) {
+                            setFormData((prev) => ({ ...prev, bannerImage: data.url }));
+                            showFeedback("[BANNER UPLOADED] Blob asset attached to drop.");
+                          } else {
+                            setError(data.error || "Failed to upload banner image");
+                          }
+                        } catch {
+                          setError("Network error uploading banner image");
+                        } finally {
+                          setUploadingBanner(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={formData.bannerImage}
+                    onChange={(e) => setFormData({ ...formData, bannerImage: e.target.value })}
+                    placeholder="/assets/editorial/hero-desktop.jpg"
+                    className="flex-1 bg-[#141414] border border-[#2A2A2A] text-white px-3.5 py-3 md:py-2 text-base md:text-xs outline-none focus:border-white font-mono"
+                  />
+                  {formData.bannerImage && (
+                    <div className="w-12 h-10 bg-black border border-[#333] shrink-0 overflow-hidden relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={formData.bannerImage}
+                        alt="Banner Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Row 4: Release Dates (TR & EN) */}

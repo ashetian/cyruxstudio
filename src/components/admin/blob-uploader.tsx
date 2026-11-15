@@ -34,55 +34,62 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const file = files[0];
+    const fileList = Array.from(files);
     setError(null);
     setSuccessMsg(null);
-
-    // Validate MIME
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError(`Unsupported media type: ${file.type || "unknown"}. Allowed: WebP, PNG, JPEG, AVIF, MP4, MOV.`);
-      return;
-    }
-
-    // Validate Size
-    const isVideo = file.type.startsWith("video/");
-    const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
-    if (file.size > limit) {
-      const limitMb = isVideo ? 50 : 15;
-      setError(`File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds maximum limit of ${limitMb}MB.`);
-      return;
-    }
-
     setUploading(true);
-    setProgress(30);
 
+    let successCount = 0;
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        // Validate MIME
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          throw new Error(
+            `Unsupported media type: ${file.type || "unknown"}. Allowed: WebP, PNG, JPEG, AVIF, MP4, MOV.`
+          );
+        }
 
-      setProgress(60);
-      const res = await fetch("/api/admin/blob/upload", {
-        method: "POST",
-        body: formData,
-      });
+        // Validate Size
+        const isVideo = file.type.startsWith("video/");
+        const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+        if (file.size > limit) {
+          const limitMb = isVideo ? 50 : 15;
+          throw new Error(
+            `File ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds limit of ${limitMb}MB.`
+          );
+        }
 
-      const data = await res.json().catch(() => ({}));
-      setProgress(100);
+        setProgress(Math.round(((i + 0.3) / fileList.length) * 100));
+        const formData = new FormData();
+        formData.append("file", file);
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Upload failed");
+        const res = await fetch("/api/admin/blob/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || `Upload failed for ${file.name}`);
+        }
+
+        successCount++;
+        setProgress(Math.round(((i + 1) / fileList.length) * 100));
+        if (onUploadSuccess) {
+          onUploadSuccess(data);
+        }
       }
 
-      setSuccessMsg(`[SUCCESS] UPLOADED: ${file.name}`);
-      if (onUploadSuccess) {
-        onUploadSuccess(data);
-      }
+      setSuccessMsg(
+        `[SUCCESS] UPLOADED ${successCount} ASSET${successCount > 1 ? "S" : ""} TO VERCEL BLOB`
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Upload error";
       setError(msg);
     } finally {
       setUploading(false);
-      setTimeout(() => setProgress(null), 1000);
+      setTimeout(() => setProgress(null), 1200);
       if (inputRef.current) inputRef.current.value = "";
     }
   };
@@ -125,6 +132,7 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
         <input
           ref={inputRef}
           type="file"
+          multiple
           accept={ALLOWED_TYPES.join(",")}
           onChange={(e) => handleFiles(e.target.files)}
           className="hidden"

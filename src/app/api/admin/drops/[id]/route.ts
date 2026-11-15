@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDropBySlug, saveDrop, deleteDrop } from "@/lib/drops";
+import { getDropBySlugAsync, saveDrop, deleteDrop } from "@/lib/drops";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const drop = getDropBySlug(id);
+    const drop = await getDropBySlugAsync(id);
 
     if (!drop) {
       return NextResponse.json(
@@ -53,7 +53,7 @@ async function handleUpdate(
 ) {
   try {
     const { id } = await context.params;
-    const existing = getDropBySlug(id);
+    const existing = await getDropBySlugAsync(id);
 
     if (!existing) {
       return NextResponse.json(

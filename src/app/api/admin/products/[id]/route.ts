@@ -118,7 +118,34 @@ async function handleUpdate(
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.price !== undefined) updateData.price = updates.price;
     if (updates.stock !== undefined) updateData.stock = updates.stock;
-    if (updates.variants !== undefined) updateData.variants = updates.variants;
+
+    // Handle category & variants preservation
+    if (updates.variants !== undefined || updates.category !== undefined) {
+      const baseVariants = (
+        updates.variants !== undefined ? updates.variants : (existing.variants as unknown[])
+      ) || [];
+      const cleanVariants = (Array.isArray(baseVariants) ? baseVariants : []).filter(
+        (v) => !(v && typeof v === "object" && "_metadata" in v)
+      );
+
+      let resolvedCategory = updates.category;
+      if (!resolvedCategory && Array.isArray(existing.variants)) {
+        const meta = (existing.variants as unknown[]).find(
+          (v) => v && typeof v === "object" && "_metadata" in v
+        ) as { _metadata?: { category?: string } } | undefined;
+        resolvedCategory = meta?._metadata?.category;
+      }
+
+      if (resolvedCategory) {
+        updateData.variants = [
+          ...cleanVariants,
+          { _metadata: { category: resolvedCategory } },
+        ];
+      } else {
+        updateData.variants = cleanVariants;
+      }
+    }
+
     if (updates.mediaUrls !== undefined) updateData.mediaUrls = updates.mediaUrls;
     if (updates.isBestseller !== undefined) updateData.isBestseller = updates.isBestseller;
 

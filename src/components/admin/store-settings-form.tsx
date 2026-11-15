@@ -4,11 +4,12 @@ import React, { useState, useEffect } from "react";
 
 export interface StoreSettingsFormProps {
   onCurrencyChange?: (currency: string) => void;
+  onSaveSuccess?: () => void;
 }
 
 const CURRENCIES = ["USD", "EUR", "TRY", "GBP"] as const;
 
-export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) {
+export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSettingsFormProps) {
   const [whatsappNumber, setWhatsappNumber] = useState("+905320000000");
   const [currency, setCurrency] = useState<string>("USD");
   const [storeName, setStoreName] = useState("cyrux studio");
@@ -26,6 +27,7 @@ export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) 
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [syncTimestamp, setSyncTimestamp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -156,7 +158,10 @@ export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) 
       }
 
       setSyncTimestamp(new Date().toLocaleTimeString());
+      setSaveSuccess("[SUCCESS] Store configuration and editorial assets successfully persisted.");
+      setTimeout(() => setSaveSuccess(null), 4000);
       if (onCurrencyChange) onCurrencyChange(currency);
+      if (onSaveSuccess) onSaveSuccess();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Save error";
       setError(msg);
@@ -206,6 +211,12 @@ export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) 
       {error && (
         <div className="bg-red-950/40 border border-red-500/80 text-red-300 text-xs p-3 uppercase tracking-wider">
           [!] {error}
+        </div>
+      )}
+
+      {saveSuccess && (
+        <div className="bg-emerald-950/60 border border-emerald-500/80 text-emerald-300 text-xs p-3 uppercase tracking-wider font-bold">
+          {saveSuccess}
         </div>
       )}
 
@@ -313,15 +324,24 @@ export function StoreSettingsForm({ onCurrencyChange }: StoreSettingsFormProps) 
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] sm:text-xs uppercase text-[#AAAAAA] font-bold tracking-wider">
-                ANNOUNCEMENT BANNER TEXT
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] sm:text-xs uppercase text-[#AAAAAA] font-bold tracking-wider">
+                  ANNOUNCEMENT BANNER TEXT
+                </label>
+                <span className="text-[10px] text-emerald-400 font-mono">[LIVE TICKER PREVIEW]</span>
+              </div>
               <input
                 type="text"
                 value={announcement}
                 onChange={(e) => setAnnouncement(e.target.value)}
                 className="bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] text-base md:text-sm px-3.5 py-3 rounded-none outline-none font-mono min-h-[44px]"
               />
+              <div className="bg-[#050505] border border-[#222222] px-3 py-1.5 overflow-hidden flex items-center gap-2 mt-0.5">
+                <span className="text-[9px] text-[#555555] uppercase font-bold shrink-0">STOREFRONT:</span>
+                <span className="text-[10px] text-amber-300 font-mono tracking-widest truncate uppercase">
+                  {announcement || "GLOBAL EXPRESS DISPATCH • CYPRUS • PARIS • TOKYO"}
+                </span>
+              </div>
             </div>
           </div>
 

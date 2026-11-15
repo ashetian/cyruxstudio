@@ -257,6 +257,9 @@ export const productVariantItemSchema = z.union([
     size: z.string(),
     stock: z.number().int().min(0, "Stock must be >= 0"),
   }),
+  z.object({
+    _metadata: z.record(z.unknown()),
+  }),
 ]);
 
 export const adminProductCreateSchema = z

@@ -3,30 +3,55 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, X, ExternalLink, LogOut, Package, Sliders, Image as ImageIcon, Layers } from "lucide-react";
+import {
+  Menu,
+  X,
+  ExternalLink,
+  LogOut,
+  Package,
+  Sliders,
+  Image as ImageIcon,
+  Layers,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+
+export type AdminTab = "products" | "drops" | "settings" | "media" | "ai";
 
 export interface AdminHeaderProps {
-  activeTab: "products" | "settings" | "media" | "drops";
-  onTabChange: (tab: "products" | "settings" | "media" | "drops") => void;
+  activeTab: AdminTab;
+  onTabChange: (tab: AdminTab) => void;
   adminEmail?: string;
+  stats?: {
+    activeGarments?: number;
+    totalStock?: number;
+    valuation?: number;
+    currency?: string;
+    creditsRemaining?: number;
+    activeDropNumber?: string;
+  };
+  onOpenAiStudio?: () => void;
 }
 
 const TABS: Array<{
-  id: "products" | "settings" | "media" | "drops";
+  id: AdminTab;
   number: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: "products", number: "01", label: "PRODUCTS CATALOG", icon: Package },
-  { id: "settings", number: "02", label: "STORE SETTINGS", icon: Sliders },
-  { id: "media", number: "03", label: "MEDIA ASSETS", icon: ImageIcon },
-  { id: "drops", number: "04", label: "DROP SYSTEM", icon: Layers },
+  { id: "products", number: "01", label: "PRODUCT CATALOG", icon: Package },
+  { id: "drops", number: "02", label: "ATELIER DROPS", icon: Layers },
+  { id: "settings", number: "03", label: "STORE SETTINGS", icon: Sliders },
+  { id: "media", number: "04", label: "BLOB VAULT", icon: ImageIcon },
+  { id: "ai", number: "05", label: "AI STUDIO", icon: Sparkles },
 ];
 
 export function AdminHeader({
   activeTab,
   onTabChange,
   adminEmail = "admin@cyrux.studio",
+  stats,
+  onOpenAiStudio,
 }: AdminHeaderProps) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -42,12 +67,20 @@ export function AdminHeader({
     }
   };
 
-  const handleTabSelect = (tab: "products" | "settings" | "media" | "drops") => {
+  const handleTabSelect = (tab: AdminTab) => {
     onTabChange(tab);
     setMobileDrawerOpen(false);
   };
 
   const currentTabObj = TABS.find((t) => t.id === activeTab) || TABS[0];
+  const currencySymbol =
+    stats?.currency === "EUR"
+      ? "€"
+      : stats?.currency === "TRY"
+      ? "₺"
+      : stats?.currency === "GBP"
+      ? "£"
+      : "$";
 
   return (
     <header className="border-b border-[#222222] bg-[#0E0E0E] sticky top-0 z-40">
@@ -76,7 +109,7 @@ export function AdminHeader({
           </div>
         </div>
 
-        {/* Current Active Tab Pill */}
+        {/* Current Active Tab Pill & Storefront trigger */}
         <div className="flex items-center gap-2 font-mono">
           <div className="px-2.5 py-1 bg-[#161616] border border-[#333333] text-[10px] text-[#FAF8F3] font-bold uppercase tracking-wider">
             [{currentTabObj.number}. {currentTabObj.id.slice(0, 4)}]
@@ -108,12 +141,66 @@ export function AdminHeader({
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               SYSTEM ONLINE (DATABASE CONNECTED)
             </span>
+
+            {/* Quick Live Stats Ticker */}
+            {stats && (
+              <>
+                <span className="text-[#333333]">|</span>
+                <div className="flex items-center gap-3 text-[11px] font-mono text-[#888]">
+                  <span>
+                    PIECES: <strong className="text-white">{stats.activeGarments ?? 0}</strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    STOCK: <strong className="text-white">{stats.totalStock ?? 0}</strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    VALUATION:{" "}
+                    <strong className="text-emerald-400">
+                      {currencySymbol}
+                      {(stats.valuation ?? 0).toLocaleString(undefined, {
+                        maximumFractionDigits: 0,
+                      })}
+                    </strong>
+                  </span>
+                  {stats.activeDropNumber && (
+                    <>
+                      <span>•</span>
+                      <span>
+                        ACTIVE: <strong className="text-amber-300">DROP {stats.activeDropNumber}</strong>
+                      </span>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-4 text-xs font-mono">
+            {/* Quick AI Studio Button */}
+            <button
+              type="button"
+              onClick={() => (onOpenAiStudio ? onOpenAiStudio() : onTabChange("ai"))}
+              className={`text-[11px] uppercase tracking-wider px-2 py-1 border flex items-center gap-1 cursor-pointer transition-none ${
+                activeTab === "ai"
+                  ? "bg-amber-400 text-black border-amber-400 font-bold"
+                  : "bg-[#141414] text-amber-300 hover:text-white border-amber-400/40 hover:border-amber-400"
+              }`}
+            >
+              <Zap className="w-3 h-3 fill-amber-400" />
+              <span>AI STUDIO</span>
+              {stats?.creditsRemaining !== undefined && (
+                <span className="text-[10px] font-mono opacity-80">
+                  ({stats.creditsRemaining.toLocaleString()} CR)
+                </span>
+              )}
+            </button>
+
             <span className="text-[#888888]">
               USER: <span className="text-[#FAF8F3]">{adminEmail}</span>
             </span>
+
             <Link
               href="/"
               target="_blank"
@@ -123,6 +210,7 @@ export function AdminHeader({
               <span>[STOREFRONT]</span>
               <ExternalLink className="w-3 h-3" />
             </Link>
+
             <button
               onClick={handleLogout}
               disabled={loggingOut}
