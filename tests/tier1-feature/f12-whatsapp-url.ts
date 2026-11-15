@@ -79,4 +79,26 @@ describe('Feature 12: Dynamic WhatsApp URL Generation', () => {
     const urlGBP = generateWhatsAppOrderUrl('+905321112233', orderGBP);
     expect(urlGBP).toContain(encodeURIComponent('180.00 GBP'));
   });
+
+  it('12.6 should format message in Turkish when lang is "tr"', () => {
+    const orderTR = {
+      productId: 'prod-01',
+      productName: 'RAW CUT BOXY TEE',
+      variant: 'Size L',
+      price: 95.0,
+      currency: 'USD',
+      customerNotes: 'Acil teslimat',
+      lang: 'tr' as const,
+    };
+
+    const url = generateWhatsAppOrderUrl('+90 532 123 45 67', orderTR);
+    const decoded = decodeURIComponent(url.replace('https://wa.me/905321234567?text=', ''));
+
+    expect(decoded).toContain('*YENİ SİPARİŞ - CYRUX STUDIO*');
+    expect(decoded).toContain('Ürün: RAW CUT BOXY TEE');
+    expect(decoded).toContain('Beden: Size L');
+    expect(decoded).toContain('Fiyat: 95.00 USD');
+    expect(decoded).toContain('Not: Acil teslimat');
+    expect(decoded).toContain('Ref ID: prod-01');
+  });
 }, { tier: 1, featureId: 12 });

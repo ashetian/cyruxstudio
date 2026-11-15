@@ -43,7 +43,10 @@ export function DropDetail({
     productImages[p.slug] || p.mediaUrls[0] || "/assets/brand/logo-emblem-dark.png";
 
   const waInquiryUrl = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `Hello Cyrux Studio, I am inquiring about Drop ${drop.number}: ${drop.title} (${drop.chapter}).`
+    t({
+      tr: `Merhaba Cyrux Studio, Drop ${drop.number}: ${drop.title} (${drop.chapter}) hakkında bilgi almak istiyorum.`,
+      en: `Hello Cyrux Studio, I am inquiring about Drop ${drop.number}: ${drop.title} (${drop.chapter}).`,
+    })
   )}`;
 
   return (

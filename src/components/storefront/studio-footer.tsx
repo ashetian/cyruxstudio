@@ -20,7 +20,10 @@ export function StudioFooter({
   const { t } = useLanguage();
 
   const wa = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
-    "Hello Cyrux Studio, I would like to inquire about current pieces and sizing."
+    t({
+      tr: "Merhaba Cyrux Studio, mevcut parçalar ve beden ölçüleri hakkında bilgi almak istiyorum.",
+      en: "Hello Cyrux Studio, I would like to inquire about current pieces and sizing.",
+    })
   )}`;
 
   const touchStartY = React.useRef<number | null>(null);

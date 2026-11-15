@@ -6,9 +6,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { formatProductPrice } from "./bestseller-grid";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export function CartDrawer({ currency = "USD" }: { currency?: string }) {
   const { items, subtotal, isOpen, closeCart, setQuantity, removeItem, clear } = useCart();
+  const { lang, t } = useLanguage();
   const reduce = useReducedMotion();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
             variant: i.variant || undefined,
             quantity: i.quantity,
           })),
+          lang,
         }),
       });
       const data: { success?: boolean; error?: string; redirectUrl?: string } =
@@ -84,12 +87,12 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
           >
             <header className="flex items-center justify-between px-5 py-4 border-b border-black/15">
               <h2 className="font-mono text-sm font-bold uppercase tracking-widest">
-                Bag ({items.reduce((n, i) => n + i.quantity, 0)})
+                {t({ tr: "Çanta", en: "Bag" })} ({items.reduce((n, i) => n + i.quantity, 0)})
               </h2>
               <button
                 type="button"
                 onClick={closeCart}
-                aria-label="Close shopping bag"
+                aria-label={t({ tr: "Çantayı kapat", en: "Close shopping bag" })}
                 className="min-w-11 min-h-11 -mr-2 flex items-center justify-center rounded-full hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
               >
                 <X className="w-5 h-5" />
@@ -98,7 +101,7 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
 
             {items.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
-                <p className="font-mono text-sm uppercase tracking-widest">Your bag is empty</p>
+                <p className="font-mono text-sm uppercase tracking-widest">{t({ tr: "Çantanız boş", en: "Your bag is empty" })}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -107,7 +110,7 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
                   }}
                   className="font-mono text-xs uppercase tracking-widest underline underline-offset-4 hover:opacity-70"
                 >
-                  Continue shopping →
+                  {t({ tr: "Alışverişe devam et →", en: "Continue shopping →" })}
                 </button>
               </div>
             ) : (
@@ -136,7 +139,7 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
                             </p>
                             {item.variant && (
                               <p className="font-mono text-[11px] text-neutral-500 uppercase">
-                                Size: {item.variant}
+                                {t({ tr: "Beden:", en: "Size:" })} {item.variant}
                               </p>
                             )}
                           </div>
@@ -182,7 +185,7 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
 
                 <footer className="px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-black/15 space-y-3">
                   <div className="flex justify-between font-mono text-sm font-bold uppercase tracking-wider">
-                    <span>Subtotal</span>
+                    <span>{t({ tr: "Ara Toplam", en: "Subtotal" })}</span>
                     <span>{formatProductPrice(subtotal, currency)}</span>
                   </div>
                   {error && (
@@ -196,14 +199,16 @@ export function CartDrawer({ currency = "USD" }: { currency?: string }) {
                     disabled={busy}
                     className="w-full min-h-12 bg-black text-[#FAF8F3] font-mono text-xs font-bold uppercase tracking-widest py-3.5 hover:bg-neutral-800 disabled:opacity-60 disabled:cursor-wait transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
                   >
-                    {busy ? "PROCESSING..." : "ORDER VIA WHATSAPP"}
+                    {busy
+                      ? t({ tr: "İŞLENİYOR...", en: "PROCESSING..." })
+                      : t({ tr: "WHATSAPP İLE SİPARİŞ VER", en: "ORDER VIA WHATSAPP" })}
                   </button>
                   <button
                     type="button"
                     onClick={clear}
                     className="w-full py-1 font-mono text-[11px] uppercase tracking-widest text-neutral-500 hover:text-black underline underline-offset-4"
                   >
-                    Clear bag
+                    {t({ tr: "Çantayı temizle", en: "Clear bag" })}
                   </button>
                 </footer>
               </>

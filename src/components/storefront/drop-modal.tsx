@@ -52,7 +52,10 @@ export function DropModal({
   );
 
   const wa = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `Hello Cyrux Studio, I am inquiring about Drop ${drop.number} (${drop.chapter}: ${drop.title}).`
+    t({
+      tr: `Merhaba Cyrux Studio, Drop ${drop.number} (${drop.chapter}: ${drop.title}) hakkında bilgi almak istiyorum.`,
+      en: `Hello Cyrux Studio, I am inquiring about Drop ${drop.number} (${drop.chapter}: ${drop.title}).`,
+    })
   )}`;
 
   return (

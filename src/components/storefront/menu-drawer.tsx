@@ -95,7 +95,12 @@ export function MenuDrawer({
   };
 
   const dur = reduce ? 0 : 0.35;
-  const wa = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}`;
+  const wa = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
+    t({
+      tr: "Merhaba Cyrux Studio, bilgi almak istiyorum.",
+      en: "Hello Cyrux Studio, I would like to inquire.",
+    })
+  )}`;
 
   return (
     <AnimatePresence>

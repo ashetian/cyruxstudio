@@ -157,7 +157,13 @@ export function ProductDetail({
         body: JSON.stringify({
           productId: product.id,
           variant: v || undefined,
-          customerNotes: qty > 1 ? `Quantity: ${qty}` : undefined,
+          customerNotes:
+            qty > 1
+              ? lang === "tr"
+                ? `Adet: ${qty}`
+                : `Quantity: ${qty}`
+              : undefined,
+          lang,
         }),
       });
       const data: { success?: boolean; error?: string; redirectUrl?: string } =

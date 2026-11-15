@@ -210,7 +210,10 @@ export function PastDropsModal({
                           {isUpcoming && (
                             <a
                               href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
-                                `Hello, I'd like early notification for Cyrux Drop ${drop.number}: ${drop.title}.`
+                                t({
+                                  tr: `Merhaba, Cyrux Drop ${drop.number}: ${drop.title} için erken bildirim almak istiyorum.`,
+                                  en: `Hello, I'd like early notification for Cyrux Drop ${drop.number}: ${drop.title}.`,
+                                })
                               )}`}
                               target="_blank"
                               rel="noopener noreferrer"

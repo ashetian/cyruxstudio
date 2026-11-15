@@ -64,6 +64,7 @@ export async function POST(request: Request) {
       currency: config.currency,
       customerNotes,
       timestamp: new Date().toISOString(),
+      lang,
     });
 
     return NextResponse.json({ success: true, redirectUrl });

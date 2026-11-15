@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatProductPrice } from "./bestseller-grid";
 import { generateWhatsAppOrderUrl } from "@/lib/whatsapp";
 import { ProductVariant } from "@/lib/seed-data";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export interface VariantModalProps {
   product: Product | null;
@@ -24,6 +25,7 @@ export function VariantModal({
   whatsappNumber = "+905551234567",
   onClose,
 }: VariantModalProps) {
+  const { lang, t } = useLanguage();
   const [selectedVariant, setSelectedVariant] = useState<string>("");
   const [customerNotes, setCustomerNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -66,6 +68,7 @@ export function VariantModal({
       price: product.price,
       currency,
       customerNotes: customerNotes.trim() || undefined,
+      lang,
     });
     window.open(url, "_blank", "noopener,noreferrer");
     onClose();
@@ -84,6 +87,7 @@ export function VariantModal({
           productId: product.id,
           variant: selectedVariant || undefined,
           customerNotes: customerNotes.trim() || undefined,
+          lang,
         }),
       });
 
@@ -133,7 +137,7 @@ export function VariantModal({
           <div className="flex justify-between items-start border-b border-black pb-4 mb-6">
             <div>
               <span className="font-mono text-[10px] tracking-widest uppercase text-brand-muted">
-                SELECT VARIANT • CHAPTER 00
+                {t({ tr: "BEDEN SEÇ • BÖLÜM 00", en: "SELECT VARIANT • CHAPTER 00" })}
               </span>
               <h3
                 id="variant-modal-title"
@@ -184,7 +188,7 @@ export function VariantModal({
           {variants.length > 0 && (
             <div className="mb-6">
               <label className="block font-mono text-xs uppercase tracking-wider font-bold mb-2">
-                SIZE / VARIANT
+                {t({ tr: "BEDEN / SEÇENEK", en: "SIZE / VARIANT" })}
               </label>
               <div className="flex flex-wrap gap-2">
                 {variants.map((v) => {
@@ -205,7 +209,7 @@ export function VariantModal({
                           : "opacity-40 cursor-not-allowed line-through border-neutral-400 text-neutral-400"
                       )}
                     >
-                      {v.name} {!isAvailable && "(OUT)"}
+                      {v.name} {!isAvailable && (lang === "tr" ? "(TÜKENDİ)" : "(OUT)")}
                     </button>
                   );
                 })}
@@ -217,7 +221,7 @@ export function VariantModal({
           <div className="mb-6">
             <div className="flex justify-between items-center mb-1">
               <label className="font-mono text-xs uppercase tracking-wider font-bold">
-                DELIVERY NOTES (OPTIONAL)
+                {t({ tr: "TESLİMAT NOTU (İSTEĞE BAĞLI)", en: "DELIVERY NOTES (OPTIONAL)" })}
               </label>
               <span className="font-mono text-[10px] text-brand-muted">
                 {customerNotes.length}/500
@@ -227,7 +231,10 @@ export function VariantModal({
               value={customerNotes}
               maxLength={500}
               onChange={(e) => setCustomerNotes(e.target.value)}
-              placeholder="Size preference, delivery instructions, gift wrapping..."
+              placeholder={t({
+                tr: "Beden tercihi, teslimat talimatı...",
+                en: "Size preference, delivery instructions, gift wrapping...",
+              })}
               className="w-full h-20 p-2.5 font-mono text-xs bg-white/70 border border-black rounded-none focus:outline-none focus:ring-1 focus:ring-black resize-none"
             />
           </div>
@@ -244,7 +251,9 @@ export function VariantModal({
                 : "bg-black text-canvas hover:bg-neutral-800 shadow-[4px_4px_0px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5"
             )}
           >
-            {isSubmitting ? "CONNECTING TO WHATSAPP..." : "ORDER VIA WHATSAPP →"}
+            {isSubmitting
+              ? t({ tr: "WHATSAPP'A BAĞLANIYOR...", en: "CONNECTING TO WHATSAPP..." })
+              : t({ tr: "WHATSAPP İLE SİPARİŞ VER →", en: "ORDER VIA WHATSAPP →" })}
           </button>
         </motion.div>
       </div>
