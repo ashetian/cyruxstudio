@@ -36,7 +36,7 @@ export function formatStoreSettings(record: {
     announcement:
       typeof brandMeta.announcement === "string"
         ? (brandMeta.announcement as string)
-        : ((INITIAL_STORE_SETTINGS.brandMetadata.announcement as string) || ""),
+        : "",
     socialLinks: (brandMeta.socialLinks as Record<string, string>) ||
       (brandMeta.socialHandles as Record<string, string>) || {
         instagram: "https://instagram.com/cyruxstudio",

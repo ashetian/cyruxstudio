@@ -14,7 +14,7 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
   const [currency, setCurrency] = useState<string>("EUR");
   const [storeName, setStoreName] = useState("cyrux studio");
   const [brandBio, setBrandBio] = useState("wearable art & brutalist luxury");
-  const [announcement, setAnnouncement] = useState("GLOBAL EXPRESS DISPATCH • CYPRUS • PARIS • TOKYO");
+  const [announcement, setAnnouncement] = useState("");
   const [instagram, setInstagram] = useState("https://instagram.com/cyruxstudio");
   const [twitter, setTwitter] = useState("https://x.com/cyruxstudio");
 

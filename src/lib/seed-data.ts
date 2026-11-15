@@ -49,7 +49,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettingsInput = {
     supportEmail: "contact@cyruxstudio.com",
     whatsappFormatted: "+90 (533) 873 77 12",
     location: "Cyprus • Global Express Dispatch",
-    announcement: "FREE WORLDWIDE EXPRESS DISPATCH ON ALL CHAPTER00 ORDERS",
+    announcement: "",
     heroDesktopImage: "/assets/editorial/hero-desktop.jpg",
     heroMobileImage: "/assets/editorial/hero-mobile.jpg",
     aboutDesktopImage: "/assets/editorial/about-desktop.jpg",
