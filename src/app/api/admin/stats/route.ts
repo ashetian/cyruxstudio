@@ -4,6 +4,9 @@ import { getDrops, getActiveDropAsync } from "@/lib/drops";
 import { formatStoreSettings } from "@/app/api/admin/settings/route";
 import { MAX_CUMULATIVE_CREDIT_BUDGET } from "@/lib/elevenlabs";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     // 1. Products & Inventory Valuation

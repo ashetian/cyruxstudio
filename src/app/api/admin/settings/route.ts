@@ -4,6 +4,9 @@ import prisma from "@/lib/db";
 import { INITIAL_STORE_SETTINGS } from "@/lib/seed-data";
 import { adminSettingsUpdateSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export function formatStoreSettings(record: {
   id: string;
   whatsappNumber: string;
