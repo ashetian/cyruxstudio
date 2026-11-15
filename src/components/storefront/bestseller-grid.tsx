@@ -76,6 +76,7 @@ export function BestsellerGrid({
   const imageFor = (p: Product): string =>
     productImages[p.slug] || p.mediaUrls[0] || "/assets/brand/logo-emblem-dark.png";
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [activeIdx, setActiveIdx] = useState<number>(0);
 
   // Wishlist toggle state (F06.4 Contract)
   const toggleWishlist = (productId: string, e?: React.MouseEvent) => {
@@ -279,11 +280,14 @@ export function BestsellerGrid({
           </div>
 
           {/* =========================================================================
-              DESKTOP: ASYMMETRIC 4-COLUMN RUNWAY GRID (F06 Contract)
+              DESKTOP: INTERACTIVE MORPHING LUNCHBOX TRAY (Accordion Bento)
               ========================================================================= */}
-          <div className="hidden lg:grid lg:grid-cols-4 gap-6 xl:gap-8 items-start">
+          <div
+            className="hidden lg:flex w-full h-[640px] xl:h-[700px] bg-[#E8E7E3] border border-black/20 p-2 gap-2 overflow-hidden select-none"
+            onMouseLeave={() => setActiveIdx(0)}
+          >
             {gridProducts.map((product, index) => {
-              const colConfig = ASYMMETRIC_COLUMN_CONFIG[index % ASYMMETRIC_COLUMN_CONFIG.length];
+              const isExpanded = index === activeIdx;
               const isWishlisted = wishlist.has(product.id);
               const isOutOfStock = product.stock <= 0;
               const watermark = getProductWatermark(product.name);
@@ -291,101 +295,153 @@ export function BestsellerGrid({
               return (
                 <motion.article
                   key={`desktop-${product.id}`}
-                  initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
+                  layout
+                  onClick={() => setActiveIdx(index)}
+                  onMouseEnter={() => setActiveIdx(index)}
                   transition={{
-                    duration: reduceMotion ? 0 : 0.5,
-                    delay: reduceMotion ? 0 : (index % 4) * 0.08,
-                    ease: [0.22, 1, 0.36, 1],
+                    layout: { duration: reduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] },
                   }}
                   className={cn(
-                    "group relative flex flex-col justify-between overflow-hidden bg-[#EDEDEB] border border-black/15 transition-all duration-300 hover:border-black cursor-pointer select-none",
-                    colConfig.aspectClass,
-                    colConfig.minHeightClass,
-                    colConfig.offsetClass
+                    "group relative overflow-hidden border transition-colors duration-300 flex flex-col justify-between cursor-pointer",
+                    isExpanded
+                      ? "flex-[4] bg-[#EDEDEB] border-black/30 shadow-xs"
+                      : "flex-[1] bg-[#F1EFEA] hover:bg-[#EAE8E2] border-black/10 hover:border-black/30"
                   )}
                 >
-                  {/* Full Card Link */}
-                  <Link
-                    href={`/products/${product.slug}`}
-                    aria-label={`View ${product.name}`}
-                    data-cursor="VIEW"
-                    className="absolute inset-0 z-[5] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
-                  />
-
-                  {/* Faint Brutalist Watermark */}
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 flex items-center justify-center select-none pointer-events-none overflow-hidden"
-                  >
-                    <span className="font-mono text-[9vw] font-black uppercase text-black/[0.035] tracking-tighter leading-none select-none">
-                      {watermark}
-                    </span>
-                  </div>
-
-                  {/* Top Header Strip */}
-                  <div className="relative z-10 p-3.5 flex items-center justify-between">
-                    <span className="font-mono text-[10px] font-bold tracking-widest text-black/70 bg-white/60 backdrop-blur-xs px-2 py-0.5 border border-black/10">
-                      [{String(index + 1).padStart(2, "0")} / {String(gridProducts.length).padStart(2, "0")}]
-                    </span>
-
-                    <button
-                      type="button"
-                      aria-label={
-                        isWishlisted
-                          ? `Remove ${product.name} from wishlist`
-                          : `Add ${product.name} to wishlist`
-                      }
-                      aria-pressed={isWishlisted}
-                      onClick={(e) => toggleWishlist(product.id, e)}
-                      className="relative z-20 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-black border border-black/10 shadow-xs flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
-                    >
-                      <Heart
-                        className={cn(
-                          "w-3.5 h-3.5 transition-colors",
-                          isWishlisted ? "fill-black text-black" : "text-black/60 hover:text-black"
-                        )}
+                  {isExpanded ? (
+                    <>
+                      {/* Full Card Direct Link on Visual Area */}
+                      <Link
+                        href={`/products/${product.slug}`}
+                        aria-label={`View ${product.name}`}
+                        data-cursor="VIEW"
+                        className="absolute inset-x-0 top-14 bottom-16 z-[5] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
                       />
-                    </button>
-                  </div>
 
-                  {/* Out of Stock Ribbon */}
-                  {isOutOfStock && (
-                    <div className="absolute inset-0 z-[6] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                      <span className="font-mono text-xs uppercase tracking-widest bg-black text-white px-3 py-1 font-bold">
-                        {t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
+                      {/* Giant Subtle Tone-on-Tone Watermark */}
+                      <div
+                        aria-hidden="true"
+                        className="absolute inset-0 flex items-center justify-center select-none pointer-events-none overflow-hidden"
+                      >
+                        <span className="font-mono text-[14vw] font-black uppercase text-black/[0.035] tracking-tighter leading-none select-none">
+                          {watermark}
+                        </span>
+                      </div>
+
+                      {/* Top Header Strip */}
+                      <div className="relative z-10 p-4 xl:p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-bold tracking-widest text-black bg-white/70 backdrop-blur-xs px-2.5 py-1 border border-black/10">
+                            [{String(index + 1).padStart(2, "0")} / {String(gridProducts.length).padStart(2, "0")}]
+                          </span>
+                          <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 hidden xl:inline">
+                            [DROP {drop.number} • ATELIER SPECIMEN]
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          aria-label={
+                            isWishlisted
+                              ? `Remove ${product.name} from wishlist`
+                              : `Add ${product.name} to wishlist`
+                          }
+                          aria-pressed={isWishlisted}
+                          onClick={(e) => toggleWishlist(product.id, e)}
+                          className="relative z-20 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-black border border-black/10 shadow-xs flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+                        >
+                          <Heart
+                            className={cn(
+                              "w-3.5 h-3.5 transition-colors",
+                              isWishlisted ? "fill-black text-black" : "text-black/60 hover:text-black"
+                            )}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Out of Stock Overlay */}
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 z-[6] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                          <span className="font-mono text-xs uppercase tracking-widest bg-black text-white px-4 py-1.5 font-bold border border-white/20">
+                            {t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Center Massive Garment Presentation */}
+                      <div className="relative flex-1 w-full min-h-0 overflow-hidden flex items-center justify-center p-6 xl:p-10 my-auto">
+                        <Image
+                          src={imageFor(product)}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 1536px) 50vw, 40vw"
+                          className={cn(
+                            "transition-transform duration-700 ease-out group-hover:scale-105",
+                            imageFor(product).includes("/assets/editorial/")
+                              ? "object-cover object-center"
+                              : "object-contain object-center mix-blend-multiply p-4 xl:p-8",
+                            isOutOfStock && "grayscale opacity-50"
+                          )}
+                          priority={index === 0}
+                        />
+                      </div>
+
+                      {/* Bottom Information Strip */}
+                      <div className="relative z-10 border-t border-black/15 bg-white/75 backdrop-blur-xs px-5 py-3.5 flex items-center justify-between shrink-0">
+                        <div className="min-w-0 pr-4">
+                          <h3 className="font-mono text-sm xl:text-base font-bold uppercase tracking-tight text-black truncate">
+                            {product.name}
+                          </h3>
+                          <p className="font-mono text-[11px] text-neutral-500 uppercase tracking-wider mt-0.5">
+                            {((product as Record<string, unknown>).category as string) || "GARMENT"} • {t({ tr: "Kıbrıs Atölye", en: "Cyprus Atelier" })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <span className="font-mono text-sm xl:text-base font-bold text-black">
+                            {formatProductPrice(product.price, currency)}
+                          </span>
+                          <Link
+                            href={`/products/${product.slug}`}
+                            data-cursor="VIEW"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black text-white hover:bg-neutral-800 font-mono text-[11px] font-bold uppercase tracking-wider transition-colors"
+                          >
+                            <span>{t({ tr: "İNCELE", en: "EXPLORE" })}</span>
+                            <span className="text-xs">→</span>
+                          </Link>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Collapsed Compartment State */
+                    <div className="w-full h-full flex flex-col justify-between items-center py-4 px-1">
+                      {/* Top Compartment Index */}
+                      <span className="font-mono text-[11px] font-bold text-black/60 bg-white/50 px-2 py-0.5 border border-black/10">
+                        [{String(index + 1).padStart(2, "0")}]
                       </span>
+
+                      {/* Faint Garment Silhouette Preview */}
+                      <div className="relative w-14 h-24 my-auto opacity-35 grayscale group-hover:opacity-70 transition-opacity">
+                        <Image
+                          src={imageFor(product)}
+                          alt={product.name}
+                          fill
+                          className="object-contain mix-blend-multiply"
+                        />
+                      </div>
+
+                      {/* Vertical Rotated Typography */}
+                      <div className="[writing-mode:vertical-rl] rotate-180 font-mono text-xs font-bold uppercase tracking-widest text-black/80 my-auto py-2 truncate max-h-[260px]">
+                        {product.name}
+                      </div>
+
+                      {/* Bottom Price Tag */}
+                      <div className="w-full pt-2 border-t border-black/10 text-center">
+                        <span className="font-mono text-[11px] font-bold text-black/70 block truncate">
+                          {formatProductPrice(product.price, currency)}
+                        </span>
+                      </div>
                     </div>
                   )}
-
-                  {/* Product Visual */}
-                  <div className="relative flex-1 w-full min-h-0 overflow-hidden flex items-center justify-center">
-                    <Image
-                      src={imageFor(product)}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 1280px) 25vw, 20vw"
-                      className={cn(
-                        "transition-transform duration-700 ease-out group-hover:scale-105",
-                        imageFor(product).includes("/assets/editorial/")
-                          ? "object-cover object-center"
-                          : "object-contain object-center mix-blend-multiply p-5 xl:p-7",
-                        isOutOfStock && "grayscale opacity-60"
-                      )}
-                      priority={index < 2}
-                    />
-                  </div>
-
-                  {/* Bottom Information Strip */}
-                  <div className="relative z-10 border-t border-black/15 bg-white/60 backdrop-blur-xs px-4 py-3 flex items-center justify-between shrink-0">
-                    <h3 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-black truncate pr-2">
-                      {product.name}
-                    </h3>
-                    <span className="font-mono text-xs sm:text-sm font-bold text-black shrink-0">
-                      {formatProductPrice(product.price, currency)}
-                    </span>
-                  </div>
                 </motion.article>
               );
             })}
