@@ -1,0 +1,33 @@
+[
+  {
+    "id": "drop-01",
+    "slug": "first-ascent",
+    "number": "01",
+    "chapter": "CHAPTER 00",
+    "title": "FIRST ASCENT",
+    "status": "active",
+    "releaseDate": {
+      "tr": "KASIM 2026",
+      "en": "NOVEMBER 2026"
+    },
+    "edition": {
+      "tr": "168 PARÇA • NUMARALI ARŞİV DROPU",
+      "en": "168 NUMBERED PIECES • ARCHIVAL RUN"
+    },
+    "description": {
+      "tr": "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
+      "en": "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our Cyprus atelier. Strictly numbered. Never restocked."
+    },
+    "productSlugs": [
+      "pretty-chaos-tee",
+      "first-ascent-tee-white",
+      "first-ascent-tee-black",
+      "cyrux-099-orbital-tee",
+      "eyes-never-lie-tee"
+    ],
+    "bannerImage": "/assets/editorial/hero-desktop.jpg",
+    "totalPieces": 168,
+    "createdAt": "2026-11-15T03:15:08.360Z",
+    "updatedAt": "2026-11-15T05:41:57.504Z"
+  }
+]

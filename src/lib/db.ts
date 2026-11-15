@@ -1,0 +1,476 @@
+import { PrismaClient } from "@prisma/client";
+import {
+  SEED_PRODUCTS,
+  INITIAL_STORE_SETTINGS,
+  type ProductVariant,
+} from "./seed-data";
+
+export type { ProductVariant };
+
+export interface BrandMetadata {
+  title: string;
+  brandName?: string;
+  heroDisplayTitle?: string;
+  tagline?: string;
+  description?: string;
+  socialHandles?: Record<string, string>;
+  socialLinks?: Record<string, string>;
+  supportEmail?: string;
+  whatsappFormatted?: string;
+  location?: string;
+  announcement?: string;
+}
+
+// Canonical Fixtures populated from seed-data
+export const MOCK_PRODUCTS = SEED_PRODUCTS.map((p, idx) => ({
+  id: p.id || `prod_${idx + 1}`,
+  name: p.name,
+  slug: p.slug,
+  description: p.description,
+  price: p.price,
+  stock: p.stock,
+  variants: p.variants,
+  mediaUrls: p.mediaUrls,
+  isBestseller: p.isBestseller,
+  createdAt: new Date("2026-01-01T00:00:00Z"),
+  updatedAt: new Date("2026-01-01T00:00:00Z"),
+}));
+
+export const MOCK_STORE_SETTINGS = {
+  ...INITIAL_STORE_SETTINGS,
+  updatedAt: new Date("2026-01-01T00:00:00Z"),
+};
+
+// ============================================================================
+// Environment & Health Check Helpers
+// ============================================================================
+
+export function isDbConfigured(): boolean {
+  const url = process.env.DATABASE_URL;
+  return Boolean(
+    url &&
+      !url.includes("dummy") &&
+      !url.includes("mock:mock") &&
+      !url.includes("[YOUR-PASSWORD]") &&
+      !url.includes("[password]")
+  );
+}
+
+export async function checkDbConnection(): Promise<{
+  ok: boolean;
+  latencyMs?: number;
+  error?: string;
+}> {
+  if (!isDbConfigured()) {
+    return {
+      ok: false,
+      error: "DATABASE_URL not configured (running in mock mode)",
+    };
+  }
+  const start = Date.now();
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { ok: true, latencyMs: Date.now() - start };
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Connection probe failed";
+    return { ok: false, error };
+  }
+}
+
+// ============================================================================
+// In-Memory Mock Store & Model Handlers
+// ============================================================================
+
+interface MockElevenLabsAsset {
+  id: string;
+  promptHash: string;
+  mediaUrl: string;
+  mediaType: string;
+  creditsUsed: number;
+  status: string;
+  metadata?: unknown;
+  createdAt: Date;
+}
+
+interface MockCreditLog {
+  id: string;
+  action: string;
+  creditsUsed: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  timestamp: Date;
+}
+
+const mockStore = {
+  products: [...MOCK_PRODUCTS],
+  settings: { ...MOCK_STORE_SETTINGS },
+  elevenLabsAssets: [] as MockElevenLabsAsset[],
+  creditLogs: [] as MockCreditLog[],
+};
+
+type MockHandlerFn = (...args: never[]) => Promise<unknown>;
+
+const mockHandlers: Record<string, Record<string, MockHandlerFn>> = {
+  product: {
+    findMany: async (args?: {
+      where?: {
+        isBestseller?: boolean;
+        slug?: string | { in?: string[] };
+        id?: string | { in?: string[] };
+        category?: string;
+        stock?: number | { gt?: number; lte?: number; gte?: number; lt?: number };
+        OR?: Array<{ id?: string; slug?: string }>;
+      };
+      take?: number;
+      skip?: number;
+      orderBy?: unknown;
+    }) => {
+      let list = [...mockStore.products];
+      if (args?.where) {
+        const { isBestseller, slug, id, stock, OR, category } = args.where;
+        if (isBestseller !== undefined) {
+          list = list.filter((p) => p.isBestseller === isBestseller);
+        }
+        if (typeof slug === "string") {
+          list = list.filter((p) => p.slug === slug);
+        } else if (slug && typeof slug === "object" && "in" in slug && Array.isArray(slug.in)) {
+          list = list.filter((p) => slug.in!.includes(p.slug));
+        }
+        if (typeof id === "string") {
+          list = list.filter((p) => p.id === id);
+        } else if (id && typeof id === "object" && "in" in id && Array.isArray(id.in)) {
+          list = list.filter((p) => id.in!.includes(p.id));
+        }
+        if (category) {
+          list = list.filter((p) => {
+            const prod = p as Record<string, unknown>;
+            const cat = prod.category ? String(prod.category).toLowerCase() : "";
+            return (
+              cat === category.toLowerCase() ||
+              p.name.toLowerCase().includes(category.toLowerCase())
+            );
+          });
+        }
+        if (typeof stock === "number") {
+          list = list.filter((p) => p.stock === stock);
+        } else if (stock && typeof stock === "object") {
+          if (stock.gt !== undefined) list = list.filter((p) => p.stock > stock.gt!);
+          if (stock.gte !== undefined) list = list.filter((p) => p.stock >= stock.gte!);
+          if (stock.lt !== undefined) list = list.filter((p) => p.stock < stock.lt!);
+          if (stock.lte !== undefined) list = list.filter((p) => p.stock <= stock.lte!);
+        }
+        if (OR && Array.isArray(OR)) {
+          list = list.filter((p) =>
+            OR.some(
+              (condition) =>
+                (condition.id && p.id === condition.id) ||
+                (condition.slug && p.slug === condition.slug)
+            )
+          );
+        }
+      }
+      if (args?.orderBy) {
+        const orderConfig = Array.isArray(args.orderBy)
+          ? (args.orderBy[0] as Record<string, "asc" | "desc">)
+          : (args.orderBy as Record<string, "asc" | "desc">);
+        if (orderConfig && typeof orderConfig === "object") {
+          const [key, order] = Object.entries(orderConfig)[0] || [];
+          if (key === "createdAt") {
+            list.sort((a, b) => {
+              const dateA = new Date(a.createdAt).getTime();
+              const dateB = new Date(b.createdAt).getTime();
+              return order === "desc" ? dateB - dateA : dateA - dateB;
+            });
+          } else if (key === "price") {
+            list.sort((a, b) =>
+              order === "desc" ? b.price - a.price : a.price - b.price
+            );
+          } else if (key === "name") {
+            list.sort((a, b) =>
+              order === "desc"
+                ? b.name.localeCompare(a.name)
+                : a.name.localeCompare(b.name)
+            );
+          }
+        }
+      }
+      if (args?.skip) list = list.slice(args.skip);
+      if (args?.take) list = list.slice(0, args.take);
+      return list;
+    },
+    findUnique: async (args: {
+      where: {
+        slug?: string;
+        id?: string;
+        OR?: Array<{ id?: string; slug?: string }>;
+      };
+    }) => {
+      if (args?.where?.slug) {
+        return mockStore.products.find((p) => p.slug === args.where.slug) || null;
+      }
+      if (args?.where?.id) {
+        return mockStore.products.find((p) => p.id === args.where.id) || null;
+      }
+      if (args?.where?.OR && Array.isArray(args.where.OR)) {
+        return (
+          mockStore.products.find((p) =>
+            args.where.OR!.some(
+              (c) => (c.id && p.id === c.id) || (c.slug && p.slug === c.slug)
+            )
+          ) || null
+        );
+      }
+      return null;
+    },
+    findFirst: async (args?: {
+      where?: {
+        isBestseller?: boolean;
+        slug?: string;
+        id?: string;
+        OR?: Array<{ id?: string; slug?: string }>;
+      };
+    }) => {
+      if (args?.where) {
+        let list = [...mockStore.products];
+        if (args.where.isBestseller !== undefined) {
+          list = list.filter((p) => p.isBestseller === args.where!.isBestseller);
+        }
+        if (args.where.slug) {
+          list = list.filter((p) => p.slug === args.where!.slug);
+        }
+        if (args.where.id) {
+          list = list.filter((p) => p.id === args.where!.id);
+        }
+        if (args.where.OR && Array.isArray(args.where.OR)) {
+          list = list.filter((p) =>
+            args.where!.OR!.some(
+              (c) => (c.id && p.id === c.id) || (c.slug && p.slug === c.slug)
+            )
+          );
+        }
+        return list[0] || null;
+      }
+      return mockStore.products[0] || null;
+    },
+    count: async () => mockStore.products.length,
+    create: async (args: { data: Record<string, unknown> }) => {
+      const created = {
+        ...(args.data as unknown as (typeof mockStore.products)[number]),
+        id: (args.data.id as string) || `prod_${Date.now()}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockStore.products.push(created);
+      return created;
+    },
+    update: async (args: {
+      where: { id?: string; slug?: string };
+      data: Record<string, unknown>;
+    }) => {
+      const idx = mockStore.products.findIndex(
+        (p) =>
+          (args.where.id && p.id === args.where.id) ||
+          (args.where.slug && p.slug === args.where.slug)
+      );
+      if (idx === -1) throw new Error("Product not found");
+      mockStore.products[idx] = {
+        ...mockStore.products[idx],
+        ...args.data,
+        updatedAt: new Date(),
+      };
+      return mockStore.products[idx];
+    },
+    upsert: async (args: {
+      where: { id?: string; slug?: string };
+      create: Record<string, unknown>;
+      update: Record<string, unknown>;
+    }) => {
+      const idx = mockStore.products.findIndex(
+        (p) =>
+          (args.where.id && p.id === args.where.id) ||
+          (args.where.slug && p.slug === args.where.slug)
+      );
+      if (idx === -1) {
+        const created = {
+          ...(args.create as unknown as (typeof mockStore.products)[number]),
+          id: (args.create.id as string) || `prod_${Date.now()}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        mockStore.products.push(created);
+        return created;
+      }
+      mockStore.products[idx] = {
+        ...mockStore.products[idx],
+        ...args.update,
+        updatedAt: new Date(),
+      };
+      return mockStore.products[idx];
+    },
+    delete: async (args: { where: { id?: string; slug?: string } }) => {
+      const idx = mockStore.products.findIndex(
+        (p) =>
+          (args.where.id && p.id === args.where.id) ||
+          (args.where.slug && p.slug === args.where.slug)
+      );
+      if (idx === -1) throw new Error("Product not found");
+      const [deleted] = mockStore.products.splice(idx, 1);
+      return deleted;
+    },
+  },
+  storeSettings: {
+    findFirst: async () => mockStore.settings,
+    findUnique: async () => mockStore.settings,
+    upsert: async (args: {
+      create: Record<string, unknown>;
+      update: Record<string, unknown>;
+    }) => {
+      mockStore.settings = {
+        ...mockStore.settings,
+        ...(args.create as unknown as typeof mockStore.settings),
+        ...(args.update as unknown as typeof mockStore.settings),
+        updatedAt: new Date(),
+      };
+      return mockStore.settings;
+    },
+    update: async (args: { data: Record<string, unknown> }) => {
+      mockStore.settings = {
+        ...mockStore.settings,
+        ...(args.data as unknown as typeof mockStore.settings),
+        updatedAt: new Date(),
+      };
+      return mockStore.settings;
+    },
+  },
+  elevenLabsAsset: {
+    findUnique: async (args: { where: { promptHash?: string; id?: string } }) => {
+      if (args?.where?.promptHash) {
+        return (
+          mockStore.elevenLabsAssets.find(
+            (a) => a.promptHash === args.where.promptHash
+          ) || null
+        );
+      }
+      if (args?.where?.id) {
+        return (
+          mockStore.elevenLabsAssets.find((a) => a.id === args.where.id) || null
+        );
+      }
+      return null;
+    },
+    findFirst: async () => mockStore.elevenLabsAssets[0] || null,
+    findMany: async () => [...mockStore.elevenLabsAssets],
+    create: async (args: { data: Record<string, unknown> }) => {
+      const created = {
+        ...(args.data as unknown as MockElevenLabsAsset),
+        id: (args.data.id as string) || `ela_${Date.now()}`,
+        createdAt: new Date(),
+      };
+      mockStore.elevenLabsAssets.push(created);
+      return created;
+    },
+  },
+  creditUsageLog: {
+    aggregate: async () => {
+      const total = mockStore.creditLogs.reduce(
+        (acc, log) => acc + (log.creditsUsed || 0),
+        0
+      );
+      return { _sum: { creditsUsed: total } };
+    },
+    create: async (args: { data: Record<string, unknown> }) => {
+      const created = {
+        ...(args.data as unknown as MockCreditLog),
+        id: (args.data.id as string) || `cul_${Date.now()}`,
+        timestamp: new Date(),
+      };
+      mockStore.creditLogs.push(created);
+      return created;
+    },
+    findMany: async () => [...mockStore.creditLogs],
+  },
+};
+
+// ============================================================================
+// Client Factory & Resilient Proxy Interceptor
+// ============================================================================
+
+function createPrismaClient(): PrismaClient {
+  const fallbackUrl =
+    "postgresql://mock:mock@localhost:5432/mock_cyrux?connect_timeout=2";
+  return new PrismaClient({
+    datasourceUrl: process.env.DATABASE_URL || fallbackUrl,
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["warn", "error"]
+        : ["error"],
+  });
+}
+
+function createResilientPrismaClient(client: PrismaClient): PrismaClient {
+  return new Proxy(client, {
+    get(target, prop, receiver) {
+      if (typeof prop === "string" && prop in mockHandlers) {
+        const modelTarget = Reflect.get(target, prop, receiver);
+        const mockModel = mockHandlers[prop];
+        return new Proxy(modelTarget, {
+          get(mTarget, mProp) {
+            const originalMethod = Reflect.get(mTarget, mProp);
+            if (typeof originalMethod === "function") {
+              return async (...args: unknown[]) => {
+                // In unconfigured / mock mode, serve directly from in-memory fallback
+                if (!isDbConfigured()) {
+                  if (
+                    mockModel &&
+                    typeof mockModel[mProp as string] === "function"
+                  ) {
+                    return mockModel[mProp as string](...(args as never[]));
+                  }
+                  return null;
+                }
+                // When configured, try real query, fallback if network or connection drops
+                try {
+                  return await originalMethod.apply(mTarget, args);
+                } catch (err: unknown) {
+                  const errorMsg =
+                    err instanceof Error ? err.message : "connection error";
+                  console.warn(
+                    `[DB Fallback Interceptor] ${String(prop)}.${String(
+                      mProp
+                    )} failed: ${errorMsg}. Serving mock data.`
+                  );
+                  if (
+                    mockModel &&
+                    typeof mockModel[mProp as string] === "function"
+                  ) {
+                    return mockModel[mProp as string](...(args as never[]));
+                  }
+                  throw err;
+                }
+              };
+            }
+            return originalMethod;
+          },
+        });
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
+
+// ============================================================================
+// Global Singleton Cache (Hot-Reload Safe)
+// ============================================================================
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma =
+  globalForPrisma.prisma ?? createResilientPrismaClient(createPrismaClient());
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+
+export default prisma;

@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// 1. Product Model (Catalog & Bestseller Grid)
+// -----------------------------------------------------------------------------
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String   @db.Text
+  price        Float
+  stock        Int      @default(0)
+  variants     Json     // Array of variants: [{ id: "s", name: "S", inStock: true }]
+  mediaUrls    String[] // Native Postgres string array for product gallery
+  isBestseller Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isBestseller])
+  @@index([createdAt])
+  @@map("products")
+}
+
+// -----------------------------------------------------------------------------
+// 2. StoreSettings Model (Admin Configuration & WhatsApp Integration)
+// -----------------------------------------------------------------------------
+model StoreSettings {
+  id             String   @id @default(cuid()) // Single row (e.g. "default")
+  whatsappNumber String   // Target WhatsApp destination (e.g. "+905551234567")
+  currency       String   @default("USD")
+  brandMetadata  Json     // Title, description, social links, banner text
+  updatedAt      DateTime @updatedAt
+
+  @@map("store_settings")
+}
+
+// -----------------------------------------------------------------------------
+// 3. ElevenLabsAsset Model (AI Generation Cache & Asset Vault)
+// -----------------------------------------------------------------------------
+model ElevenLabsAsset {
+  id          String   @id @default(cuid())
+  promptHash  String   @unique // SHA-256(prompt + params) for instant cache hits
+  mediaUrl    String   // Vercel Blob URL or public asset path
+  mediaType   String   // "image" | "video"
+  creditsUsed Int      // Credits deducted for this generation
+  status      String   @default("ready") // "pending" | "ready" | "failed"
+  metadata    Json?    // Model ID, generation params, prompt text, latency
+  createdAt   DateTime @default(now())
+
+  @@index([mediaType])
+  @@index([createdAt])
+  @@map("elevenlabs_assets")
+}
+
+// -----------------------------------------------------------------------------
+// 4. CreditUsageLog Model (Audit Trail & 23k Budget Guard)
+// -----------------------------------------------------------------------------
+model CreditUsageLog {
+  id            String   @id @default(cuid())
+  action        String   // "image_generation" | "video_generation" | "system_check"
+  creditsUsed   Int      // Amount spent
+  balanceBefore Int      // Snapshot before deduction
+  balanceAfter  Int      // Snapshot after deduction
+  timestamp     DateTime @default(now())
+
+  @@index([timestamp])
+  @@map("credit_usage_logs")
+}

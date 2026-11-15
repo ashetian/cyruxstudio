@@ -1,0 +1,125 @@
+--- /home/ashetian/Desktop/cyruxstudio/tests/tier1-feature/f11-whatsapp-validation.ts	2026-11-14 16:07:04.454890300 +0300
++++ /home/ashetian/Desktop/cyruxstudio/.agents/teamwork/teamwork_preview_explorer_m3_fix_3/proposed_f11_whatsapp_validation.ts	2026-11-14 17:24:55.863799529 +0300
+@@ -1,32 +1,12 @@
+ import { describe, it, expect } from '../framework.ts';
+-import { sanitizeCustomerText } from '../contracts.ts';
++import {
++  validateOrderPayload,
++  whatsAppOrderInputSchema,
++  whatsAppOrderApiRequestSchema,
++  sanitizeCustomerText,
++} from '../../src/lib/validations.ts';
+ 
+ describe('Feature 11: WhatsApp Order Payload Validation', () => {
+-  const validateOrderPayload = (input: any) => {
+-    if (!input || typeof input !== 'object') {
+-      throw new Error('Payload must be an object');
+-    }
+-    if (!input.productId || typeof input.productId !== 'string' || input.productId.trim() === '') {
+-      throw new Error('productId is required and cannot be empty');
+-    }
+-    if (input.variant !== undefined && (typeof input.variant !== 'string' || input.variant.length > 50)) {
+-      throw new Error('variant must be a string up to 50 characters');
+-    }
+-    if (input.customerNotes !== undefined) {
+-      if (typeof input.customerNotes !== 'string') {
+-        throw new Error('customerNotes must be a string');
+-      }
+-      if (input.customerNotes.length > 500) {
+-        throw new Error('customerNotes cannot exceed 500 characters');
+-      }
+-    }
+-    return {
+-      productId: input.productId.trim(),
+-      variant: input.variant ? input.variant.trim() : undefined,
+-      customerNotes: input.customerNotes ? sanitizeCustomerText(input.customerNotes) : undefined,
+-    };
+-  };
+-
+   it('11.1 should successfully validate a clean, well-formed order payload', () => {
+     const valid = {
+       productId: 'prod-hoodie-01',
+@@ -38,6 +18,22 @@
+     expect(sanitized.productId).toBe('prod-hoodie-01');
+     expect(sanitized.variant).toBe('Size L / Deep Black');
+     expect(sanitized.customerNotes).toBe('Please deliver after 5 PM.');
++
++    // Exercise production Zod API request schema
++    const parsedApi = whatsAppOrderApiRequestSchema.parse(valid);
++    expect(parsedApi.productId).toBe('prod-hoodie-01');
++    expect(parsedApi.variant).toBe('Size L / Deep Black');
++    expect(parsedApi.customerNotes).toBe('Please deliver after 5 PM.');
++
++    // Exercise production full order input schema
++    const parsedFull = whatsAppOrderInputSchema.parse({
++      ...valid,
++      productName: 'Monolith Hoodie',
++      price: 180,
++    });
++    expect(parsedFull.productId).toBe('prod-hoodie-01');
++    expect(parsedFull.price).toBe(180);
++    expect(parsedFull.currency).toBe('USD');
+   });
+ 
+   it('11.2 should sanitize XSS injection payload <script>alert("xss")</script> from customer notes', () => {
+@@ -50,6 +46,13 @@
+     expect(sanitized.customerNotes).not.toContain('<script>');
+     expect(sanitized.customerNotes).not.toContain('</script>');
+     expect(sanitized.customerNotes).toBe('Hello alert(xss) world');
++
++    // Exercise production sanitizeCustomerText directly
++    expect(sanitizeCustomerText(malicious.customerNotes)).toBe('Hello alert(xss) world');
++
++    // Exercise production Zod schema sanitization transform
++    const parsed = whatsAppOrderApiRequestSchema.parse(malicious);
++    expect(parsed.customerNotes).toBe('Hello alert(xss) world');
+   });
+ 
+   it('11.3 should sanitize HTML tags <img onerror=...> and quotes from customer notes', () => {
+@@ -61,12 +64,24 @@
+     const sanitized = validateOrderPayload(htmlPayload);
+     expect(sanitized.customerNotes).not.toContain('<img');
+     expect(sanitized.customerNotes).not.toContain('onerror');
++
++    // Exercise production Zod schema transform
++    const parsed = whatsAppOrderApiRequestSchema.parse(htmlPayload);
++    expect(parsed.customerNotes).not.toContain('<img');
++    expect(parsed.customerNotes).not.toContain('onerror');
+   });
+ 
+   it('11.4 should reject payloads with missing or empty productId', () => {
+     expect(() => validateOrderPayload({ productId: '' })).toThrow('productId is required');
+     expect(() => validateOrderPayload({ productId: '   ' })).toThrow('productId is required');
+     expect(() => validateOrderPayload({})).toThrow('productId is required');
++
++    // Exercise production Zod schemas rejection
++    expect(whatsAppOrderApiRequestSchema.safeParse({ productId: '' }).success).toBe(false);
++    expect(whatsAppOrderApiRequestSchema.safeParse({}).success).toBe(false);
++    expect(
++      whatsAppOrderInputSchema.safeParse({ productId: '', productName: 'Tee', price: 10 }).success
++    ).toBe(false);
+   });
+ 
+   it('11.5 should reject payloads where customerNotes exceed maximum 500 character limit', () => {
+@@ -77,5 +92,21 @@
+         customerNotes: oversizedNotes,
+       })
+     ).toThrow('customerNotes cannot exceed 500 characters');
++
++    // Exercise production Zod schemas rejection on oversized notes and invalid price
++    expect(
++      whatsAppOrderApiRequestSchema.safeParse({
++        productId: 'prod-01',
++        customerNotes: oversizedNotes,
++      }).success
++    ).toBe(false);
++
++    expect(
++      whatsAppOrderInputSchema.safeParse({
++        productId: 'prod-01',
++        productName: 'Tee',
++        price: -50,
++      }).success
++    ).toBe(false);
+   });
+ }, { tier: 1, featureId: 11 });
