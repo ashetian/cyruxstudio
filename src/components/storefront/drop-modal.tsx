@@ -88,11 +88,10 @@ export function DropModal({
             {/* Modal Header */}
             <div className="flex items-center justify-between px-5 sm:px-8 py-4 border-b border-neutral-800 bg-neutral-950/80 shrink-0">
               <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-widest text-[#FAF8F3]">
                   {drop.chapter} • DROP {drop.number}: {drop.title}
                 </span>
-                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 border border-emerald-500/40 text-emerald-400 font-bold uppercase tracking-wider">
+                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 border border-white/20 text-neutral-300 font-bold uppercase tracking-wider">
                   {t({ tr: "AKTİF DROP", en: "LIVE DROP" })}
                 </span>
               </div>
@@ -119,7 +118,7 @@ export function DropModal({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex flex-col justify-end">
-                  <span className="text-[11px] uppercase tracking-widest text-emerald-400 font-bold mb-1">
+                  <span className="text-[11px] uppercase tracking-widest text-neutral-300 font-bold mb-1">
                     {drop.edition[lang]}
                   </span>
                   <h3 className="font-sans text-2xl sm:text-4xl font-black uppercase tracking-tight text-white leading-none">
@@ -187,7 +186,7 @@ export function DropModal({
                           <span className="text-[11px] text-neutral-400 font-bold block mt-0.5">
                             {formatProductPrice(p.price, currency)}
                           </span>
-                          <span className="text-[9px] text-emerald-400 block mt-1 uppercase">
+                          <span className="text-[9px] text-neutral-400 block mt-1 uppercase">
                             {p.stock > 0 ? t({ tr: "STOKTA VAR", en: "IN STOCK" }) : t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
                           </span>
                         </div>

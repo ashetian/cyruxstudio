@@ -125,47 +125,66 @@ export function DropDetail({
         </div>
 
         {/* Hero Editorial Header */}
-        <section aria-label="Drop Overview" className="mb-14 md:mb-20">
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span
-              className={cn(
-                "px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest border",
-                isActive && "bg-emerald-50 text-emerald-700 border-emerald-300",
-                isArchived && "bg-neutral-900 text-neutral-200 border-neutral-700",
-                isUpcoming && "bg-amber-100 text-amber-900 border-amber-300"
-              )}
-            >
-              {isActive && (
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2" />
-              )}
-              {isActive
-                ? t({ tr: "CANLI DROP", en: "LIVE DROP" })
-                : isArchived
-                ? t({ tr: "KASADA SAKLANDI / TÜKENDİ", en: "VAULTED / SOLD OUT" })
-                : t({ tr: "ATÖLYE PROTOTİP DROPU", en: "ATELIER PROTOTYPING" })}
-            </span>
-            <span className="font-mono text-xs text-neutral-500">
-              {drop.releaseDate[lang]}
-            </span>
-            {products.length > 0 && (
-              <>
-                <span className="font-mono text-xs text-neutral-400">•</span>
-                <span className="font-mono text-xs text-neutral-500">
-                  {products.length} {t({ tr: "Model", en: "Garments" })}
-                </span>
-              </>
-            )}
+        <section aria-label="Drop Overview" className="mb-14 md:mb-16">
+          <div className="flex items-baseline justify-between gap-4 mb-3 font-mono text-xs text-neutral-500 uppercase tracking-widest">
+            <span>DROP {drop.number} // {drop.chapter}</span>
+            <span>{drop.releaseDate[lang]}</span>
           </div>
 
           <h1 className="font-mono text-3xl sm:text-5xl md:text-6xl font-bold uppercase tracking-tight text-black">
-            DROP {drop.number} • {drop.title}
+            {drop.title}
           </h1>
           <p className="font-mono text-sm sm:text-base text-neutral-600 font-semibold tracking-wider uppercase mt-2">
             {drop.chapter} — {drop.edition[lang]}
           </p>
 
+          {/* Boxless Minimalist Technical Spec Table (Kutusuz / Sıfır Yeşil) */}
+          <div className="my-8 py-5 border-y border-black/15 grid grid-cols-2 sm:grid-cols-4 gap-6 font-mono text-xs">
+            <div>
+              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
+                {t({ tr: "DURUM / STATUS", en: "STATUS" })}
+              </span>
+              <span className="font-bold text-black uppercase tracking-wider">
+                {isActive
+                  ? t({ tr: "CANLI DROP // AKTİF", en: "ACTIVE // LIVE RELEASE" })
+                  : isArchived
+                  ? t({ tr: "ARŞİV // KASADA", en: "VAULTED // SOLD OUT" })
+                  : t({ tr: "ATÖLYE PROTOTİPİ", en: "ATELIER PROTOTYPE" })}
+              </span>
+            </div>
+
+            <div>
+              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
+                {t({ tr: "TARİH / TIMELINE", en: "RELEASE TIMELINE" })}
+              </span>
+              <span className="font-bold text-black uppercase">
+                {drop.releaseDate[lang]}
+              </span>
+            </div>
+
+            <div>
+              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
+                {t({ tr: "PARÇA / GARMENTS", en: "GARMENTS" })}
+              </span>
+              <span className="font-bold text-black uppercase">
+                {products.length > 0
+                  ? `${products.length} ${t({ tr: "ÖZEL MODEL", en: "PIECES" })}`
+                  : t({ tr: "ÖZEL SERİ", en: "STUDIO RUN" })}
+              </span>
+            </div>
+
+            <div>
+              <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
+                {t({ tr: "ATÖLYE / ORIGIN", en: "ORIGIN" })}
+              </span>
+              <span className="font-bold text-black uppercase">
+                CYPRUS ATELIER
+              </span>
+            </div>
+          </div>
+
           {/* Visual Showcase Banner */}
-          <div className="relative aspect-[21/9] sm:aspect-[2.6/1] w-full my-8 overflow-hidden bg-neutral-900 border border-black">
+          <div className="relative aspect-[21/9] sm:aspect-[2.6/1] w-full my-8 overflow-hidden bg-black/5 border border-black/20">
             <Image
               src={drop.bannerImage}
               alt={drop.title}
@@ -189,7 +208,7 @@ export function DropDetail({
           </div>
 
           {/* Editorial Narrative Manifesto */}
-          <div className="max-w-3xl">
+          <div className="max-w-3xl pt-2">
             <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-2">
               {t({ tr: "DROP MANİFESTOSU", en: "DROP MANIFESTO" })}
             </h2>
@@ -306,10 +325,9 @@ export function DropDetail({
 
         {/* 5. Upcoming Atelier Prototyping Section */}
         {isUpcoming && (
-          <section className="mb-16 border border-black/20 bg-[#EDEDEB] p-8 sm:p-12 max-w-3xl">
-            <div className="flex items-center gap-2 font-mono text-xs text-amber-900 mb-4 uppercase tracking-widest">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span>ATÖLYE DROP TAKVİMİ (ATELIER ROADMAP)</span>
+          <section className="mb-16 border border-black/20 bg-[#FAF8F3] p-8 sm:p-12 max-w-3xl">
+            <div className="font-mono text-xs text-neutral-500 mb-4 uppercase tracking-widest font-bold">
+              [ ATÖLYE DROP TAKVİMİ // ATELIER ROADMAP ]
             </div>
             <h3 className="font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight text-black mb-3">
               {t({ tr: "Prototipleme Devam Ediyor", en: "Currently Under Atelier Prototyping" })}

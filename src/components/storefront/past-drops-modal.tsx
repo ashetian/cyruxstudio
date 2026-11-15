@@ -128,7 +128,7 @@ export function PastDropsModal({
                       key={drop.id}
                       className={`relative border p-5 sm:p-6 transition-all ${
                         isActive
-                          ? "border-emerald-500/60 bg-emerald-950/10"
+                          ? "border-white/30 bg-white/[0.03]"
                           : isArchived
                           ? "border-neutral-800 bg-neutral-950/80 opacity-80"
                           : "border-neutral-800/80 bg-neutral-950/40"
@@ -136,11 +136,8 @@ export function PastDropsModal({
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div className="flex items-center gap-2.5">
-                          {isActive && (
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                          )}
                           {isArchived && <Lock className="w-3.5 h-3.5 text-neutral-500" />}
-                          {isUpcoming && <Clock className="w-3.5 h-3.5 text-amber-400" />}
+                          {isUpcoming && <Clock className="w-3.5 h-3.5 text-neutral-400" />}
 
                           <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">
                             {drop.chapter} • DROP {drop.number}
@@ -149,10 +146,10 @@ export function PastDropsModal({
                           <span
                             className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider ${
                               isActive
-                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                ? "bg-white text-black border border-white"
                                 : isArchived
                                 ? "bg-neutral-900 text-neutral-500 border border-neutral-800"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                                : "bg-neutral-900 text-neutral-400 border border-neutral-700"
                             }`}
                           >
                             {isActive
