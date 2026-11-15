@@ -52,15 +52,6 @@ export const ASYMMETRIC_COLUMN_CONFIG = [
 
 export const CARD_LAYOUT = ASYMMETRIC_COLUMN_CONFIG;
 
-function getProductWatermark(name: string): string {
-  const words = name
-    .toUpperCase()
-    .replace(/[^A-Z0-9\s]/g, "")
-    .split(/\s+/)
-    .filter((w) => w.length > 2 && w !== "THE" && w !== "AND" && w !== "TEE");
-  return words[0] || "CYRUX";
-}
-
 export function BestsellerGrid({
   products,
   currency = "USD",
@@ -178,7 +169,6 @@ export function BestsellerGrid({
             {gridProducts.map((product, index) => {
               const isWishlisted = wishlist.has(product.id);
               const isOutOfStock = product.stock <= 0;
-              const watermark = getProductWatermark(product.name);
 
               return (
                 <motion.article
@@ -200,16 +190,6 @@ export function BestsellerGrid({
                     data-cursor="VIEW"
                     className="absolute inset-0 z-[5] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
                   />
-
-                  {/* Gigantic Architectural Tone-on-Tone Watermark */}
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 flex items-center justify-center select-none pointer-events-none overflow-hidden"
-                  >
-                    <span className="font-mono text-[20vw] font-black uppercase text-black/[0.04] tracking-tighter leading-none select-none">
-                      {watermark}
-                    </span>
-                  </div>
 
                   {/* Top Runway Header */}
                   <div className="relative z-10 p-4 sm:p-5 flex items-center justify-between">
@@ -289,7 +269,6 @@ export function BestsellerGrid({
               const isExpanded = index === activeIdx;
               const isWishlisted = wishlist.has(product.id);
               const isOutOfStock = product.stock <= 0;
-              const watermark = getProductWatermark(product.name);
 
               return (
                 <motion.article
@@ -316,16 +295,6 @@ export function BestsellerGrid({
                         data-cursor="VIEW"
                         className="absolute inset-x-0 top-14 bottom-16 z-[5] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
                       />
-
-                      {/* Giant Subtle Tone-on-Tone Watermark */}
-                      <div
-                        aria-hidden="true"
-                        className="absolute inset-0 flex items-center justify-center select-none pointer-events-none overflow-hidden"
-                      >
-                        <span className="font-mono text-[14vw] font-black uppercase text-black/[0.035] tracking-tighter leading-none select-none">
-                          {watermark}
-                        </span>
-                      </div>
 
                       {/* Top Header Strip */}
                       <div className="relative z-10 p-4 xl:p-5 flex items-center justify-between">
