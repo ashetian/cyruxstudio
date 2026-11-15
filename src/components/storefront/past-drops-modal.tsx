@@ -91,7 +91,7 @@ export function PastDropsModal({
             <div className="flex items-center justify-between px-5 sm:px-8 py-4 border-b border-neutral-800 bg-neutral-950/80 shrink-0">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold uppercase tracking-widest text-[#FAF8F3]">
-                  {t({ tr: "DROP ARŞİVİ // GEÇMİŞ & GELECEK DROPLAR", en: "DROP LINEAGE // PAST & FUTURE DROPS" })}
+                  {t({ tr: "DROP ARŞİVİ • TÜM KOLEKSİYONLAR", en: "DROP ARCHIVE • ALL COLLECTIONS" })}
                 </span>
                 <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 border border-neutral-700 text-neutral-400 uppercase tracking-wider">
                   CYRUX STUDIO ARCHIVE

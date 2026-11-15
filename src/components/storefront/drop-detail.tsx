@@ -127,7 +127,7 @@ export function DropDetail({
         {/* Hero Editorial Header */}
         <section aria-label="Drop Overview" className="mb-14 md:mb-16">
           <div className="flex items-baseline justify-between gap-4 mb-3 font-mono text-xs text-neutral-500 uppercase tracking-widest">
-            <span>DROP {drop.number} // {drop.chapter}</span>
+            <span>DROP {drop.number} • {drop.chapter}</span>
             <span>{drop.releaseDate[lang]}</span>
           </div>
 
@@ -138,24 +138,24 @@ export function DropDetail({
             {drop.chapter} — {drop.edition[lang]}
           </p>
 
-          {/* Boxless Minimalist Technical Spec Table (Kutusuz / Sıfır Yeşil) */}
+          {/* Boxless Minimalist Technical Spec Table (Kutusuz / Sıfır Yeşil / Sıfır Slash) */}
           <div className="my-8 py-5 border-y border-black/15 grid grid-cols-2 sm:grid-cols-4 gap-6 font-mono text-xs">
             <div>
               <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "DURUM / STATUS", en: "STATUS" })}
+                {t({ tr: "DURUM", en: "STATUS" })}
               </span>
               <span className="font-bold text-black uppercase tracking-wider">
                 {isActive
-                  ? t({ tr: "CANLI DROP // AKTİF", en: "ACTIVE // LIVE RELEASE" })
+                  ? t({ tr: "CANLI DROP", en: "ACTIVE RELEASE" })
                   : isArchived
-                  ? t({ tr: "ARŞİV // KASADA", en: "VAULTED // SOLD OUT" })
+                  ? t({ tr: "ARŞİV", en: "VAULTED" })
                   : t({ tr: "ATÖLYE PROTOTİPİ", en: "ATELIER PROTOTYPE" })}
               </span>
             </div>
 
             <div>
               <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "TARİH / TIMELINE", en: "RELEASE TIMELINE" })}
+                {t({ tr: "TARİH", en: "RELEASE DATE" })}
               </span>
               <span className="font-bold text-black uppercase">
                 {drop.releaseDate[lang]}
@@ -164,7 +164,7 @@ export function DropDetail({
 
             <div>
               <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "PARÇA / GARMENTS", en: "GARMENTS" })}
+                {t({ tr: "PARÇA", en: "GARMENTS" })}
               </span>
               <span className="font-bold text-black uppercase">
                 {products.length > 0
@@ -175,7 +175,7 @@ export function DropDetail({
 
             <div>
               <span className="block text-neutral-400 uppercase text-[10px] tracking-widest mb-1">
-                {t({ tr: "ATÖLYE / ORIGIN", en: "ORIGIN" })}
+                {t({ tr: "ATÖLYE", en: "ORIGIN" })}
               </span>
               <span className="font-bold text-black uppercase">
                 CYPRUS ATELIER
@@ -327,7 +327,7 @@ export function DropDetail({
         {isUpcoming && (
           <section className="mb-16 border border-black/20 bg-[#FAF8F3] p-8 sm:p-12 max-w-3xl">
             <div className="font-mono text-xs text-neutral-500 mb-4 uppercase tracking-widest font-bold">
-              [ ATÖLYE DROP TAKVİMİ // ATELIER ROADMAP ]
+              [ {t({ tr: "ATÖLYE DROP TAKVİMİ", en: "ATELIER ROADMAP" })} ]
             </div>
             <h3 className="font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight text-black mb-3">
               {t({ tr: "Prototipleme Devam Ediyor", en: "Currently Under Atelier Prototyping" })}

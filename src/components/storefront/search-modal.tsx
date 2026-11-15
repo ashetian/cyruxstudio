@@ -411,7 +411,10 @@ export function DynamicSearchModal({
         <div className="hidden sm:flex items-center justify-between px-6 py-2.5 border-t border-white/10 bg-[#060606] font-mono text-[10px] uppercase tracking-widest text-neutral-500 shrink-0">
           <span>
             {displayedResults.length > 0 &&
-              `// MATCHES: ${displayedResults.length} ITEMS`}
+              t({
+                tr: `${displayedResults.length} PARÇA BULUNDU`,
+                en: `${displayedResults.length} PIECES FOUND`,
+              })}
           </span>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">

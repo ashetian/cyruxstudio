@@ -523,8 +523,8 @@ export function HeroSection({
                   </p>
                   <p className="font-mono text-[10px] text-neutral-400 mb-3 uppercase tracking-wider">
                     {t({
-                      tr: "// ÖNERİLEN ARAMALAR:",
-                      en: "// SUGGESTED SEARCHES:",
+                      tr: "ÖNERİLEN ARAMALAR:",
+                      en: "SUGGESTED SEARCHES:",
                     })}
                   </p>
                   <div className="flex flex-wrap items-center justify-center gap-1.5">

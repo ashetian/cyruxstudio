@@ -173,7 +173,7 @@ export function DropsIndex({
                     <div className="p-6 sm:p-8">
                       <div className="flex items-baseline justify-between gap-4 mb-2">
                         <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500 font-bold">
-                          DROP {drop.number} // {drop.chapter}
+                          DROP {drop.number} • {drop.chapter}
                         </span>
                         <span className="font-mono text-[11px] text-neutral-500 uppercase tracking-widest">
                           {drop.releaseDate[lang]}
@@ -194,7 +194,7 @@ export function DropsIndex({
                         {drop.description[lang]}
                       </p>
 
-                      {/* Boxless Minimalist Technical Spec Table (Sıfır yeşil, sıfır rozet) */}
+                      {/* Boxless Minimalist Technical Spec Table (Sıfır yeşil, sıfır rozet, sıfır slash) */}
                       <div className="mt-6 pt-5 border-t border-black/10 grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-4 font-mono text-[11px]">
                         <div>
                           <span className="block text-neutral-400 uppercase text-[9px] tracking-widest">
@@ -204,8 +204,8 @@ export function DropsIndex({
                             {isActive
                               ? t({ tr: "CANLI DROP", en: "ACTIVE RELEASE" })
                               : isArchived
-                              ? t({ tr: "ARŞİV // KASADA", en: "VAULTED" })
-                              : t({ tr: "ATÖLYE PROTOTİP", en: "PROTOTYPING" })}
+                              ? t({ tr: "ARŞİV", en: "VAULTED" })
+                              : t({ tr: "ATÖLYE PROTOTİPİ", en: "PROTOTYPING" })}
                           </span>
                         </div>
 
