@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Search, ArrowRight } from "lucide-react";
@@ -13,7 +13,6 @@ import { useSearch } from "@/components/providers/search-provider";
 import { CartDrawer } from "@/components/storefront/cart-drawer";
 import { MenuDrawer } from "@/components/storefront/menu-drawer";
 import { StudioFooter } from "@/components/storefront/studio-footer";
-import { formatProductPrice } from "@/components/storefront/bestseller-grid";
 
 export interface DropsIndexProps {
   products: Product[];
@@ -25,7 +24,6 @@ export interface DropsIndexProps {
 
 export function DropsIndex({
   products,
-  productImages = {},
   currency = "USD",
   whatsappNumber = "+905551234567",
   drops,
@@ -36,25 +34,6 @@ export function DropsIndex({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const catalog = drops && drops.length > 0 ? drops : DROPS_CATALOG;
-  const activeDrop = catalog.find((d) => d.status === "active") || catalog[0];
-  const otherDrops = catalog.filter((d) => d.id !== activeDrop.id);
-
-  const otherDropBadge = useMemo(() => {
-    if (otherDrops.length === 0) return null;
-    const nums = otherDrops.map((d) => d.number?.trim()).filter(Boolean);
-    if (nums.length === 0) return null;
-    if (nums.length === 1) return `DROP ${nums[0]}`;
-    if (nums.length === 2) return `${nums[0]} & ${nums[1]}`;
-    return `${nums.slice(0, -1).join(", ")} & ${nums[nums.length - 1]}`;
-  }, [otherDrops]);
-
-  // Products belonging to the active drop
-  const activeProducts = products.filter((p) =>
-    activeDrop.productSlugs.includes(p.slug)
-  );
-
-  const imageFor = (p: Product): string =>
-    productImages[p.slug] || p.mediaUrls[0] || "/assets/brand/logo-emblem-dark.png";
 
   return (
     <div className="min-h-screen bg-[#FAF8F3] text-brand-black flex flex-col justify-between selection:bg-black selection:text-white">
@@ -138,7 +117,6 @@ export function DropsIndex({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
             {catalog.map((drop) => {
               const isArchived = drop.status === "archived";
-              const isUpcoming = drop.status === "upcoming";
               const isActive = drop.status === "active";
               const dropProducts = products.filter((p) =>
                 drop.productSlugs.includes(p.slug)

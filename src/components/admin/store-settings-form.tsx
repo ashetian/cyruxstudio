@@ -142,6 +142,10 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
           aboutMobileImage,
           brandMetadata: {
             announcement,
+            socialLinks: {
+              instagram,
+              twitter,
+            },
             heroDesktopImage,
             heroMobileImage,
             aboutDesktopImage,
@@ -355,11 +359,12 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] sm:text-xs uppercase text-[#AAAAAA] font-bold tracking-wider">
-                INSTAGRAM URL
+                INSTAGRAM URL (FOOTER & SOCIAL)
               </label>
               <input
                 type="text"
                 value={instagram}
+                placeholder="https://instagram.com/cyruxstudio"
                 onChange={(e) => setInstagram(e.target.value)}
                 className="bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] text-base md:text-sm px-3.5 py-3 rounded-none outline-none font-mono min-h-[44px]"
               />

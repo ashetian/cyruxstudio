@@ -149,13 +149,29 @@ export function DropDetail({
                       fill
                       sizes="(max-width: 768px) 50vw, 33vw"
                       className={cn(
-                        "transition-transform duration-700 ease-out group-hover:scale-105",
+                        "transition-all duration-500 ease-out group-hover:scale-105",
+                        product.mediaUrls?.[1] && "group-hover:opacity-0",
                         imageFor(product).includes("/assets/editorial/")
                           ? "object-cover object-center"
                           : "object-contain object-center mix-blend-multiply",
                         isOutOfStock && "grayscale opacity-60"
                       )}
                     />
+                    {product.mediaUrls?.[1] && (
+                      <Image
+                        src={product.mediaUrls[1]}
+                        alt={`${product.name} - Back View`}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className={cn(
+                          "transition-all duration-500 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105 pointer-events-none",
+                          product.mediaUrls[1].includes("/assets/editorial/")
+                            ? "object-cover object-center"
+                            : "object-contain object-center mix-blend-multiply",
+                          isOutOfStock && "grayscale opacity-60"
+                        )}
+                      />
+                    )}
                   </div>
 
                   {/* Bottom Info Strip */}

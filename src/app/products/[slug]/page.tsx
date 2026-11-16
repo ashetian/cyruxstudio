@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { resolveEditorialAssets } from "@/lib/editorial";
 import { ProductDetail } from "@/components/storefront/product-detail";
@@ -11,7 +11,8 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  let { slug } = await params;
+  if (slug === "eyes-never-lie-tee") slug = "cyrux-099-orbital-tee";
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product) return { title: "Product Not Found" };
   const image = resolveEditorialAssets([product]).productImages[product.slug] || "/og-image.jpg";
@@ -46,6 +47,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
+  if (slug === "eyes-never-lie-tee") {
+    redirect("/products/cyrux-099-orbital-tee");
+  }
   const [product, others, settings] = await Promise.all([
     prisma.product.findUnique({ where: { slug } }),
     prisma.product.findMany({

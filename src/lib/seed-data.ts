@@ -117,7 +117,7 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
     name: "CYRUX 099 ORBITAL TEE",
     slug: "cyrux-099-orbital-tee",
     description:
-      "Astronomical cybernetic motif tee in deep washed charcoal. Center orbital star constellation with specular chrome micro-stud effect and studio trademark typographic lockup.",
+      "Astronomical cybernetic motif tee in deep washed charcoal. Front features center orbital star constellation with specular chrome micro-stud effect. Back features cinematic 35mm letterbox eye gaze screenprint with brutalist studio text treatment. Chapter 00 release.",
     price: 110.0,
     stock: 25,
     isBestseller: true,
@@ -125,24 +125,12 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
       { id: "orb-s", name: "S", inStock: true, sku: "ORB-099-S" },
       { id: "orb-m", name: "M", inStock: true, sku: "ORB-099-M" },
       { id: "orb-l", name: "L", inStock: true, sku: "ORB-099-L" },
+      { id: "orb-xl", name: "XL", inStock: true, sku: "ORB-099-XL" },
     ],
-    mediaUrls: ["/assets/products/cyrux-099-orbital.png"],
-  },
-  {
-    id: "prod_5",
-    name: "EYES NEVER LIE TEE",
-    slug: "eyes-never-lie-tee",
-    description:
-      "Cinematic 35mm letterbox eye gaze screenprint on pitch black heavyweight cotton. Brutalist studio text treatment. Limited edition wearable art run.",
-    price: 105.0,
-    stock: 18,
-    isBestseller: false,
-    variants: [
-      { id: "enl-s", name: "S", inStock: true, sku: "ENL-001-S" },
-      { id: "enl-m", name: "M", inStock: true, sku: "ENL-001-M" },
-      { id: "enl-l", name: "L", inStock: true, sku: "ENL-001-L" },
+    mediaUrls: [
+      "/assets/products/cyrux-099-orbital.png",
+      "/assets/products/eyes-never-lie.png",
     ],
-    mediaUrls: ["/assets/products/eyes-never-lie.png"],
   },
 ];
 
@@ -183,19 +171,18 @@ export const INITIAL_DROPS: InitialDropInput[] = [
       en: "NOVEMBER 2026",
     },
     edition: {
-      tr: "5 MODEL • ÖZEL ARŞİV DROPU",
-      en: "5 GARMENTS • ARCHIVAL DROP",
+      tr: "4 MODEL • ÖZEL ARŞİV DROPU",
+      en: "4 GARMENTS • ARCHIVAL DROP",
     },
     description: {
-      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kuzey Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
-      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our North Cyprus atelier. Never restocked.",
+      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 4 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kuzey Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
+      en: "Chapter 00 First Ascent consists of 4 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our North Cyprus atelier. Never restocked.",
     },
     productSlugs: [
       "pretty-chaos-tee",
       "first-ascent-tee-white",
       "first-ascent-tee-black",
       "cyrux-099-orbital-tee",
-      "eyes-never-lie-tee",
     ],
     bannerImage: "/assets/editorial/hero-desktop.jpg",
     totalPieces: 168,

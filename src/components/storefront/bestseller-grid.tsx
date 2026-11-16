@@ -234,7 +234,8 @@ export function BestsellerGrid({
                       fill
                       sizes="(max-width: 1024px) 100vw, 30vw"
                       className={cn(
-                        "transition-transform duration-500 ease-out group-active:scale-95 group-hover:scale-105",
+                        "transition-all duration-500 ease-out group-active:scale-95 group-hover:scale-105",
+                        product.mediaUrls?.[1] && "group-hover:opacity-0",
                         imageFor(product).includes("/assets/editorial/")
                           ? "object-cover object-center"
                           : "object-contain object-center mix-blend-multiply p-4 sm:p-8",
@@ -242,6 +243,21 @@ export function BestsellerGrid({
                       )}
                       priority={index < 2}
                     />
+                    {product.mediaUrls?.[1] && (
+                      <Image
+                        src={product.mediaUrls[1]}
+                        alt={`${product.name} - Back View`}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 30vw"
+                        className={cn(
+                          "transition-all duration-500 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105 pointer-events-none",
+                          product.mediaUrls[1].includes("/assets/editorial/")
+                            ? "object-cover object-center"
+                            : "object-contain object-center mix-blend-multiply p-4 sm:p-8",
+                          isOutOfStock && "grayscale opacity-50"
+                        )}
+                      />
+                    )}
                   </div>
 
                   {/* Bottom Information Strip */}

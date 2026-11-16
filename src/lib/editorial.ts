@@ -10,7 +10,6 @@ export const PRODUCT_EDITORIAL_FILES: Record<string, string> = {
   "first-ascent-tee-white": "p-first-ascent-white.jpg",
   "first-ascent-tee-black": "p-first-ascent-black.jpg",
   "cyrux-099-orbital-tee": "p-cyrux-099-orbital.jpg",
-  "eyes-never-lie-tee": "p-eyes-never-lie.jpg",
 };
 
 export interface EditorialAssets {
