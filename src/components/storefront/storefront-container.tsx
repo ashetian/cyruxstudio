@@ -39,6 +39,8 @@ function StorefrontInner({
   const currency = settings?.currency || "USD";
   const whatsappNumber = settings?.whatsappNumber || "+905551234567";
   const brandMeta = (settings?.brandMetadata as Record<string, unknown>) || {};
+  const socialLinks = ((brandMeta.socialLinks || brandMeta.socialHandles) as Record<string, string>) || {};
+  const instagramUrl = socialLinks.instagram || "https://instagram.com/cyruxstudio";
   const announcement =
     typeof brandMeta.announcement === "string" && brandMeta.announcement.trim().length > 0
       ? brandMeta.announcement.trim()
@@ -97,6 +99,7 @@ function StorefrontInner({
       {/* 4. Brutalist Curtain-Reveal Studio Footer */}
       <StudioFooter
         whatsappNumber={whatsappNumber}
+        instagramUrl={instagramUrl}
       />
 
       {/* 5. Fixed Bottom Floating Island Navigation */}
@@ -106,6 +109,7 @@ function StorefrontInner({
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
         whatsappNumber={whatsappNumber}
+        instagramUrl={instagramUrl}
         drops={allDrops}
       />
     </main>
