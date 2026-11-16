@@ -164,7 +164,6 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     let autoRotationSpeed = 0.014;
 
     const onPointerMove = (e: PointerEvent) => {
-      const rect = container.getBoundingClientRect();
       const clientX = e.clientX;
       const clientY = e.clientY;
 
