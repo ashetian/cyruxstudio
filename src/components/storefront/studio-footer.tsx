@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { useLanguage } from "@/components/providers/language-provider";
+import { LegalModal, type LegalTabId } from "@/components/storefront/legal-modal";
 import { cn } from "@/lib/utils";
 
 export function formatInstagramUrl(input?: string): string {
@@ -32,6 +33,14 @@ export function StudioFooter({
 }: StudioFooterProps) {
   const { t } = useLanguage();
   const formattedInstagram = formatInstagramUrl(instagramUrl);
+
+  const [legalOpen, setLegalOpen] = React.useState(false);
+  const [legalTab, setLegalTab] = React.useState<LegalTabId>("privacy");
+
+  const openLegal = (tab: LegalTabId) => {
+    setLegalTab(tab);
+    setLegalOpen(true);
+  };
 
   const wa = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
     t({
@@ -180,23 +189,49 @@ export function StudioFooter({
       </div>
 
       {/* 4. Bottom Legal & Credits Bar */}
-      <div className="w-full border-t border-neutral-900/80 px-5 sm:px-8 md:px-12 py-4 sm:py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row items-center justify-between gap-2.5 font-mono text-[10px] sm:text-[11px] text-neutral-500 uppercase tracking-wider">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <div className="w-full border-t border-neutral-900/80 px-5 sm:px-8 md:px-12 py-4 sm:py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col md:flex-row items-center justify-between gap-3 font-mono text-[10px] sm:text-[11px] text-neutral-500 uppercase tracking-wider">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-center sm:text-left">
           <span>CYRUX STUDIO © {new Date().getFullYear()}</span>
-          <span className="hidden sm:inline text-neutral-700">•</span>
+          <span className="hidden sm:inline text-neutral-800">•</span>
           <span className="hidden sm:inline">ALL RIGHTS RESERVED</span>
-          <span className="hidden sm:inline text-neutral-700">•</span>
-          <a
-            href={formattedInstagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors"
-          >
-            INSTAGRAM ↗
-          </a>
         </div>
 
-        <div className="flex items-center gap-1.5 lowercase">
+        {/* Discreet Legal Links (Inconspicuous / Nizami) */}
+        <div className="flex flex-wrap items-center justify-center gap-x-2.5 sm:gap-x-3 gap-y-1 text-[9px] sm:text-[10px] text-neutral-600 tracking-wider">
+          <button
+            type="button"
+            onClick={() => openLegal("privacy")}
+            className="hover:text-neutral-300 transition-colors cursor-pointer"
+          >
+            {t({ tr: "GİZLİLİK", en: "PRIVACY" })}
+          </button>
+          <span className="text-neutral-800">•</span>
+          <button
+            type="button"
+            onClick={() => openLegal("terms")}
+            className="hover:text-neutral-300 transition-colors cursor-pointer"
+          >
+            {t({ tr: "KOŞULLAR", en: "TERMS" })}
+          </button>
+          <span className="text-neutral-800">•</span>
+          <button
+            type="button"
+            onClick={() => openLegal("shipping")}
+            className="hover:text-neutral-300 transition-colors cursor-pointer"
+          >
+            {t({ tr: "TESLİMAT & İADE", en: "SHIPPING & RETURNS" })}
+          </button>
+          <span className="text-neutral-800">•</span>
+          <button
+            type="button"
+            onClick={() => openLegal("sales")}
+            className="hover:text-neutral-300 transition-colors cursor-pointer"
+          >
+            {t({ tr: "MESAFELİ SATIŞ", en: "LEGAL NOTICE" })}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 lowercase text-neutral-500">
           <span>made with</span>
           <Heart className="w-3 h-3 text-rose-500 fill-rose-500 inline-block animate-pulse" />
           <span>by</span>
@@ -204,12 +239,18 @@ export function StudioFooter({
             href="https://instagram.com/ashetian_"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-bold text-neutral-300 hover:text-white underline underline-offset-4 decoration-neutral-600 hover:decoration-white transition-colors"
+            className="font-bold text-neutral-400 hover:text-white underline underline-offset-4 decoration-neutral-700 hover:decoration-white transition-colors"
           >
             ashetian_
           </a>
         </div>
       </div>
+
+      <LegalModal
+        isOpen={legalOpen}
+        onClose={() => setLegalOpen(false)}
+        initialTab={legalTab}
+      />
     </footer>
   );
 }
