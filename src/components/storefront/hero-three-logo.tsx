@@ -18,7 +18,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    // 1. WebGL Support Check
+    // 1. WebGL Support Verification
     try {
       const testCanvas = document.createElement("canvas");
       const gl =
@@ -38,12 +38,12 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     let isVisible = true;
 
     // 2. Scene Setup
-    const width = container.clientWidth || 160;
-    const height = container.clientHeight || 160;
+    const width = container.clientWidth || 320;
+    const height = container.clientHeight || 320;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.z = 4.2;
+    camera.position.z = 4.4;
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -56,104 +56,85 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;
+    renderer.toneMappingExposure = 1.25;
 
     container.appendChild(renderer.domElement);
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
 
-    // 3. Lighting (Dynamic brutalist chrome specular setup)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    // 3. Lighting Setup (Brutalist specular metallic reflection)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
-    keyLight.position.set(3, 4, 4);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
+    keyLight.position.set(3.5, 4.0, 4.5);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x99bbdd, 2.0);
-    rimLight.position.set(-3, -2, -3);
+    const rimLight = new THREE.DirectionalLight(0x88aacc, 2.2);
+    rimLight.position.set(-3.5, -2.5, -3.5);
     scene.add(rimLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 3.5, 12);
-    pointLight.position.set(0, 0, 3);
-    scene.add(pointLight);
+    const dynamicPointLight = new THREE.PointLight(0xffffff, 4.0, 15);
+    dynamicPointLight.position.set(0, 0, 3.5);
+    scene.add(dynamicPointLight);
 
-    // 4. Logo Group & Materials
+    // 4. Mesh Creation using cyrux-campaign-poster.jpg directly
     const logoGroup = new THREE.Group();
     scene.add(logoGroup);
 
     const textureLoader = new THREE.TextureLoader();
-    const chromeTexture = textureLoader.load(
-      "/assets/brand/emblem-3d-chrome.png",
+    const posterTexture = textureLoader.load(
+      "/assets/video/cyrux-campaign-poster.jpg",
       () => {
         setIsLoaded(true);
       }
     );
-    chromeTexture.colorSpace = THREE.SRGBColorSpace;
-    chromeTexture.generateMipmaps = true;
-    chromeTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    posterTexture.colorSpace = THREE.SRGBColorSpace;
+    posterTexture.generateMipmaps = true;
+    posterTexture.minFilter = THREE.LinearMipmapLinearFilter;
 
-    const bumpTexture = textureLoader.load("/assets/brand/emblem-3d-bump.png");
+    // Mirrored texture for back side so "CYRUX" reads correctly as it spins
+    const backPosterTexture = posterTexture.clone();
+    backPosterTexture.wrapS = THREE.RepeatWrapping;
+    backPosterTexture.repeat.x = -1;
 
-    const materialConfig = {
-      map: chromeTexture,
-      bumpMap: bumpTexture,
-      bumpScale: 0.035,
-      transparent: true,
-      metalness: 0.92,
-      roughness: 0.14,
-      depthWrite: true,
-    };
+    // 3D Plaque Geometry (2.35 x 2.35 x 0.08 depth)
+    const boxGeo = new THREE.BoxGeometry(2.35, 2.35, 0.08);
 
     const frontMaterial = new THREE.MeshStandardMaterial({
-      ...materialConfig,
-      side: THREE.FrontSide,
+      map: posterTexture,
+      metalness: 0.9,
+      roughness: 0.16,
     });
 
     const backMaterial = new THREE.MeshStandardMaterial({
-      ...materialConfig,
-      side: THREE.FrontSide,
+      map: backPosterTexture,
+      metalness: 0.9,
+      roughness: 0.16,
     });
 
-    const planeGeo = new THREE.PlaneGeometry(2.35, 2.35, 24, 24);
-
-    // Front Face
-    const frontMesh = new THREE.Mesh(planeGeo, frontMaterial);
-    frontMesh.position.z = 0.06;
-    logoGroup.add(frontMesh);
-
-    // Back Face
-    const backMesh = new THREE.Mesh(planeGeo, backMaterial);
-    backMesh.position.z = -0.06;
-    backMesh.rotation.y = Math.PI;
-    logoGroup.add(backMesh);
-
-    // 3D Rim / Volumetric Depth Layers for solid metallic look
-    const rimCount = 5;
-    const rimMeshes: THREE.Mesh[] = [];
-    const rimMaterial = new THREE.MeshStandardMaterial({
-      map: chromeTexture,
-      transparent: true,
-      opacity: 0.7,
-      color: 0xcccccc,
-      metalness: 0.96,
-      roughness: 0.2,
-      side: THREE.DoubleSide,
-      depthWrite: false,
+    // Dark brushed chrome sides
+    const edgeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x141414,
+      metalness: 0.98,
+      roughness: 0.12,
     });
 
-    for (let i = 0; i < rimCount; i++) {
-      const offsetZ = -0.05 + (0.1 / (rimCount - 1)) * i;
-      if (Math.abs(offsetZ) < 0.01) continue;
-      const rimMesh = new THREE.Mesh(planeGeo, rimMaterial);
-      rimMesh.position.z = offsetZ;
-      rimMesh.scale.set(0.995, 0.995, 1);
-      logoGroup.add(rimMesh);
-      rimMeshes.push(rimMesh);
-    }
+    // Box face order: [+X, -X, +Y, -Y, +Z (front), -Z (back)]
+    const materials = [
+      edgeMaterial,
+      edgeMaterial,
+      edgeMaterial,
+      edgeMaterial,
+      frontMaterial,
+      backMaterial,
+    ];
 
-    // 5. Interaction State (Mouse tracking & Drag physics)
+    const plaqueMesh = new THREE.Mesh(boxGeo, materials);
+    logoGroup.add(plaqueMesh);
+
+    // 5. Interaction State (Mouse Tracking & Drag Momentum Physics)
     let pointerX = 0;
     let pointerY = 0;
     let targetTiltX = 0;
@@ -161,28 +142,27 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     let isDragging = false;
     let prevPointerX = 0;
     let dragVelocity = 0;
-    let autoRotationSpeed = 0.014;
+    let autoRotationSpeed = 0.013;
 
     const onPointerMove = (e: PointerEvent) => {
       const clientX = e.clientX;
       const clientY = e.clientY;
 
-      // Global window parallax tilt
       const normX = (clientX / window.innerWidth) * 2 - 1;
       const normY = (clientY / window.innerHeight) * 2 - 1;
 
       pointerX = normX;
       pointerY = normY;
 
-      targetTiltX = pointerY * 0.35;
-      targetTiltZ = -pointerX * 0.15;
+      targetTiltX = pointerY * 0.32;
+      targetTiltZ = -pointerX * 0.14;
 
-      pointLight.position.x = pointerX * 2.5;
-      pointLight.position.y = -pointerY * 2.5;
+      dynamicPointLight.position.x = pointerX * 3.0;
+      dynamicPointLight.position.y = -pointerY * 3.0;
 
       if (isDragging) {
         const deltaX = clientX - prevPointerX;
-        dragVelocity = deltaX * 0.008;
+        dragVelocity = deltaX * 0.007;
         logoGroup.rotation.y += dragVelocity;
         prevPointerX = clientX;
       }
@@ -191,19 +171,19 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     const onPointerDown = (e: PointerEvent) => {
       isDragging = true;
       prevPointerX = e.clientX;
-      autoRotationSpeed = 0.004; // Gentle slow-down when held
+      autoRotationSpeed = 0.003;
     };
 
     const onPointerUp = () => {
       isDragging = false;
-      autoRotationSpeed = 0.014;
+      autoRotationSpeed = 0.013;
     };
 
     container.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerup", onPointerUp);
 
-    // 6. Resize Handling
+    // 6. Responsive Resize Handling
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = entry.contentRect.width;
@@ -226,7 +206,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     );
     intersectionObserver.observe(container);
 
-    // 8. Main Render Loop
+    // 8. Animation Loop
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
@@ -238,7 +218,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
         logoGroup.rotation.y += autoRotationSpeed + dragVelocity;
       }
 
-      // Smooth Lerp Tilt (Pitch & Roll)
+      // Smooth Tilt Lerp
       logoGroup.rotation.x += (targetTiltX - logoGroup.rotation.x) * 0.08;
       logoGroup.rotation.z += (targetTiltZ - logoGroup.rotation.z) * 0.08;
 
@@ -247,7 +227,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
 
     animate();
 
-    // 9. Teardown / Memory Disposal
+    // 9. Teardown / Cleanup
     return () => {
       cancelAnimationFrame(animId);
       resizeObserver.disconnect();
@@ -256,12 +236,12 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
 
-      planeGeo.dispose();
+      boxGeo.dispose();
       frontMaterial.dispose();
       backMaterial.dispose();
-      rimMaterial.dispose();
-      chromeTexture.dispose();
-      bumpTexture.dispose();
+      edgeMaterial.dispose();
+      posterTexture.dispose();
+      backPosterTexture.dispose();
       renderer.dispose();
 
       if (renderer.domElement && container.contains(renderer.domElement)) {
@@ -277,11 +257,11 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
         style={size ? { width: size, height: size } : undefined}
       >
         <Image
-          src="/assets/brand/emblem-3d-chrome.png"
-          alt="Cyrux Studio 3D Emblem"
+          src="/assets/video/cyrux-campaign-poster.jpg"
+          alt="Cyrux Studio 3D Rotating Logo"
           fill
-          sizes="(max-width: 768px) 25vw, 160px"
-          className="object-contain animate-[spin_12s_linear_infinite]"
+          sizes="(max-width: 768px) 70vw, 420px"
+          className="object-contain"
         />
       </div>
     );
@@ -295,14 +275,13 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
       className={`relative aspect-square cursor-grab active:cursor-grabbing select-none touch-none ${className}`}
       style={size ? { width: size, height: size } : undefined}
     >
-      {/* Subtle loader fallback until Three.js texture paints */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center opacity-40">
           <Image
-            src="/assets/brand/emblem-3d-chrome.png"
+            src="/assets/video/cyrux-campaign-poster.jpg"
             alt=""
             fill
-            sizes="(max-width: 768px) 25vw, 160px"
+            sizes="(max-width: 768px) 70vw, 420px"
             className="object-contain"
           />
         </div>

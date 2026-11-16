@@ -93,7 +93,6 @@ export function HeroSection({
   const [internalQuery, setInternalQuery] = useState(searchQuery);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const titleContainerRef = useRef<HTMLHeadingElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const touchMovedRef = useRef(false);
   const [lockedHeroHeight, setLockedHeroHeight] = useState<number | null>(null);
@@ -209,8 +208,6 @@ export function HeroSection({
 
     return () => ctx.revert();
   }, [skipEntranceAnimation]);
-
-  const characters = ["c", "y", "r", "u", "x"];
 
   return (
     <section
@@ -575,39 +572,14 @@ export function HeroSection({
         </div>
       </header>
 
-      {/* 3. Middle Ambient Space */}
-      <div className="flex-1 min-h-[80px] sm:min-h-[180px]" />
-
-      {/* 4. Monumental Display Typography ("CYRUX" - Sekuya with Horizontal Overflow Bleed) */}
-      <div className="relative z-10 w-full overflow-hidden select-none pb-16 sm:pb-20 md:pb-24">
-        <div className="flex justify-center overflow-visible pb-3 sm:pb-6" aria-hidden="true">
-          <span className="char-split inline-block will-change-transform">
-            <span className="relative block w-[clamp(4.25rem,14vw,10.5rem)] aspect-square">
-              <HeroThreeLogo />
-            </span>
-          </span>
+      {/* 3. Hero Centerpiece: 3D Rotating Three.js Plaque Logo (cyrux-campaign-poster) */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center select-none py-6 sm:py-10 md:py-14 my-auto">
+        <div className="char-split will-change-transform flex items-center justify-center">
+          <div className="relative block w-[clamp(14rem,32vw,24rem)] aspect-square drop-shadow-[0_25px_60px_rgba(0,0,0,0.9)]">
+            <HeroThreeLogo />
+          </div>
         </div>
-        <h1
-          ref={titleContainerRef}
-          aria-label="cyrux"
-          className="relative left-1/2 -translate-x-1/2 w-[110vw] sm:w-[114vw] md:w-[118vw] text-center flex justify-between px-0 font-sekuya uppercase font-normal tracking-tight leading-[0.8] pointer-events-none select-none"
-          style={{
-            color: BRAND_TOKENS.CREAM_DISPLAY,
-            fontSize: "clamp(4.25rem, 25vw, 32rem)",
-          }}
-        >
-          {characters.map((char, index) => (
-            <span
-              key={`${char}-${index}`}
-              className="inline-block overflow-hidden py-1"
-              style={{ lineHeight: "0.85" }}
-            >
-              <span className="char-split inline-block will-change-transform">
-                {char}
-              </span>
-            </span>
-          ))}
-        </h1>
+        <h1 className="sr-only">cyrux studio</h1>
       </div>
     </section>
   );
