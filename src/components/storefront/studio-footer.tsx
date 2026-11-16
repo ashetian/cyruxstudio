@@ -7,17 +7,31 @@ import { Heart } from "lucide-react";
 import { useLanguage } from "@/components/providers/language-provider";
 import { cn } from "@/lib/utils";
 
+export function formatInstagramUrl(input?: string): string {
+  if (!input) return "https://instagram.com/cyruxstudio";
+  const trimmed = input.trim();
+  if (!trimmed) return "https://instagram.com/cyruxstudio";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  const handle = trimmed.replace(/^@/, "").replace(/^instagram\.com\//, "");
+  return `https://instagram.com/${handle}`;
+}
+
 export interface StudioFooterProps {
   whatsappNumber?: string;
+  instagramUrl?: string;
   onOpenPastDrops?: () => void;
   className?: string;
 }
 
 export function StudioFooter({
   whatsappNumber = "+905551234567",
+  instagramUrl = "https://instagram.com/cyruxstudio",
   className = "",
 }: StudioFooterProps) {
   const { t } = useLanguage();
+  const formattedInstagram = formatInstagramUrl(instagramUrl);
 
   const wa = `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(
     t({
@@ -130,6 +144,26 @@ export function StudioFooter({
             ↗
           </span>
         </a>
+
+        {/* Row 4: INSTAGRAM (Dynamic from Admin) */}
+        <a
+          href={formattedInstagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group w-full text-left py-5 sm:py-7 md:py-9 px-5 sm:px-8 md:px-12 border-b border-neutral-900/80 transition-colors duration-200 touch-manipulation md:hover:bg-[#FAF8F3] md:hover:text-black active:bg-[#FAF8F3] active:text-black focus:outline-none focus-visible:bg-[#FAF8F3] focus-visible:text-black flex items-center justify-between cursor-pointer"
+        >
+          <div className="flex items-baseline gap-3 sm:gap-6 md:gap-8">
+            <span className="font-mono text-xs sm:text-sm text-neutral-600 md:group-hover:text-black/60 group-active:text-black/60 transition-colors">
+              [04]
+            </span>
+            <span className="font-sekuya text-2xl sm:text-4xl md:text-6xl lg:text-7xl uppercase tracking-tight leading-none">
+              INSTAGRAM
+            </span>
+          </div>
+          <span className="font-mono text-xl sm:text-3xl md:text-5xl font-light transform md:group-hover:translate-x-2 md:group-hover:-translate-y-2 transition-transform duration-200 text-neutral-500 md:group-hover:text-black group-active:text-black">
+            ↗
+          </span>
+        </a>
       </nav>
 
       {/* 3. Center Brand Logo Emblem */}
@@ -147,10 +181,19 @@ export function StudioFooter({
 
       {/* 4. Bottom Legal & Credits Bar */}
       <div className="w-full border-t border-neutral-900/80 px-5 sm:px-8 md:px-12 py-4 sm:py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row items-center justify-between gap-2.5 font-mono text-[10px] sm:text-[11px] text-neutral-500 uppercase tracking-wider">
-        <div>
+        <div className="flex items-center gap-2 sm:gap-3">
           <span>CYRUX STUDIO © {new Date().getFullYear()}</span>
-          <span className="hidden sm:inline mx-2 text-neutral-700">•</span>
+          <span className="hidden sm:inline text-neutral-700">•</span>
           <span className="hidden sm:inline">ALL RIGHTS RESERVED</span>
+          <span className="hidden sm:inline text-neutral-700">•</span>
+          <a
+            href={formattedInstagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            INSTAGRAM ↗
+          </a>
         </div>
 
         <div className="flex items-center gap-1.5 lowercase">

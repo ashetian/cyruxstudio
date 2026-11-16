@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     template: "%s | CYRUX STUDIO",
   },
   description:
-    "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our Cyprus atelier.",
+    "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our North Cyprus atelier.",
   applicationName: "CYRUX STUDIO",
   authors: [{ name: "CYRUX STUDIO", url: "https://instagram.com/ashetian_" }],
   creator: "ashetian_",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     "brutalist streetwear",
     "cyberpunk fashion",
     "avant-garde streetwear",
-    "cyprus atelier",
+    "north cyprus atelier",
     "monochrome fashion",
     "heavyweight cotton tee",
     "limited drops",
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     siteName: "CYRUX STUDIO",
     title: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
     description:
-      "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our Cyprus atelier.",
+      "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our North Cyprus atelier.",
     images: [
       {
         url: "/og-image.jpg",

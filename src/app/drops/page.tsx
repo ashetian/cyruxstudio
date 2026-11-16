@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Drops & Archive",
   description:
-    "Cyrux Studio archival garment drops. Avant-garde wearable art and brutalist streetwear engineered at our Cyprus atelier.",
+    "Cyrux Studio archival garment drops. Avant-garde wearable art and brutalist streetwear engineered at our North Cyprus atelier.",
   alternates: {
     canonical: "/drops",
   },

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!drop) return { title: "Drop Not Found" };
 
   const title = `Drop ${drop.number}: ${drop.title}`;
-  const description = `${drop.chapter} • ${drop.edition.en}. Cyprus atelier engineered archival collection.`;
+  const description = `${drop.chapter} • ${drop.edition.en}. North Cyprus atelier engineered archival collection.`;
   const image = drop.bannerImage || "/og-image.jpg";
 
   return {

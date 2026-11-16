@@ -334,7 +334,7 @@ export function StoreSettingsForm({ onCurrencyChange, onSaveSuccess }: StoreSett
               <div className="bg-[#050505] border border-[#222222] px-3 py-1.5 overflow-hidden flex items-center gap-2 mt-0.5">
                 <span className="text-[9px] text-[#555555] uppercase font-bold shrink-0">STOREFRONT:</span>
                 <span className="text-[10px] text-amber-300 font-mono tracking-widest truncate uppercase">
-                  {announcement || "GLOBAL EXPRESS DISPATCH • CYPRUS • PARIS • TOKYO"}
+                  {announcement || "GLOBAL EXPRESS DISPATCH • NORTH CYPRUS • PARIS • TOKYO"}
                 </span>
               </div>
             </div>

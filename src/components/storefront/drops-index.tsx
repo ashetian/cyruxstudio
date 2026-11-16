@@ -120,15 +120,15 @@ export function DropsIndex({
         {/* Title & Introduction */}
         <div className="mb-12 md:mb-16 border-b border-black/10 pb-8">
           <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-2">
-            CYPRUS ATELIER ARCHIVE & RELEASES
+            NORTH CYPRUS ATELIER ARCHIVE & RELEASES
           </p>
           <h1 className="font-mono text-3xl sm:text-5xl md:text-6xl font-bold uppercase tracking-tight text-black">
             {t({ tr: "Drop Kataloğu", en: "Drops Catalog" })}
           </h1>
           <p className="mt-3 text-sm sm:text-base text-neutral-600 max-w-2xl font-mono leading-relaxed">
             {t({
-              tr: "Cyrux Studio'nun giyilebilir sanat serileri. Her parça tek seferlik üretilir ve asla tekrar basılmaz.",
-              en: "Cyrux Studio's wearable art collections. Hand-finished at our Cyprus atelier. Never restocked.",
+              tr: "Cyrux Studio'nun giyilebilir sanat serileri. Kuzey Kıbrıs atölyemizde üretilir, her parça tek seferliktir ve asla tekrar basılmaz.",
+              en: "Cyrux Studio's wearable art collections. Hand-finished at our North Cyprus atelier. Never restocked.",
             })}
           </p>
         </div>
@@ -225,7 +225,7 @@ export function DropsIndex({
                             {t({ tr: "LOKASYON", en: "ATELIER" })}
                           </span>
                           <span className="font-bold text-black uppercase">
-                            CYPRUS
+                            NORTH CYPRUS
                           </span>
                         </div>
                       </div>

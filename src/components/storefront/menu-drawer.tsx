@@ -13,6 +13,7 @@ export interface MenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   whatsappNumber: string;
+  instagramUrl?: string;
   onOpenPastDrops?: () => void;
   drops?: DropData[];
 }
@@ -26,6 +27,7 @@ export function MenuDrawer({
   isOpen,
   onClose,
   whatsappNumber,
+  instagramUrl = "https://instagram.com/cyruxstudio",
   drops,
 }: MenuDrawerProps) {
   const { lang, setLang, t } = useLanguage();
@@ -221,11 +223,21 @@ export function MenuDrawer({
                     WhatsApp ↗
                   </a>
                 </li>
+                <li>
+                  <a
+                    href={instagramUrl.startsWith("http") ? instagramUrl : `https://instagram.com/${instagramUrl.replace(/^@/, "").replace(/^instagram\.com\//, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline"
+                  >
+                    Instagram ↗
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div className="pt-6 border-t border-neutral-800 font-mono text-[11px] text-neutral-500 uppercase tracking-widest">
-              CYPRUS ATELIER • CYRUX STUDIO
+              NORTH CYPRUS ATELIER • CYRUX STUDIO
             </div>
           </motion.nav>
         </div>

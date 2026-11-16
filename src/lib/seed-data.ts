@@ -48,7 +48,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettingsInput = {
     },
     supportEmail: "contact@cyruxstudio.com",
     whatsappFormatted: "+90 (533) 873 77 12",
-    location: "Cyprus • Global Express Dispatch",
+    location: "Kuzey Kıbrıs • Global Express Dispatch",
     announcement: "",
     heroDesktopImage: "/assets/editorial/hero-desktop.jpg",
     heroMobileImage: "/assets/editorial/hero-mobile.jpg",
@@ -187,8 +187,8 @@ export const INITIAL_DROPS: InitialDropInput[] = [
       en: "5 GARMENTS • ARCHIVAL DROP",
     },
     description: {
-      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
-      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our Cyprus atelier. Never restocked.",
+      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 5 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kuzey Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
+      en: "Chapter 00 First Ascent consists of 5 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our North Cyprus atelier. Never restocked.",
     },
     productSlugs: [
       "pretty-chaos-tee",
@@ -239,8 +239,8 @@ export const INITIAL_DROPS: InitialDropInput[] = [
       en: "IN ATELIER PROTOTYPING",
     },
     description: {
-      tr: "Ağır bomber ceketler, modüler fermuarlı kargo pantolonlar ve 3D yansıtıcı mikro-aplikeler. Kıbrıs atölyemizde prototip üretimi devam etmektedir.",
-      en: "Heavyweight technical puffers, modular cargo trousers, and specular 3D chrome details. Currently in atelier prototyping in Cyprus.",
+      tr: "Ağır bomber ceketler, modüler fermuarlı kargo pantolonlar ve 3D yansıtıcı mikro-aplikeler. Kuzey Kıbrıs atölyemizde prototip üretimi devam etmektedir.",
+      en: "Heavyweight technical puffers, modular cargo trousers, and specular 3D chrome details. Currently in atelier prototyping in North Cyprus.",
     },
     productSlugs: [],
     bannerImage: "/assets/campaign/campaign-card-puffer.webp",

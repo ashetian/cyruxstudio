@@ -125,7 +125,7 @@ export function DropModal({
                     {drop.title}
                   </h3>
                   <span className="text-[10px] text-neutral-400 uppercase tracking-widest mt-1">
-                    {drop.releaseDate[lang]} • {t({ tr: "KIBRIS ATÖLYESİ (35.1856° N)", en: "CYPRUS ATELIER (35.1856° N)" })}
+                    {drop.releaseDate[lang]} • {t({ tr: "KUZEY KIBRIS ATÖLYESİ (35.1856° N)", en: "NORTH CYPRUS ATELIER (35.1856° N)" })}
                   </span>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export function DropModal({
                     {t({ tr: "TEKRAR BASILMAYACAK", en: "NEVER RESTOCKED" })}
                   </span>
                   <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-800">
-                    {t({ tr: "KIBRIS ATÖLYESİNDEN EXPRESS GÖNDERİM", en: "EXPRESS DISPATCH FROM CYPRUS" })}
+                    {t({ tr: "KUZEY KIBRIS ATÖLYESİNDEN EXPRESS GÖNDERİM", en: "EXPRESS DISPATCH FROM NORTH CYPRUS" })}
                   </span>
                 </div>
               </div>

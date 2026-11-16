@@ -230,7 +230,7 @@ export function PastDropsModal({
             {/* Modal Footer */}
             <div className="p-4 sm:p-5 border-t border-neutral-800 bg-neutral-950 flex items-center justify-between shrink-0">
               <span className="text-[11px] text-neutral-500 uppercase tracking-widest">
-                CYRUX ARCHIVAL RECORD • CYPRUS ATELIER
+                CYRUX ARCHIVAL RECORD • NORTH CYPRUS ATELIER
               </span>
               <button
                 type="button"

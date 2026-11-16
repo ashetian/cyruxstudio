@@ -189,10 +189,12 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     intersectionObserver.observe(container);
 
     // 8. Animation Loop
+    let clock = 0;
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
       if (!isVisible) return;
+      clock += 0.02;
 
       // Continuous Idle Y Rotation + Drag Momentum Decay
       if (!isDragging) {
@@ -200,9 +202,13 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
         logoGroup.rotation.y += autoRotationSpeed + dragVelocity;
       }
 
-      // Smooth Tilt Lerp
-      logoGroup.rotation.x += (targetTiltX - logoGroup.rotation.x) * 0.08;
-      logoGroup.rotation.z += (targetTiltZ - logoGroup.rotation.z) * 0.08;
+      // Gentle ambient floating motion so mobile touchscreens also enjoy shifting chrome highlights
+      const ambientFloatX = Math.sin(clock * 0.7) * 0.04;
+      const ambientFloatZ = Math.cos(clock * 0.5) * 0.03;
+
+      // Smooth Tilt Lerp (combines cursor tilt + ambient micro-float)
+      logoGroup.rotation.x += (targetTiltX + ambientFloatX - logoGroup.rotation.x) * 0.08;
+      logoGroup.rotation.z += (targetTiltZ + ambientFloatZ - logoGroup.rotation.z) * 0.08;
 
       renderer.render(scene, camera);
     };
@@ -244,7 +250,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
           alt="Cyrux Studio 3D Rotating Logo"
           fill
           priority
-          sizes="(max-width: 768px) 85vw, 600px"
+          sizes="(max-width: 640px) 75vw, (max-width: 1024px) 45vw, 36rem"
           className="object-contain"
         />
       </div>
@@ -256,7 +262,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
       ref={containerRef}
       role="img"
       aria-label="Cyrux Studio 3D Rotating Logo"
-      className={`relative aspect-square cursor-grab active:cursor-grabbing select-none touch-none ${className}`}
+      className={`relative aspect-square cursor-grab active:cursor-grabbing select-none touch-pan-y ${className}`}
       style={size ? { width: size, height: size } : undefined}
     >
       {!isLoaded && (
@@ -266,7 +272,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
             alt=""
             fill
             priority
-            sizes="(max-width: 768px) 85vw, 600px"
+            sizes="(max-width: 640px) 75vw, (max-width: 1024px) 45vw, 36rem"
             className="object-contain"
           />
         </div>

@@ -198,8 +198,8 @@ export function AboutSection({
               <span className="font-semibold text-white">CYRUX STUDIO</span>
               <span>
                 {t({
-                  tr: "KIBRIS • 35.1856° N",
-                  en: "CYPRUS • 35.1856° N",
+                  tr: "KUZEY KIBRIS • 35.1856° N",
+                  en: "NORTH CYPRUS • 35.1856° N",
                 })}
               </span>
             </div>

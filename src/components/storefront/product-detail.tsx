@@ -405,8 +405,8 @@ export function ProductDetail({
               </Accordion>
               <Accordion title={t({ tr: "KARGO & TESLİMAT", en: "SHIPPING" })}>
                 {t({
-                  tr: "Kıbrıs (Cyprus) atölyemizden tüm dünyaya express kargo ile gönderilir. Siparişler doğrudan resmi WhatsApp terminali üzerinden koordine edilir.",
-                  en: "Dispatched from Cyprus with worldwide express shipping. Orders are confirmed and arranged directly over WhatsApp.",
+                  tr: "Kuzey Kıbrıs (North Cyprus) atölyemizden tüm dünyaya express kargo ile gönderilir. Siparişler doğrudan resmi WhatsApp terminali üzerinden koordine edilir.",
+                  en: "Dispatched from North Cyprus with worldwide express shipping. Orders are confirmed and arranged directly over WhatsApp.",
                 })}
               </Accordion>
             </div>

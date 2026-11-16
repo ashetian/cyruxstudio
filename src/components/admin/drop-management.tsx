@@ -107,8 +107,8 @@ export function DropManagement({ onDropMutated }: DropManagementProps = {}) {
       releaseDateEn: "DECEMBER 2026",
       editionTr: "150 PARÇA • NUMARALI ARŞİV DÖKÜMÜ",
       editionEn: "150 NUMBERED PIECES • ARCHIVAL RUN",
-      descTr: "Kıbrıs atölyemizde limitli üretilmiş avangart sokak giyimi serisi.",
-      descEn: "Limited avant-garde streetwear run crafted at our Cyprus atelier.",
+      descTr: "Kuzey Kıbrıs atölyemizde limitli üretilmiş avangart sokak giyimi serisi.",
+      descEn: "Limited avant-garde streetwear run crafted at our North Cyprus atelier.",
       productSlugs: [],
     });
     setModalOpen(true);
