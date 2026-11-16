@@ -572,10 +572,10 @@ export function HeroSection({
         </div>
       </header>
 
-      {/* 3. Hero Centerpiece: 3D Rotating Three.js Plaque Logo (cyrux-campaign-poster) */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center select-none py-6 sm:py-10 md:py-14 my-auto">
-        <div className="char-split will-change-transform flex items-center justify-center">
-          <div className="relative block w-[clamp(14rem,32vw,24rem)] aspect-square drop-shadow-[0_25px_60px_rgba(0,0,0,0.9)]">
+      {/* 3. Hero Centerpiece: 3D Rotating Three.js Logo (Transparent Cutout, Monumental Scale) */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center select-none py-4 sm:py-8 md:py-10 my-auto">
+        <div className="char-split will-change-transform flex items-center justify-center w-full">
+          <div className="relative block w-[clamp(18rem,52vw,40rem)] max-w-[92vw] max-h-[72vh] aspect-square drop-shadow-[0_25px_80px_rgba(0,0,0,0.95)]">
             <HeroThreeLogo />
           </div>
         </div>

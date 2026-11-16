@@ -43,7 +43,7 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.z = 4.4;
+    camera.position.z = 3.6;
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -64,75 +64,97 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     renderer.domElement.style.display = "block";
 
     // 3. Lighting Setup (Brutalist specular metallic reflection)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
     keyLight.position.set(3.5, 4.0, 4.5);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x88aacc, 2.2);
+    const rimLight = new THREE.DirectionalLight(0x88aacc, 2.5);
     rimLight.position.set(-3.5, -2.5, -3.5);
     scene.add(rimLight);
 
-    const dynamicPointLight = new THREE.PointLight(0xffffff, 4.0, 15);
+    const dynamicPointLight = new THREE.PointLight(0xffffff, 4.5, 15);
     dynamicPointLight.position.set(0, 0, 3.5);
     scene.add(dynamicPointLight);
 
-    // 4. Mesh Creation using cyrux-campaign-poster.jpg directly
+    // 4. Mesh Creation using transparent logo cutout
     const logoGroup = new THREE.Group();
     scene.add(logoGroup);
 
     const textureLoader = new THREE.TextureLoader();
-    const posterTexture = textureLoader.load(
-      "/assets/video/cyrux-campaign-poster.jpg",
+    const logoTexture = textureLoader.load(
+      "/assets/brand/cyrux-poster-transparent.png",
       () => {
         setIsLoaded(true);
       }
     );
-    posterTexture.colorSpace = THREE.SRGBColorSpace;
-    posterTexture.generateMipmaps = true;
-    posterTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    logoTexture.colorSpace = THREE.SRGBColorSpace;
+    logoTexture.generateMipmaps = true;
+    logoTexture.minFilter = THREE.LinearMipmapLinearFilter;
 
-    // Mirrored texture for back side so "CYRUX" reads correctly as it spins
-    const backPosterTexture = posterTexture.clone();
-    backPosterTexture.wrapS = THREE.RepeatWrapping;
-    backPosterTexture.repeat.x = -1;
+    const bumpTexture = textureLoader.load("/assets/brand/cyrux-poster-bump.png");
+    bumpTexture.generateMipmaps = true;
 
-    // 3D Plaque Geometry (2.35 x 2.35 x 0.08 depth)
-    const boxGeo = new THREE.BoxGeometry(2.35, 2.35, 0.08);
+    // Multi-plane volumetric geometry for sculpted physical 3D thickness
+    const planeGeo = new THREE.PlaneGeometry(2.6, 2.6, 24, 24);
+
+    const materialConfig = {
+      map: logoTexture,
+      bumpMap: bumpTexture,
+      bumpScale: 0.04,
+      metalness: 0.95,
+      roughness: 0.14,
+      transparent: true,
+      alphaTest: 0.08,
+      depthWrite: true,
+    };
 
     const frontMaterial = new THREE.MeshStandardMaterial({
-      map: posterTexture,
-      metalness: 0.9,
-      roughness: 0.16,
+      ...materialConfig,
+      side: THREE.FrontSide,
     });
 
     const backMaterial = new THREE.MeshStandardMaterial({
-      map: backPosterTexture,
-      metalness: 0.9,
-      roughness: 0.16,
+      ...materialConfig,
+      side: THREE.FrontSide,
     });
 
-    // Dark brushed chrome sides
-    const edgeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x141414,
+    // Front Face
+    const frontMesh = new THREE.Mesh(planeGeo, frontMaterial);
+    frontMesh.position.z = 0.05;
+    logoGroup.add(frontMesh);
+
+    // Back Face (Rotated 180° around Y so CYRUX reads correctly from the back)
+    const backMesh = new THREE.Mesh(planeGeo, backMaterial);
+    backMesh.position.z = -0.05;
+    backMesh.rotation.y = Math.PI;
+    logoGroup.add(backMesh);
+
+    // Volumetric 3D Rim / Depth Layers for solid metallic body
+    const rimCount = 5;
+    const rimMeshes: THREE.Mesh[] = [];
+    const rimMaterial = new THREE.MeshStandardMaterial({
+      map: logoTexture,
+      color: 0x888888,
       metalness: 0.98,
-      roughness: 0.12,
+      roughness: 0.22,
+      transparent: true,
+      alphaTest: 0.08,
+      side: THREE.DoubleSide,
+      depthWrite: false,
     });
 
-    // Box face order: [+X, -X, +Y, -Y, +Z (front), -Z (back)]
-    const materials = [
-      edgeMaterial,
-      edgeMaterial,
-      edgeMaterial,
-      edgeMaterial,
-      frontMaterial,
-      backMaterial,
-    ];
-
-    const plaqueMesh = new THREE.Mesh(boxGeo, materials);
-    logoGroup.add(plaqueMesh);
+    for (let i = 0; i < rimCount; i++) {
+      const offsetZ = -0.04 + (0.08 / (rimCount - 1)) * i;
+      if (Math.abs(offsetZ) < 0.005) continue;
+      const rimMesh = new THREE.Mesh(planeGeo, rimMaterial);
+      rimMesh.position.z = offsetZ;
+      rimMesh.scale.set(0.996, 0.996, 1);
+      logoGroup.add(rimMesh);
+      rimMeshes.push(rimMesh);
+    }
 
     // 5. Interaction State (Mouse Tracking & Drag Momentum Physics)
     let pointerX = 0;
@@ -236,12 +258,12 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
 
-      boxGeo.dispose();
+      planeGeo.dispose();
       frontMaterial.dispose();
       backMaterial.dispose();
-      edgeMaterial.dispose();
-      posterTexture.dispose();
-      backPosterTexture.dispose();
+      rimMaterial.dispose();
+      logoTexture.dispose();
+      bumpTexture.dispose();
       renderer.dispose();
 
       if (renderer.domElement && container.contains(renderer.domElement)) {
@@ -257,10 +279,11 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
         style={size ? { width: size, height: size } : undefined}
       >
         <Image
-          src="/assets/video/cyrux-campaign-poster.jpg"
+          src="/assets/brand/cyrux-poster-transparent.webp"
           alt="Cyrux Studio 3D Rotating Logo"
           fill
-          sizes="(max-width: 768px) 70vw, 420px"
+          priority
+          sizes="(max-width: 768px) 85vw, 600px"
           className="object-contain"
         />
       </div>
@@ -278,10 +301,11 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center opacity-40">
           <Image
-            src="/assets/video/cyrux-campaign-poster.jpg"
+            src="/assets/brand/cyrux-poster-transparent.webp"
             alt=""
             fill
-            sizes="(max-width: 768px) 70vw, 420px"
+            priority
+            sizes="(max-width: 768px) 85vw, 600px"
             className="object-contain"
           />
         </div>
