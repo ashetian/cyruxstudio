@@ -12,6 +12,7 @@ import { BRAND_TOKENS } from "@/lib/constants";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
 import { formatProductPrice } from "@/components/storefront/bestseller-grid";
+import { HeroThreeLogo } from "@/components/storefront/hero-three-logo";
 
 const dropdownContainerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -579,16 +580,10 @@ export function HeroSection({
 
       {/* 4. Monumental Display Typography ("CYRUX" - Sekuya with Horizontal Overflow Bleed) */}
       <div className="relative z-10 w-full overflow-hidden select-none pb-16 sm:pb-20 md:pb-24">
-        <div className="flex justify-center overflow-hidden pb-3 sm:pb-6" aria-hidden="true">
+        <div className="flex justify-center overflow-visible pb-3 sm:pb-6" aria-hidden="true">
           <span className="char-split inline-block will-change-transform">
-            <span className="relative block w-[clamp(3.75rem,13vw,10rem)] aspect-square">
-              <Image
-                src="/assets/brand/logo-emblem-white.webp"
-                alt=""
-                fill
-                sizes="(max-width: 768px) 20vw, 160px"
-                className="object-contain"
-              />
+            <span className="relative block w-[clamp(4.25rem,14vw,10.5rem)] aspect-square">
+              <HeroThreeLogo />
             </span>
           </span>
         </div>
