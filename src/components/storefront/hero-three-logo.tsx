@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 interface HeroThreeLogoProps {
   className?: string;
@@ -56,105 +57,64 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.35;
 
     container.appendChild(renderer.domElement);
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
 
-    // 3. Lighting Setup (Brutalist specular metallic reflection)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    // 3. Lighting Setup (Brutalist specular chrome reflections)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
-    keyLight.position.set(3.5, 4.0, 4.5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 4.0);
+    keyLight.position.set(4.0, 4.5, 4.0);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x88aacc, 2.5);
-    rimLight.position.set(-3.5, -2.5, -3.5);
+    const rimLight = new THREE.DirectionalLight(0x88aacc, 3.0);
+    rimLight.position.set(-4.0, -3.0, -3.5);
     scene.add(rimLight);
 
-    const dynamicPointLight = new THREE.PointLight(0xffffff, 4.5, 15);
+    const topLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    topLight.position.set(0, 5.0, 0);
+    scene.add(topLight);
+
+    const dynamicPointLight = new THREE.PointLight(0xffffff, 5.0, 18);
     dynamicPointLight.position.set(0, 0, 3.5);
     scene.add(dynamicPointLight);
 
-    // 4. Mesh Creation using transparent logo cutout
+    // 4. Mesh Creation using true solid 3D geometry (watertight, beveled chrome mesh)
     const logoGroup = new THREE.Group();
     scene.add(logoGroup);
 
-    const textureLoader = new THREE.TextureLoader();
-    const logoTexture = textureLoader.load(
-      "/assets/brand/cyrux-poster-transparent.png",
-      () => {
+    const chromeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf2f2f2,
+      metalness: 0.96,
+      roughness: 0.12,
+    });
+
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load(
+      "/assets/brand/cyrux-logo-solid.glb",
+      (gltf) => {
+        const model = gltf.scene;
+        model.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            mesh.material = chromeMaterial;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+          }
+        });
+        logoGroup.add(model);
         setIsLoaded(true);
+      },
+      undefined,
+      (err) => {
+        console.error("Failed to load solid 3D logo GLB:", err);
       }
     );
-    logoTexture.colorSpace = THREE.SRGBColorSpace;
-    logoTexture.generateMipmaps = true;
-    logoTexture.minFilter = THREE.LinearMipmapLinearFilter;
-
-    const bumpTexture = textureLoader.load("/assets/brand/cyrux-poster-bump.png");
-    bumpTexture.generateMipmaps = true;
-
-    // Multi-plane volumetric geometry for sculpted physical 3D thickness
-    const planeGeo = new THREE.PlaneGeometry(2.6, 2.6, 24, 24);
-
-    const materialConfig = {
-      map: logoTexture,
-      bumpMap: bumpTexture,
-      bumpScale: 0.04,
-      metalness: 0.95,
-      roughness: 0.14,
-      transparent: true,
-      alphaTest: 0.08,
-      depthWrite: true,
-    };
-
-    const frontMaterial = new THREE.MeshStandardMaterial({
-      ...materialConfig,
-      side: THREE.FrontSide,
-    });
-
-    const backMaterial = new THREE.MeshStandardMaterial({
-      ...materialConfig,
-      side: THREE.FrontSide,
-    });
-
-    // Front Face
-    const frontMesh = new THREE.Mesh(planeGeo, frontMaterial);
-    frontMesh.position.z = 0.05;
-    logoGroup.add(frontMesh);
-
-    // Back Face (Rotated 180° around Y so CYRUX reads correctly from the back)
-    const backMesh = new THREE.Mesh(planeGeo, backMaterial);
-    backMesh.position.z = -0.05;
-    backMesh.rotation.y = Math.PI;
-    logoGroup.add(backMesh);
-
-    // Volumetric 3D Rim / Depth Layers for solid metallic body
-    const rimCount = 5;
-    const rimMeshes: THREE.Mesh[] = [];
-    const rimMaterial = new THREE.MeshStandardMaterial({
-      map: logoTexture,
-      color: 0x888888,
-      metalness: 0.98,
-      roughness: 0.22,
-      transparent: true,
-      alphaTest: 0.08,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
-
-    for (let i = 0; i < rimCount; i++) {
-      const offsetZ = -0.04 + (0.08 / (rimCount - 1)) * i;
-      if (Math.abs(offsetZ) < 0.005) continue;
-      const rimMesh = new THREE.Mesh(planeGeo, rimMaterial);
-      rimMesh.position.z = offsetZ;
-      rimMesh.scale.set(0.996, 0.996, 1);
-      logoGroup.add(rimMesh);
-      rimMeshes.push(rimMesh);
-    }
 
     // 5. Interaction State (Mouse Tracking & Drag Momentum Physics)
     let pointerX = 0;
@@ -258,12 +218,13 @@ export function HeroThreeLogo({ className = "", size }: HeroThreeLogoProps) {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
 
-      planeGeo.dispose();
-      frontMaterial.dispose();
-      backMaterial.dispose();
-      rimMaterial.dispose();
-      logoTexture.dispose();
-      bumpTexture.dispose();
+      chromeMaterial.dispose();
+      logoGroup.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          mesh.geometry?.dispose();
+        }
+      });
       renderer.dispose();
 
       if (renderer.domElement && container.contains(renderer.domElement)) {
