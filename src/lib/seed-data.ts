@@ -95,6 +95,8 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
     price: 95.0,
     stock: 80,
     isBestseller: true,
+    color: "Black",
+    colorHex: "#0A0A0A",
     variants: [
       { id: "fa-b-s", name: "BLACK / S", size: "S", color: "Black", colorHex: "#0A0A0A", inStock: true, sku: "FA-BLK-S", imageUrl: "/assets/products/first-ascent-black.png" },
       { id: "fa-b-m", name: "BLACK / M", size: "M", color: "Black", colorHex: "#0A0A0A", inStock: true, sku: "FA-BLK-M", imageUrl: "/assets/products/first-ascent-black.png" },

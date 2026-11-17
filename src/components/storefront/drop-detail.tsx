@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ShoppingBag, Search } from "lucide-react";
 import type { Product } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,29 @@ export interface DropDetailProps {
   whatsappNumber?: string;
 }
 
+const dropSlideVariants: Variants = {
+  enter: (dir: number) => ({
+    x: dir > 0 ? "100%" : "-100%",
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      x: { type: "spring" as const, stiffness: 320, damping: 32 },
+      opacity: { duration: 0.2 },
+    },
+  },
+  exit: (dir: number) => ({
+    x: dir < 0 ? "100%" : "-100%",
+    opacity: 0,
+    transition: {
+      x: { type: "spring" as const, stiffness: 320, damping: 32 },
+      opacity: { duration: 0.2 },
+    },
+  }),
+};
+
 function DropProductCard({
   product,
   allProducts,
@@ -39,7 +63,7 @@ function DropProductCard({
   t: (input: { tr: string; en: string }) => string;
 }) {
   const [activeSlug, setActiveSlug] = useState(product.slug);
-  const [activeSide, setActiveSide] = useState<"front" | "back">("front");
+  const [slideDir, setSlideDir] = useState<number>(1);
 
   const displayProduct =
     activeSlug === product.slug
@@ -57,7 +81,7 @@ function DropProductCard({
 
   const frontImg = imageFor(displayProduct);
   const backImg = displayProduct.mediaUrls?.[1] || frontImg;
-  const currentImg = activeSide === "back" ? backImg : frontImg;
+  const currentImg = frontImg;
   const isOutOfStock = displayProduct.stock <= 0;
 
   return (
@@ -77,10 +101,11 @@ function DropProductCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                setSlideDir(-1);
                 setActiveSlug(product.slug);
               }}
               className={cn(
-                "w-3 h-3 rounded-full border transition-all",
+                "w-3 h-3 rounded-full border transition-all cursor-pointer",
                 activeSlug === product.slug
                   ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
                   : "opacity-60 hover:opacity-100 border-black/30"
@@ -94,10 +119,11 @@ function DropProductCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                setSlideDir(1);
                 setActiveSlug(twin.slug);
               }}
               className={cn(
-                "w-3 h-3 rounded-full border transition-all",
+                "w-3 h-3 rounded-full border transition-all cursor-pointer",
                 activeSlug === twin.slug
                   ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
                   : "opacity-60 hover:opacity-100 border-black/30"
@@ -115,18 +141,9 @@ function DropProductCard({
         )}
 
         {isDiptych && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveSide((s) => (s === "front" ? "back" : "front"));
-            }}
-            className="pointer-events-auto font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-white/90 hover:bg-white text-black px-2 py-0.5 border border-black/15 shadow-xs transition-colors flex items-center gap-1"
-          >
-            <span>{activeSide === "front" ? (lang === "tr" ? "ÖN" : "FRONT") : (lang === "tr" ? "ARKA" : "BACK")}</span>
-            <span className="text-[8px] text-neutral-400">⇄</span>
-          </button>
+          <div className="pointer-events-auto font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-white/90 text-black px-2 py-0.5 border border-black/15 shadow-xs flex items-center gap-1">
+            <span>{lang === "tr" ? "ÖN + ARKA YAPISIK" : "FRONT + BACK"}</span>
+          </div>
         )}
       </div>
 
@@ -139,22 +156,67 @@ function DropProductCard({
         </div>
       )}
 
-      {/* Product Image: Responsive aspect-[3/4] */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden flex items-center justify-center p-3 sm:p-6 md:p-8">
-        <Image
-          key={`${displayProduct.id}-${activeSide}`}
-          src={currentImg}
-          alt={displayProduct.name}
-          fill
-          sizes="(max-width: 768px) 50vw, 33vw"
-          className={cn(
-            "transition-all duration-500 ease-out group-hover:scale-105",
-            currentImg.includes("/assets/editorial/")
-              ? "object-cover object-center"
-              : "object-contain object-center mix-blend-multiply",
-            isOutOfStock && "grayscale opacity-60"
-          )}
-        />
+      {/* Product Image: Responsive aspect-square, 0 padding, no margin */}
+      <div className="relative aspect-square w-full overflow-hidden bg-[#EDEDEF]">
+        {isDiptych ? (
+          /* Diptych Dual Panel (ÖN + ARKA YAPISIK - ZERO GAP, ZERO MARGIN) */
+          <div className="grid grid-cols-2 gap-0 w-full h-full">
+            <div className="relative w-full h-full overflow-hidden border-r border-black/10">
+              <Image
+                src={frontImg}
+                alt={`${displayProduct.name} - Front`}
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className={cn(
+                  "transition-all duration-500 ease-out group-hover:scale-105 object-cover object-center",
+                  isOutOfStock && "grayscale opacity-60"
+                )}
+              />
+              <span className="absolute bottom-1.5 left-1.5 z-10 bg-black/80 text-white font-mono text-[8px] font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                01. {lang === "tr" ? "ÖN" : "FRONT"}
+              </span>
+            </div>
+            <div className="relative w-full h-full overflow-hidden">
+              <Image
+                src={backImg}
+                alt={`${displayProduct.name} - Back`}
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className={cn(
+                  "transition-all duration-500 ease-out group-hover:scale-105 object-cover object-center",
+                  isOutOfStock && "grayscale opacity-60"
+                )}
+              />
+              <span className="absolute bottom-1.5 left-1.5 z-10 bg-black/80 text-white font-mono text-[8px] font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                02. {lang === "tr" ? "ARKA" : "BACK"}
+              </span>
+            </div>
+          </div>
+        ) : (
+          /* Single Image with Horizontal Slide Transition on Colorway Change */
+          <AnimatePresence mode="popLayout" custom={slideDir} initial={false}>
+            <motion.div
+              key={displayProduct.id}
+              custom={slideDir}
+              variants={dropSlideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="relative w-full h-full"
+            >
+              <Image
+                src={currentImg}
+                alt={displayProduct.name}
+                fill
+                sizes="(max-width: 768px) 50vw, 33vw"
+                className={cn(
+                  "transition-all duration-500 ease-out group-hover:scale-105 object-cover object-center",
+                  isOutOfStock && "grayscale opacity-60"
+                )}
+              />
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
 
       {/* Bottom Info Strip */}

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { Minus, Plus, ShoppingBag, ChevronDown, Search } from "lucide-react";
 import type { Product } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ import { HeroSection } from "./hero-section";
 import { formatProductPrice } from "./bestseller-grid";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
+import { SplitCurtainGallery } from "./split-curtain-gallery";
 
 export interface ProductDetailProps {
   product: Product;
@@ -48,6 +49,36 @@ function Accordion({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
+export interface ColorOptionItem {
+  name: string;
+  hex: string;
+  imageUrl: string;
+  targetProduct?: Product;
+}
+
+const slideFromRightVariants: Variants = {
+  enter: {
+    x: "100%",
+    opacity: 0,
+  },
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      x: { type: "spring" as const, stiffness: 320, damping: 32 },
+      opacity: { duration: 0.2 },
+    },
+  },
+  exit: {
+    x: "-100%",
+    opacity: 0,
+    transition: {
+      x: { type: "spring" as const, stiffness: 320, damping: 32 },
+      opacity: { duration: 0.2 },
+    },
+  },
+};
+
 export function ProductDetail({
   product,
   others,
@@ -71,53 +102,188 @@ export function ProductDetail({
   const hasTriggeredExit = useRef(false);
   const hideMobileBarRef = useRef(false);
 
-  const variants = React.useMemo(
-    () => (product.variants as unknown as ProductVariant[]) || [],
-    [product.variants]
-  );
-  const soldOut = product.stock <= 0;
+  const [currentProduct, setCurrentProduct] = useState<Product>(product);
 
-  const twinProduct = product.twinProductSlug
-    ? others.find((p) => p.slug === product.twinProductSlug) || null
+  useEffect(() => {
+    setCurrentProduct(product);
+  }, [product]);
+
+  const variants = React.useMemo(
+    () => (currentProduct.variants as unknown as ProductVariant[]) || [],
+    [currentProduct.variants]
+  );
+  const soldOut = currentProduct.stock <= 0;
+
+  const allProductsList = React.useMemo(
+    () => [product, ...others],
+    [product, others]
+  );
+
+  const twinProduct = currentProduct.twinProductSlug
+    ? allProductsList.find((p) => p.slug === currentProduct.twinProductSlug && p.id !== currentProduct.id) || null
     : null;
 
   const isDiptych = Boolean(
-    product.isDiptych || (product.mediaUrls && product.mediaUrls.length >= 2)
+    currentProduct.isDiptych ||
+    currentProduct.slug === "cyrux-099-orbital-tee" ||
+    (currentProduct.mediaUrls && currentProduct.mediaUrls.length >= 2 && currentProduct.slug.includes("099"))
   );
 
   const gallery = Array.from(
-    new Set([productImages[product.slug], ...product.mediaUrls].filter(Boolean))
+    new Set([productImages[currentProduct.slug], ...currentProduct.mediaUrls].filter(Boolean))
   );
   if (gallery.length === 0) gallery.push(FALLBACK_IMG);
   const [active, setActive] = useState(0);
 
-  const colors = React.useMemo(() => {
-    const list: string[] = [];
+  const colorOptions = React.useMemo<ColorOptionItem[]>(() => {
+    // 1. From variants if variants define colors:
+    const fromVariants: ColorOptionItem[] = [];
     for (const v of variants) {
-      if (v.color && !list.includes(v.color)) {
-        list.push(v.color);
+      if (v.color && !fromVariants.some((o) => o.name.toLowerCase() === v.color!.toLowerCase())) {
+        const hex = v.colorHex || (v.color.toLowerCase().includes("white") ? "#FAF8F3" : "#0A0A0A");
+        const img =
+          v.imageUrl ||
+          gallery.find((g) => g.toLowerCase().includes(v.color!.toLowerCase())) ||
+          gallery[fromVariants.length] ||
+          gallery[0];
+        fromVariants.push({
+          name: v.color.toUpperCase(),
+          hex,
+          imageUrl: img,
+        });
       }
     }
-    return list;
-  }, [variants]);
+    if (fromVariants.length > 1) return fromVariants;
 
-  const [selectedColor, setSelectedColor] = useState<string>(colors[0] || "");
+    // 2. Twin product pairing:
+    if (twinProduct) {
+      const curColor = (currentProduct.color || "BLACK").toUpperCase();
+      const twinColor = (twinProduct.color || "WHITE").toUpperCase();
+      const curImg = gallery[0] || productImages[currentProduct.slug];
+      const twinImg = productImages[twinProduct.slug] || twinProduct.mediaUrls?.[0] || curImg;
+      return [
+        {
+          name: curColor,
+          hex: currentProduct.colorHex || (curColor.includes("WHITE") ? "#FAF8F3" : "#0A0A0A"),
+          imageUrl: curImg,
+          targetProduct: currentProduct,
+        },
+        {
+          name: twinColor,
+          hex: twinProduct.colorHex || (twinColor.includes("WHITE") ? "#FAF8F3" : "#0A0A0A"),
+          imageUrl: twinImg,
+          targetProduct: twinProduct,
+        },
+      ];
+    }
+
+    // 3. Complementary dual image colorways (e.g. Chapter001 First Ascent black + white):
+    if (gallery.length >= 2) {
+      return gallery.map((img, idx) => {
+        const isWhite =
+          img.toLowerCase().includes("white") ||
+          (idx === 1 && !img.toLowerCase().includes("black"));
+        const name = isWhite ? "WHITE" : "BLACK";
+        const hex = isWhite ? "#FAF8F3" : "#0A0A0A";
+        return {
+          name,
+          hex,
+          imageUrl: img,
+        };
+      });
+    }
+
+    if (currentProduct.color) {
+      return [
+        {
+          name: currentProduct.color.toUpperCase(),
+          hex: currentProduct.colorHex || "#0A0A0A",
+          imageUrl: gallery[0],
+        },
+      ];
+    }
+
+    return [];
+  }, [variants, currentProduct, twinProduct, gallery, productImages]);
+
+  const [selectedColor, setSelectedColor] = useState<string>(() => {
+    return colorOptions[0]?.name || (currentProduct.color || "BLACK").toUpperCase();
+  });
+
+  useEffect(() => {
+    if (colorOptions.length > 0 && !colorOptions.some((o) => o.name.toLowerCase() === selectedColor.toLowerCase())) {
+      setSelectedColor(colorOptions[0].name);
+    }
+  }, [colorOptions, selectedColor]);
 
   useEffect(() => {
     setActive(0);
     setSize("");
-    setSelectedColor(colors[0] || "");
     setQty(1);
     setHint(null);
     setHideMobileBar(false);
     hideMobileBarRef.current = false;
     hasTriggeredExit.current = false;
     router.prefetch("/");
-  }, [product.id, router, colors]);
+  }, [currentProduct.id, router]);
 
-  const displayedVariants = colors.length > 1
-    ? variants.filter((v) => !v.color || v.color.toLowerCase() === selectedColor.toLowerCase())
-    : variants;
+  const activeImageSrc = React.useMemo(() => {
+    if (gallery[active]) return gallery[active];
+    const matched = colorOptions.find((o) => o.name.toLowerCase() === selectedColor.toLowerCase());
+    if (matched?.imageUrl) return matched.imageUrl;
+    return gallery[0] || FALLBACK_IMG;
+  }, [gallery, active, colorOptions, selectedColor]);
+
+  const displayedVariants = React.useMemo(() => {
+    if (colorOptions.length > 1) {
+      const filtered = variants.filter(
+        (v) => !v.color || v.color.toLowerCase() === selectedColor.toLowerCase()
+      );
+      if (filtered.length > 0) return filtered;
+    }
+    return variants;
+  }, [variants, colorOptions, selectedColor]);
+
+  const handleColorOptionClick = (opt: ColorOptionItem) => {
+    if (opt.name.toLowerCase() === selectedColor.toLowerCase()) return;
+    setSelectedColor(opt.name);
+
+    if (opt.targetProduct && opt.targetProduct.id !== currentProduct.id) {
+      setCurrentProduct(opt.targetProduct);
+      if (typeof window !== "undefined") {
+        window.history.pushState(null, "", `/products/${opt.targetProduct.slug}`);
+      }
+      return;
+    }
+
+    if (opt.imageUrl) {
+      const idx = gallery.findIndex((src) => src === opt.imageUrl);
+      if (idx !== -1) {
+        setActive(idx);
+        return;
+      }
+    }
+    const optIdx = colorOptions.findIndex((o) => o.name.toLowerCase() === opt.name.toLowerCase());
+    if (optIdx !== -1 && gallery[optIdx]) {
+      setActive(optIdx);
+    }
+  };
+
+  const handleThumbnailClick = (src: string, index: number) => {
+    setActive(index);
+    const matched = colorOptions.find(
+      (o) => o.imageUrl === src || src.toLowerCase().includes(o.name.toLowerCase())
+    );
+    if (matched && matched.name.toLowerCase() !== selectedColor.toLowerCase()) {
+      setSelectedColor(matched.name);
+      if (matched.targetProduct && matched.targetProduct.id !== currentProduct.id) {
+        setCurrentProduct(matched.targetProduct);
+        if (typeof window !== "undefined") {
+          window.history.pushState(null, "", `/products/${matched.targetProduct.slug}`);
+        }
+      }
+    }
+  };
 
   // Zero-re-render scroll listener: only triggers state once on mobile bar threshold and navigates when curtain clears viewport
   useEffect(() => {
@@ -159,13 +325,13 @@ export function ProductDetail({
     const v = requireSize();
     if (v === undefined) return;
     setHint(null);
-    const finalVariant = colors.length > 1 ? `${selectedColor} / ${v}` : v;
+    const finalVariant = colorOptions.length > 1 ? `${selectedColor} / ${v}` : v;
     addItem(
       {
-        productId: product.id,
-        name: product.name,
+        productId: currentProduct.id,
+        name: currentProduct.name,
         image: gallery[active] || gallery[0],
-        price: product.price,
+        price: currentProduct.price,
         variant: finalVariant,
       },
       qty
@@ -182,10 +348,10 @@ export function ProductDetail({
     // 1. Add current item
     addItem(
       {
-        productId: product.id,
-        name: product.name,
+        productId: currentProduct.id,
+        name: currentProduct.name,
         image: gallery[0],
-        price: product.price,
+        price: currentProduct.price,
         variant: v,
       },
       qty
@@ -221,13 +387,13 @@ export function ProductDetail({
     if (v === undefined) return;
     setHint(null);
     setBusy(true);
-    const finalVariant = colors.length > 1 ? `${selectedColor} / ${v}` : v;
+    const finalVariant = colorOptions.length > 1 ? `${selectedColor} / ${v}` : v;
     try {
       const res = await fetch("/api/order/whatsapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productId: product.id,
+          productId: currentProduct.id,
           variant: finalVariant || undefined,
           customerNotes:
             qty > 1
@@ -324,128 +490,122 @@ export function ProductDetail({
         </header>
 
         <section className="max-w-7xl mx-auto px-4 md:px-12 py-6 sm:py-8 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-14">
-          {/* Gallery */}
+          {/* Gallery: Interactive Split-Curtain for Diptych, or Square Carousel for Standard Products */}
           <motion.div {...fade()} className="lg:col-span-7 flex flex-col gap-3">
-            {isDiptych && gallery.length >= 2 && (
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
-                <button
-                  type="button"
-                  onClick={() => setActive(0)}
-                  className={cn(
-                    "px-3 py-1.5 border transition-all cursor-pointer font-bold",
-                    active === 0
-                      ? "border-black bg-black text-white"
-                      : "border-black/20 hover:border-black text-neutral-600 bg-white/50"
-                  )}
-                >
-                  01. {t({ tr: "ÖN GÖĞÜS BASKISI", en: "FRONT CHEST" })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActive(1)}
-                  className={cn(
-                    "px-3 py-1.5 border transition-all cursor-pointer font-bold",
-                    active === 1
-                      ? "border-black bg-black text-white"
-                      : "border-black/20 hover:border-black text-neutral-600 bg-white/50"
-                  )}
-                >
-                  02. {t({ tr: "ARKA SERİGRAFİ", en: "BACK SCREENPRINT" })}
-                </button>
-                <span className="text-neutral-400 text-[9px] hidden sm:inline ml-auto font-bold tracking-widest">
-                  [DIPTYCH ARTWORK COMPOSITION]
-                </span>
-              </div>
-            )}
-            <div className="flex flex-col-reverse sm:flex-row gap-3">
-            {gallery.length > 1 && (
-              <ul className="flex sm:flex-col gap-2 overflow-x-auto pb-1 sm:pb-0" aria-label="Product images">
-                {gallery.map((src, i) => (
-                  <li key={src} className="shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setActive(i)}
-                      aria-label={`Show image ${i + 1}`}
-                      aria-current={i === active}
-                      className={cn(
-                        "relative block w-16 h-20 bg-[#EDEDEF] border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black",
-                        i === active ? "border-black" : "border-transparent hover:border-black/40"
-                      )}
+            {isDiptych && gallery.length >= 2 ? (
+              <SplitCurtainGallery
+                frontImage={gallery[0]}
+                backImage={gallery[1]}
+                productName={currentProduct.name}
+                t={t}
+              />
+            ) : (
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                {gallery.length > 1 && (
+                  <ul className="flex sm:flex-col gap-2 overflow-x-auto pb-1 sm:pb-0 m-0 p-0" aria-label="Product options & images">
+                    {gallery.map((src, i) => {
+                      const isCurrent = i === active || activeImageSrc === src;
+                      return (
+                        <li key={src} className="shrink-0 m-0 p-0">
+                          <button
+                            type="button"
+                            onClick={() => handleThumbnailClick(src, i)}
+                            aria-label={`Option image ${i + 1}`}
+                            aria-current={isCurrent}
+                            className={cn(
+                              "relative block w-16 h-16 sm:w-20 sm:h-20 aspect-square bg-[#EDEDEF] border transition-all cursor-pointer m-0 p-0 overflow-hidden",
+                              isCurrent
+                                ? "border-black ring-1 ring-black"
+                                : "border-black/20 hover:border-black/60"
+                            )}
+                          >
+                            <Image
+                              src={src}
+                              alt=""
+                              fill
+                              sizes="80px"
+                              className="w-full h-full m-0 p-0 object-cover mix-blend-multiply"
+                            />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                {/* Main Photo: Always Square (aspect-square), Zero Margin (m-0 p-0), Slide in Right to Left */}
+                <div className="relative flex-1 aspect-square bg-[#EDEDEF] overflow-hidden border border-black/15 shadow-xs m-0 p-0">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.div
+                      key={`${selectedColor}-${activeImageSrc}`}
+                      variants={reduce ? {} : slideFromRightVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      className="relative w-full h-full m-0 p-0"
                     >
                       <Image
-                        src={src}
-                        alt=""
+                        src={activeImageSrc}
+                        alt={`${currentProduct.name} - ${selectedColor}`}
                         fill
-                        sizes="64px"
+                        priority
+                        sizes="(max-width: 1024px) 100vw, 58vw"
                         className={cn(
-                          src.includes("/assets/editorial/")
-                            ? "object-cover"
-                            : "object-contain p-1.5 mix-blend-multiply"
+                          "w-full h-full m-0 p-0 object-cover object-center",
+                          activeImageSrc.includes("/assets/editorial/") ? "" : "mix-blend-multiply"
                         )}
                       />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
             )}
-            <div className="relative flex-1 aspect-[4/5] bg-[#EDEDEF] overflow-hidden">
-              <Image
-                key={gallery[active]}
-                src={gallery[active]}
-                alt={product.name}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 58vw"
-                className={cn(
-                  gallery[active].includes("/assets/editorial/")
-                    ? "object-cover object-center"
-                    : "object-contain object-center p-6 sm:p-10 mix-blend-multiply"
-                )}
-              />
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
           {/* Info */}
           <motion.div {...fade(0.1)} className="lg:col-span-5 lg:sticky lg:top-24 self-start">
             <h1 className="font-mono text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-tight">
-              {product.name}
+              {currentProduct.name}
             </h1>
             <p className="mt-2 sm:mt-3 font-mono text-base sm:text-lg font-bold">
-              {formatProductPrice(product.price, currency)}
+              {formatProductPrice(currentProduct.price, currency)}
             </p>
             <p className="mt-4 sm:mt-5 font-mono text-xs leading-relaxed text-neutral-700">
-              {product.description}
+              {currentProduct.description}
             </p>
 
-            {/* Colorway / Twin Selector */}
-            {(product.color || twinProduct || colors.length > 1) && (
+            {/* Colorway Options (Defining each other) */}
+            {colorOptions.length > 0 && (
               <div className="mt-6 sm:mt-7" role="group" aria-label="Select color">
                 <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
-                  {t({ tr: "RENK", en: "COLOR" })}: <strong className="text-black font-bold">{product.color || selectedColor}</strong>
+                  {t({ tr: "RENK", en: "COLOR" })}: <strong className="text-black font-bold">{selectedColor}</strong>
                 </span>
-                <div className="mt-2 flex items-center gap-2.5">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border border-black bg-black text-white font-mono text-xs uppercase tracking-wider">
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs"
-                      style={{ backgroundColor: product.colorHex || "#FAF8F3" }}
-                    />
-                    <span>{product.color || "CURRENT"}</span>
-                  </div>
-
-                  {twinProduct && (
-                    <Link
-                      href={`/products/${twinProduct.slug}`}
-                      className="flex items-center gap-2 px-3 py-1.5 border border-black/30 hover:border-black bg-white/70 text-black font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
-                    >
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-black/40 shadow-xs"
-                        style={{ backgroundColor: twinProduct.colorHex || "#0A0A0A" }}
-                      />
-                      <span>{twinProduct.color || twinProduct.name}</span>
-                      <span className="text-[10px] text-neutral-400 font-bold">↗</span>
-                    </Link>
-                  )}
+                <div className="mt-2 flex items-center gap-2.5 flex-wrap">
+                  {colorOptions.map((opt) => {
+                    const isSel = selectedColor.toLowerCase() === opt.name.toLowerCase();
+                    return (
+                      <button
+                        key={opt.name}
+                        type="button"
+                        onClick={() => handleColorOptionClick(opt)}
+                        className={cn(
+                          "flex items-center gap-2 px-3.5 py-2 border font-mono text-xs uppercase tracking-wider transition-all cursor-pointer",
+                          isSel
+                            ? "border-black bg-black text-white"
+                            : "border-black/30 hover:border-black bg-white/70 text-black hover:scale-105"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "w-3.5 h-3.5 rounded-full border shadow-xs shrink-0",
+                            isSel ? "border-white/50" : "border-black/40"
+                          )}
+                          style={{ backgroundColor: opt.hex }}
+                        />
+                        <span className="font-bold">{opt.name}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -544,7 +704,7 @@ export function ProductDetail({
                       {t({ tr: "CHAPTER 00 • TAMAMLAYICI İKİLİ SET", en: "CHAPTER 00 • COMPLEMENTARY TWIN SET" })}
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-600 bg-white/80 px-2 py-0.5 border border-black/10">
-                      {product.color || "WHT"} + {twinProduct.color || "BLK"}
+                      {currentProduct.color || "WHT"} + {twinProduct.color || "BLK"}
                     </span>
                   </div>
                   <p className="font-mono text-[11px] text-neutral-600 leading-relaxed">
@@ -568,7 +728,7 @@ export function ProductDetail({
 
             <div className="mt-8 border-t border-black/20">
               <Accordion title={t({ tr: "DETAYLAR", en: "DETAILS" })}>
-                {product.description || t({
+                {currentProduct.description || t({
                   tr: "Ağır gramaj tok kumaş, mimari oversize kesim. cyrux studio sınırlı arşiv serisi.",
                   en: "Heavyweight construction, oversized fit. Part of the cyrux studio archival run.",
                 })}
@@ -602,7 +762,7 @@ export function ProductDetail({
                 return (
                   <li key={o.id} className="snap-start shrink-0 w-40 sm:w-52">
                     <Link href={`/products/${o.slug}`} className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-black">
-                      <div className="relative aspect-[3/4] bg-[#EDEDEF] overflow-hidden">
+                      <div className="relative aspect-square bg-[#EDEDEF] overflow-hidden">
                         <Image
                           src={otherImg}
                           alt={o.name}
@@ -612,7 +772,7 @@ export function ProductDetail({
                             "transition-transform duration-700 group-hover:scale-105",
                             otherImg.includes("/assets/editorial/")
                               ? "object-cover"
-                              : "object-contain p-3 mix-blend-multiply"
+                              : "object-cover mix-blend-multiply"
                           )}
                         />
                       </div>

@@ -50,7 +50,9 @@ export function NewProductModal({
   const [colorHex, setColorHex] = useState("");
   const [twinProductSlug, setTwinProductSlug] = useState("");
   const [isDiptych, setIsDiptych] = useState(false);
-  const [variants, setVariants] = useState<Array<{ size: string; stock: number }>>([
+  const [variants, setVariants] = useState<
+    Array<{ id?: string; name?: string; size: string; stock: number; color?: string; colorHex?: string; imageUrl?: string }>
+  >([
     { size: "S", stock: 5 },
     { size: "M", stock: 5 },
   ]);
@@ -76,9 +78,14 @@ export function NewProductModal({
       if (Array.isArray(productToEdit.variants)) {
         const cleanVars = productToEdit.variants
           .filter((v) => v && typeof v === "object" && !("_metadata" in v))
-          .map((v) => ({
-            size: v.size || v.name || "M",
+          .map((v: Record<string, unknown>, idx: number) => ({
+            id: typeof v.id === "string" ? v.id : `var_${idx}`,
+            name: typeof v.name === "string" ? v.name : (typeof v.size === "string" ? v.size : "M"),
+            size: typeof v.size === "string" ? v.size : (typeof v.name === "string" ? v.name.replace(/^[A-Z]+\s*\/\s*/i, "") : "M"),
             stock: Number(v.stock) || 0,
+            color: typeof v.color === "string" ? v.color : (typeof v.name === "string" && v.name.includes("/") ? v.name.split("/")[0].trim() : ""),
+            colorHex: typeof v.colorHex === "string" ? v.colorHex : "",
+            imageUrl: typeof v.imageUrl === "string" ? v.imageUrl : "",
           }));
         if (cleanVars.length > 0) {
           setVariants(cleanVars);
@@ -148,10 +155,39 @@ export function NewProductModal({
     setVariants([...variants, { size: "L", stock: 5 }]);
   };
 
-  const updateVariant = (index: number, key: "size" | "stock", value: string | number) => {
+  const updateVariant = (
+    index: number,
+    key: "size" | "stock" | "color" | "colorHex",
+    value: string | number
+  ) => {
     const next = [...variants];
     next[index] = { ...next[index], [key]: value };
+    if (key === "size" || key === "color") {
+      const c = key === "color" ? String(value).trim() : next[index].color;
+      const s = key === "size" ? String(value).trim() : next[index].size;
+      next[index].name = c ? `${c.toUpperCase()} / ${s}` : s;
+    }
     setVariants(next);
+  };
+
+  const moveVariant = (index: number, direction: "up" | "down") => {
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= variants.length) return;
+    const next = [...variants];
+    const item = next[index];
+    next[index] = next[target];
+    next[target] = item;
+    setVariants(next);
+  };
+
+  const moveMedia = (index: number, direction: "left" | "right") => {
+    const target = direction === "left" ? index - 1 : index + 1;
+    if (target < 0 || target >= mediaUrls.length) return;
+    const next = [...mediaUrls];
+    const item = next[index];
+    next[index] = next[target];
+    next[target] = item;
+    setMediaUrls(next);
   };
 
   const removeVariant = (index: number) => {
@@ -285,7 +321,7 @@ export function NewProductModal({
         <div className="flex items-center justify-between border-b border-[#222222] p-4 md:p-5 bg-[#121212] shrink-0">
           <div>
             <div className="text-[10px] tracking-widest text-[#888888] uppercase font-bold">
-              {isEditing ? "PRODUCT SPECIFICATION // UPDATE" : "CATALOG REGISTRATION // NEW PIECE"}
+              {isEditing ? "PRODUCT SPECIFICATION — UPDATE" : "CATALOG REGISTRATION — NEW PIECE"}
             </div>
             <h2 className="text-base md:text-lg font-bold tracking-tight text-[#FAF8F3] uppercase mt-0.5">
               {isEditing ? `[ EDIT: ${productToEdit?.name} ]` : "[ + NEW PRODUCT DROP ]"}
@@ -568,29 +604,70 @@ export function NewProductModal({
                   </button>
                 </div>
 
-                {/* Variant Rows */}
-                <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto pr-1">
+                {/* Variant Rows with Reorder Controls */}
+                <div className="flex flex-col gap-1.5 max-h-[190px] overflow-y-auto pr-1">
                   {variants.map((v, i) => (
-                    <div key={i} className="flex items-center gap-2">
+                    <div key={i} className="flex items-center gap-1.5 p-1 bg-[#0A0A0A] border border-[#262626]">
+                      {/* Reorder Buttons */}
+                      <div className="flex flex-col shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => moveVariant(i, "up")}
+                          disabled={i === 0}
+                          title="Move up in order"
+                          className="w-5 h-3.5 flex items-center justify-center text-[#777] hover:text-white disabled:opacity-20 cursor-pointer text-[9px] font-bold"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveVariant(i, "down")}
+                          disabled={i === variants.length - 1}
+                          title="Move down in order"
+                          className="w-5 h-3.5 flex items-center justify-center text-[#777] hover:text-white disabled:opacity-20 cursor-pointer text-[9px] font-bold"
+                        >
+                          ▼
+                        </button>
+                      </div>
+
+                      {/* Index Tag */}
+                      <span className="text-[9px] text-[#666] font-mono shrink-0 w-5 text-center font-bold">
+                        [{String(i + 1).padStart(2, "0")}]
+                      </span>
+
+                      {/* Color (Optional) */}
+                      <input
+                        type="text"
+                        value={v.color || ""}
+                        onChange={(e) => updateVariant(i, "color", e.target.value)}
+                        placeholder="COLOR (BLK/WHT)"
+                        className="w-28 bg-[#141414] border border-[#2A2A2A] text-white px-2 py-1 text-xs uppercase font-mono"
+                      />
+
+                      {/* Size */}
                       <input
                         type="text"
                         value={v.size}
                         onChange={(e) => updateVariant(i, "size", e.target.value)}
                         placeholder="SIZE (S, M...)"
-                        className="flex-1 bg-[#0A0A0A] border border-[#2A2A2A] text-white px-2.5 py-1.5 text-xs uppercase font-mono"
+                        className="w-20 bg-[#141414] border border-[#2A2A2A] text-white px-2 py-1 text-xs uppercase font-mono"
                       />
+
+                      {/* Stock */}
                       <input
                         type="number"
                         min="0"
                         value={v.stock}
                         onChange={(e) => updateVariant(i, "stock", parseInt(e.target.value, 10) || 0)}
                         placeholder="STOCK"
-                        className="w-20 bg-[#0A0A0A] border border-[#2A2A2A] text-white px-2.5 py-1.5 text-xs font-mono"
+                        className="w-16 bg-[#141414] border border-[#2A2A2A] text-white px-2 py-1 text-xs font-mono"
                       />
+
+                      {/* Delete */}
                       <button
                         type="button"
                         onClick={() => removeVariant(i)}
-                        className="w-8 h-8 flex items-center justify-center text-[#666] hover:text-red-400 border border-transparent hover:border-red-900/40"
+                        className="w-7 h-7 flex items-center justify-center text-[#666] hover:text-red-400 border border-transparent hover:border-red-900/40 ml-auto shrink-0"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -647,18 +724,38 @@ export function NewProductModal({
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={url} alt={`Asset ${idx + 1}`} className="w-full h-full object-cover" />
 
-                        {idx === 0 && (
-                          <span className="absolute top-1 left-1 bg-amber-400 text-black text-[8px] font-bold px-1">
-                            PRIMARY
-                          </span>
-                        )}
+                        {/* Index & Primary tag */}
+                        <span className="absolute top-1 left-1 bg-black/80 text-white border border-white/20 text-[8px] font-bold px-1 z-10 font-mono">
+                          [{String(idx + 1).padStart(2, "0")}] {idx === 0 ? "★" : ""}
+                        </span>
 
-                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
+                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity p-1">
+                          {/* Reordering Controls */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => moveMedia(idx, "left")}
+                              disabled={idx === 0}
+                              title="Move Earlier"
+                              className="px-1.5 py-0.5 bg-[#202020] hover:bg-white text-white hover:text-black text-[9px] disabled:opacity-20 border border-white/20 cursor-pointer font-bold"
+                            >
+                              ←
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveMedia(idx, "right")}
+                              disabled={idx === mediaUrls.length - 1}
+                              title="Move Later"
+                              className="px-1.5 py-0.5 bg-[#202020] hover:bg-white text-white hover:text-black text-[9px] disabled:opacity-20 border border-white/20 cursor-pointer font-bold"
+                            >
+                              →
+                            </button>
+                          </div>
                           {idx !== 0 && (
                             <button
                               type="button"
                               onClick={() => setPrimaryMedia(idx)}
-                              className="text-[8px] text-white underline uppercase"
+                              className="text-[8px] text-white hover:underline uppercase font-bold"
                             >
                               SET PRIMARY
                             </button>
@@ -666,7 +763,7 @@ export function NewProductModal({
                           <button
                             type="button"
                             onClick={() => removeMedia(idx)}
-                            className="p-1 bg-red-900 text-white rounded-none"
+                            className="p-1 bg-red-900/80 hover:bg-red-700 text-white rounded-none cursor-pointer"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
