@@ -8,3 +8,10 @@ This repository enforces high-fashion archival atelier minimalism for Cyrux Stud
 - **Zero Double Slashes ("//")**: Absolutely NEVER use `//` in user-facing UI text, headers, badges, or dividers (e.g. `// ARCHIVE`, `// CHAPTER 00`, `// 2026`). Use `•`, `—`, `[01]`, or natural whitespace.
 - **Active Skill**: Always adhere to the `cyrux-pure-ui` skill for all frontend, design, and styling tasks.
 - **Zero Build Spam**: Never run `npm run build` during iterative changes. Only verify with `npm run typecheck` and `npm test`.
+
+## 2. Global Frontend & Design Intelligence Suite
+In all frontend development, combine and adhere to:
+- **`unslop-ui` + `design-taste-frontend`**: Anti-slop creative direction, zero AI-default gradients, zero emoji in copy, bespoke identity.
+- **`uiux-designer`**: Touch targets (>=44px), WCAG contrast, visible focus rings, cursor-pointer on interactives.
+- **`frontend-expert`**: Clean TypeScript, zero `any`, proper error boundaries, and performance optimization.
+
