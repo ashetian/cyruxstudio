@@ -16,7 +16,6 @@ import { HeroSection } from "./hero-section";
 import { formatProductPrice } from "./bestseller-grid";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
-import { SplitCurtainGallery } from "./split-curtain-gallery";
 
 export interface ProductDetailProps {
   product: Product;
@@ -490,15 +489,31 @@ export function ProductDetail({
         </header>
 
         <section className="max-w-7xl mx-auto px-4 md:px-12 py-6 sm:py-8 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-14">
-          {/* Gallery: Interactive Split-Curtain for Diptych, or Square Carousel for Standard Products */}
+          {/* Gallery */}
           <motion.div {...fade()} className="lg:col-span-7 flex flex-col gap-3">
             {isDiptych && gallery.length >= 2 ? (
-              <SplitCurtainGallery
-                frontImage={gallery[0]}
-                backImage={gallery[1]}
-                productName={currentProduct.name}
-                t={t}
-              />
+              <div className="grid grid-cols-2 gap-0 border border-black/15 bg-[#EDEDEF] w-full aspect-[2/1] overflow-hidden m-0 p-0 shadow-xs">
+                <div className="relative aspect-square w-full h-full border-r border-black/10 m-0 p-0 overflow-hidden">
+                  <Image
+                    src={gallery[0]}
+                    alt={`${currentProduct.name} - Front`}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 50vw, 35vw"
+                    className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply"
+                  />
+                </div>
+                <div className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden">
+                  <Image
+                    src={gallery[1]}
+                    alt={`${currentProduct.name} - Back`}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 50vw, 35vw"
+                    className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply"
+                  />
+                </div>
+              </div>
             ) : (
               <div className="flex flex-col-reverse sm:flex-row gap-3">
                 {gallery.length > 1 && (
