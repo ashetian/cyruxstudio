@@ -194,6 +194,8 @@ export function ProductDetail({
     isDiptych && (currentProduct.slug === "cyrux-099-orbital-tee" || colorOptions.length <= 1)
   );
 
+  const isFirstAscent = Boolean(currentProduct.slug.includes("first-ascent"));
+
   const [selectedColor, setSelectedColor] = useState<string>(() => {
     return colorOptions[0]?.name || (currentProduct.color || "BLACK").toUpperCase();
   });
@@ -483,88 +485,153 @@ export function ProductDetail({
             {isDiptych && gallery.length >= 2 ? (
               <div className="flex flex-col border border-black/20 bg-[#EDEDEF] w-full overflow-hidden shadow-xs">
                 {/* Continuous Seamless Diptych (0 gap, 0 border between images) */}
-                <div className="relative grid grid-cols-2 gap-0 w-full aspect-[2/1] overflow-hidden m-0 p-0">
+                <div
+                  className={cn(
+                    "relative grid grid-cols-2 gap-0 w-full overflow-hidden m-0 p-0",
+                    isFirstAscent ? "aspect-[1688/805]" : "aspect-[2/1]"
+                  )}
+                >
                   {/* Panel 01: Front / Color 1 */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isFrontBackDiptych && colorOptions[0]) {
-                        handleColorOptionClick(colorOptions[0]);
-                      }
-                      setActive(0);
-                    }}
-                    className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none"
-                  >
-                    <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 z-20 pointer-events-none">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
-                          (isFrontBackDiptych ? active === 0 : selectedColor.toLowerCase() === (colorOptions[0]?.name || "").toLowerCase())
-                            ? "bg-black text-[#FAF8F3] border-black"
-                            : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
-                        )}
-                      >
-                        <span
-                          className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
-                          style={{ backgroundColor: colorOptions[0]?.hex || "#0A0A0A" }}
-                        />
-                        <span>
-                          {isFrontBackDiptych
-                            ? `01 • ${t({ tr: "ÖN", en: "FRONT" })}`
-                            : `01 • ${colorOptions[0]?.name || "NOIR"}`}
+                  {isFrontBackDiptych ? (
+                    <div
+                      className={cn(
+                        "relative w-full h-full m-0 p-0 overflow-hidden text-left select-none cursor-default",
+                        isFirstAscent ? "aspect-[844/805]" : "aspect-square"
+                      )}
+                    >
+                      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 z-20 pointer-events-none">
+                        <span className="inline-flex items-center px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs bg-black text-[#FAF8F3] border border-black">
+                          01 • {t({ tr: "ÖN", en: "FRONT" })}
                         </span>
-                      </span>
+                      </div>
+                      <Image
+                        src={gallery[0]}
+                        alt={`${currentProduct.name} - ${t({ tr: "Ön", en: "Front" })}`}
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 50vw, 42vw"
+                        className={cn(
+                          "w-full h-full m-0 p-0 object-cover mix-blend-multiply select-none",
+                          isFirstAscent ? "object-right" : "object-center"
+                        )}
+                      />
                     </div>
-                    <Image
-                      src={gallery[0]}
-                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Ön", en: "Front" }) : colorOptions[0]?.name || "1"}`}
-                      fill
-                      priority
-                      sizes="(max-width: 1024px) 50vw, 42vw"
-                      className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply select-none"
-                    />
-                  </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (colorOptions[0]) {
+                          handleColorOptionClick(colorOptions[0]);
+                        }
+                        setActive(0);
+                      }}
+                      className={cn(
+                        "relative w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none",
+                        isFirstAscent ? "aspect-[844/805]" : "aspect-square"
+                      )}
+                    >
+                      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 z-20 pointer-events-none">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
+                            selectedColor.toLowerCase() === (colorOptions[0]?.name || "").toLowerCase()
+                              ? "bg-black text-[#FAF8F3] border-black"
+                              : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
+                          )}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
+                            style={{ backgroundColor: colorOptions[0]?.hex || "#0A0A0A" }}
+                          />
+                          <span>
+                            01 • {colorOptions[0]?.name || "NOIR"}
+                          </span>
+                        </span>
+                      </div>
+                      <Image
+                        src={gallery[0]}
+                        alt={`${currentProduct.name} - ${colorOptions[0]?.name || "1"}`}
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 50vw, 42vw"
+                        className={cn(
+                          "w-full h-full m-0 p-0 object-cover mix-blend-multiply select-none",
+                          isFirstAscent ? "object-right" : "object-center"
+                        )}
+                      />
+                    </button>
+                  )}
 
                   {/* Panel 02: Back / Color 2 */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isFrontBackDiptych && colorOptions[1]) {
-                        handleColorOptionClick(colorOptions[1]);
-                      }
-                      setActive(1);
-                    }}
-                    className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none"
-                  >
-                    <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 z-20 pointer-events-none">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
-                          (isFrontBackDiptych ? active === 1 : selectedColor.toLowerCase() === (colorOptions[1]?.name || "").toLowerCase())
-                            ? "bg-black text-[#FAF8F3] border-black"
-                            : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
-                        )}
-                      >
-                        <span
-                          className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
-                          style={{ backgroundColor: colorOptions[1]?.hex || "#FAF8F3" }}
-                        />
-                        <span>
-                          {isFrontBackDiptych
-                            ? `02 • ${t({ tr: "ARKA", en: "BACK" })}`
-                            : `02 • ${colorOptions[1]?.name || "BLANC"}`}
+                  {isFrontBackDiptych ? (
+                    <div
+                      className={cn(
+                        "relative w-full h-full m-0 p-0 overflow-hidden text-left select-none cursor-default",
+                        isFirstAscent ? "aspect-[844/805]" : "aspect-square"
+                      )}
+                    >
+                      <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 z-20 pointer-events-none">
+                        <span className="inline-flex items-center px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs bg-black text-[#FAF8F3] border border-black">
+                          02 • {t({ tr: "ARKA", en: "BACK" })}
                         </span>
-                      </span>
+                      </div>
+                      <Image
+                        src={gallery[1]}
+                        alt={`${currentProduct.name} - ${t({ tr: "Arka", en: "Back" })}`}
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 50vw, 42vw"
+                        className={cn(
+                          "w-full h-full m-0 p-0 object-cover mix-blend-multiply select-none",
+                          isFirstAscent ? "object-left" : "object-center"
+                        )}
+                      />
                     </div>
-                    <Image
-                      src={gallery[1]}
-                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Arka", en: "Back" }) : colorOptions[1]?.name || "2"}`}
-                      fill
-                      priority
-                      sizes="(max-width: 1024px) 50vw, 42vw"
-                      className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply select-none"
-                    />
-                  </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (colorOptions[1]) {
+                          handleColorOptionClick(colorOptions[1]);
+                        }
+                        setActive(1);
+                      }}
+                      className={cn(
+                        "relative w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none",
+                        isFirstAscent ? "aspect-[844/805]" : "aspect-square"
+                      )}
+                    >
+                      <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 z-20 pointer-events-none">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
+                            selectedColor.toLowerCase() === (colorOptions[1]?.name || "").toLowerCase()
+                              ? "bg-black text-[#FAF8F3] border-black"
+                              : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
+                          )}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
+                            style={{ backgroundColor: colorOptions[1]?.hex || "#FAF8F3" }}
+                          />
+                          <span>
+                            02 • {colorOptions[1]?.name || "BLANC"}
+                          </span>
+                        </span>
+                      </div>
+                      <Image
+                        src={gallery[1]}
+                        alt={`${currentProduct.name} - ${colorOptions[1]?.name || "2"}`}
+                        fill
+                        priority
+                        sizes="(max-width: 1024px) 50vw, 42vw"
+                        className={cn(
+                          "w-full h-full m-0 p-0 object-cover mix-blend-multiply select-none",
+                          isFirstAscent ? "object-left" : "object-center"
+                        )}
+                      />
+                    </button>
+                  )}
                 </div>
 
                 {/* Archival Diptych Status Bar */}
@@ -688,7 +755,7 @@ export function ProductDetail({
             </p>
 
             {/* Colorway Indicator (Clean, Minimal Typography — No Cluttered Buttons) */}
-            {colorOptions.length > 1 && (
+            {!isFrontBackDiptych && colorOptions.length > 1 && (
               <div className="mt-5 sm:mt-6 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500">
                 <span>{t({ tr: "RENK", en: "COLOR" })}:</span>
                 <strong className="text-black font-bold">{selectedColor}</strong>

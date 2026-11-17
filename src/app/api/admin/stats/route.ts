@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma, { isDbConfigured } from "@/lib/db";
 import { getDrops, getActiveDropAsync } from "@/lib/drops";
-import { formatStoreSettings } from "@/app/api/admin/settings/route";
+import { formatStoreSettings } from "@/lib/settings";
 import { MAX_CUMULATIVE_CREDIT_BUDGET } from "@/lib/elevenlabs";
 
 export const dynamic = "force-dynamic";
