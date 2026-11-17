@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { ShoppingBag, Search } from "lucide-react";
 import { BRAND_TOKENS } from "@/lib/constants";
 import { useLanguage } from "@/components/providers/language-provider";
