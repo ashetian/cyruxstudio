@@ -35,6 +35,10 @@ export interface ProductItem {
   isBestseller: boolean;
   badge: string | null;
   category: string;
+  color?: string | null;
+  colorHex?: string | null;
+  twinProductSlug?: string | null;
+  isDiptych?: boolean;
   createdAt: string;
   updatedAt: string;
 }

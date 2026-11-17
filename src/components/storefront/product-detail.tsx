@@ -71,8 +71,19 @@ export function ProductDetail({
   const hasTriggeredExit = useRef(false);
   const hideMobileBarRef = useRef(false);
 
-  const variants = (product.variants as unknown as ProductVariant[]) || [];
+  const variants = React.useMemo(
+    () => (product.variants as unknown as ProductVariant[]) || [],
+    [product.variants]
+  );
   const soldOut = product.stock <= 0;
+
+  const twinProduct = product.twinProductSlug
+    ? others.find((p) => p.slug === product.twinProductSlug) || null
+    : null;
+
+  const isDiptych = Boolean(
+    product.isDiptych || (product.mediaUrls && product.mediaUrls.length >= 2)
+  );
 
   const gallery = Array.from(
     new Set([productImages[product.slug], ...product.mediaUrls].filter(Boolean))
@@ -80,16 +91,33 @@ export function ProductDetail({
   if (gallery.length === 0) gallery.push(FALLBACK_IMG);
   const [active, setActive] = useState(0);
 
+  const colors = React.useMemo(() => {
+    const list: string[] = [];
+    for (const v of variants) {
+      if (v.color && !list.includes(v.color)) {
+        list.push(v.color);
+      }
+    }
+    return list;
+  }, [variants]);
+
+  const [selectedColor, setSelectedColor] = useState<string>(colors[0] || "");
+
   useEffect(() => {
     setActive(0);
     setSize("");
+    setSelectedColor(colors[0] || "");
     setQty(1);
     setHint(null);
     setHideMobileBar(false);
     hideMobileBarRef.current = false;
     hasTriggeredExit.current = false;
     router.prefetch("/");
-  }, [product.id, router]);
+  }, [product.id, router, colors]);
+
+  const displayedVariants = colors.length > 1
+    ? variants.filter((v) => !v.color || v.color.toLowerCase() === selectedColor.toLowerCase())
+    : variants;
 
   // Zero-re-render scroll listener: only triggers state once on mobile bar threshold and navigates when curtain clears viewport
   useEffect(() => {
@@ -131,6 +159,27 @@ export function ProductDetail({
     const v = requireSize();
     if (v === undefined) return;
     setHint(null);
+    const finalVariant = colors.length > 1 ? `${selectedColor} / ${v}` : v;
+    addItem(
+      {
+        productId: product.id,
+        name: product.name,
+        image: gallery[active] || gallery[0],
+        price: product.price,
+        variant: finalVariant,
+      },
+      qty
+    );
+    openCart();
+  };
+
+  const handleAddBothTwin = () => {
+    if (soldOut || !twinProduct || twinProduct.stock <= 0) return;
+    const v = requireSize();
+    if (v === undefined) return;
+    setHint(null);
+
+    // 1. Add current item
     addItem(
       {
         productId: product.id,
@@ -141,6 +190,28 @@ export function ProductDetail({
       },
       qty
     );
+
+    // 2. Add twin item
+    const twinVariants = (twinProduct.variants as unknown as ProductVariant[]) || [];
+    const matchedTwinVariant = v
+      ? twinVariants.find((tv) => tv.name.toLowerCase() === v.toLowerCase() && tv.inStock) ||
+        twinVariants.find((tv) => tv.inStock)
+      : undefined;
+
+    const twinImg =
+      productImages[twinProduct.slug] || twinProduct.mediaUrls[0] || gallery[0];
+
+    addItem(
+      {
+        productId: twinProduct.id,
+        name: twinProduct.name,
+        image: twinImg,
+        price: twinProduct.price,
+        variant: matchedTwinVariant ? matchedTwinVariant.name : v,
+      },
+      qty
+    );
+
     openCart();
   };
 
@@ -150,13 +221,14 @@ export function ProductDetail({
     if (v === undefined) return;
     setHint(null);
     setBusy(true);
+    const finalVariant = colors.length > 1 ? `${selectedColor} / ${v}` : v;
     try {
       const res = await fetch("/api/order/whatsapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product.id,
-          variant: v || undefined,
+          variant: finalVariant || undefined,
           customerNotes:
             qty > 1
               ? lang === "tr"
@@ -253,7 +325,39 @@ export function ProductDetail({
 
         <section className="max-w-7xl mx-auto px-4 md:px-12 py-6 sm:py-8 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-14">
           {/* Gallery */}
-          <motion.div {...fade()} className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-3">
+          <motion.div {...fade()} className="lg:col-span-7 flex flex-col gap-3">
+            {isDiptych && gallery.length >= 2 && (
+              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
+                <button
+                  type="button"
+                  onClick={() => setActive(0)}
+                  className={cn(
+                    "px-3 py-1.5 border transition-all cursor-pointer font-bold",
+                    active === 0
+                      ? "border-black bg-black text-white"
+                      : "border-black/20 hover:border-black text-neutral-600 bg-white/50"
+                  )}
+                >
+                  01. {t({ tr: "ÖN GÖĞÜS BASKISI", en: "FRONT CHEST" })}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActive(1)}
+                  className={cn(
+                    "px-3 py-1.5 border transition-all cursor-pointer font-bold",
+                    active === 1
+                      ? "border-black bg-black text-white"
+                      : "border-black/20 hover:border-black text-neutral-600 bg-white/50"
+                  )}
+                >
+                  02. {t({ tr: "ARKA SERİGRAFİ", en: "BACK SCREENPRINT" })}
+                </button>
+                <span className="text-neutral-400 text-[9px] hidden sm:inline ml-auto font-bold tracking-widest">
+                  [DIPTYCH ARTWORK COMPOSITION]
+                </span>
+              </div>
+            )}
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
             {gallery.length > 1 && (
               <ul className="flex sm:flex-col gap-2 overflow-x-auto pb-1 sm:pb-0" aria-label="Product images">
                 {gallery.map((src, i) => (
@@ -299,7 +403,8 @@ export function ProductDetail({
                 )}
               />
             </div>
-          </motion.div>
+          </div>
+        </motion.div>
 
           {/* Info */}
           <motion.div {...fade(0.1)} className="lg:col-span-5 lg:sticky lg:top-24 self-start">
@@ -313,34 +418,70 @@ export function ProductDetail({
               {product.description}
             </p>
 
-            {variants.length > 0 && (
+            {/* Colorway / Twin Selector */}
+            {(product.color || twinProduct || colors.length > 1) && (
+              <div className="mt-6 sm:mt-7" role="group" aria-label="Select color">
+                <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+                  {t({ tr: "RENK", en: "COLOR" })}: <strong className="text-black font-bold">{product.color || selectedColor}</strong>
+                </span>
+                <div className="mt-2 flex items-center gap-2.5">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border border-black bg-black text-white font-mono text-xs uppercase tracking-wider">
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-xs"
+                      style={{ backgroundColor: product.colorHex || "#FAF8F3" }}
+                    />
+                    <span>{product.color || "CURRENT"}</span>
+                  </div>
+
+                  {twinProduct && (
+                    <Link
+                      href={`/products/${twinProduct.slug}`}
+                      className="flex items-center gap-2 px-3 py-1.5 border border-black/30 hover:border-black bg-white/70 text-black font-mono text-xs uppercase tracking-wider transition-all hover:scale-105"
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/40 shadow-xs"
+                        style={{ backgroundColor: twinProduct.colorHex || "#0A0A0A" }}
+                      />
+                      <span>{twinProduct.color || twinProduct.name}</span>
+                      <span className="text-[10px] text-neutral-400 font-bold">↗</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {displayedVariants.length > 0 && (
               <div className="mt-6 sm:mt-7" role="group" aria-label="Select size">
                 <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
                   Size{size ? `: ${size}` : ""}
                 </span>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {variants.map((v) => (
-                    <button
-                      key={v.id}
-                      type="button"
-                      disabled={!v.inStock || soldOut}
-                      aria-pressed={size === v.name}
-                      onClick={() => {
-                        setSize(v.name);
-                        setHint(null);
-                      }}
-                      className={cn(
-                        "min-w-11 h-11 px-3 font-mono text-xs uppercase border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black",
-                        !v.inStock || soldOut
-                          ? "border-black/10 text-black/30 line-through cursor-not-allowed"
-                          : size === v.name
-                          ? "border-black bg-black text-white"
-                          : "border-black/30 hover:border-black"
-                      )}
-                    >
-                      {v.name}
-                    </button>
-                  ))}
+                  {displayedVariants.map((v) => {
+                    const label = v.size || v.name.replace(/^(BLACK|WHITE)\s*\/\s*/i, "");
+                    const isSelected = size === label || size === v.name;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        disabled={!v.inStock || soldOut}
+                        aria-pressed={isSelected}
+                        onClick={() => {
+                          setSize(label);
+                          setHint(null);
+                        }}
+                        className={cn(
+                          "min-w-11 h-11 px-3 font-mono text-xs uppercase border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer",
+                          !v.inStock || soldOut
+                            ? "border-black/10 text-black/30 line-through cursor-not-allowed"
+                            : isSelected
+                            ? "border-black bg-black text-white"
+                            : "border-black/30 hover:border-black"
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -394,6 +535,35 @@ export function ProductDetail({
                   {hint}
                 </p>
               )}
+
+              {/* Complementary Twin Set Duo CTA */}
+              {twinProduct && (
+                <div className="mt-3 p-4 border border-black bg-[#EDEDEB] flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-black">
+                      {t({ tr: "CHAPTER 00 • TAMAMLAYICI İKİLİ SET", en: "CHAPTER 00 • COMPLEMENTARY TWIN SET" })}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-600 bg-white/80 px-2 py-0.5 border border-black/10">
+                      {product.color || "WHT"} + {twinProduct.color || "BLK"}
+                    </span>
+                  </div>
+                  <p className="font-mono text-[11px] text-neutral-600 leading-relaxed">
+                    {t({
+                      tr: "Monokromik zıtlık ikilisi (Noir & Blanc). Albino Viper serigrafisi ile birbirini tamamlayan iki parça.",
+                      en: "Two monochrome inverted sculptures (Noir & Blanc). Albino Viper serigraphy designed as a complementary pair.",
+                    })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAddBothTwin}
+                    disabled={soldOut || twinProduct.stock <= 0}
+                    className="w-full min-h-11 border-2 border-black bg-white hover:bg-black hover:text-white font-mono text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_#000000] cursor-pointer"
+                  >
+                    <span>{t({ tr: "İKİ RENGİ BİRLİKTE SEPETE EKLE (SET)", en: "ADD BOTH COLORWAYS TO BAG (SET)" })}</span>
+                    <span className="text-xs">→</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 border-t border-black/20">
@@ -403,6 +573,14 @@ export function ProductDetail({
                   en: "Heavyweight construction, oversized fit. Part of the cyrux studio archival run.",
                 })}
               </Accordion>
+              {isDiptych && (
+                <Accordion title={t({ tr: "DIPTYCH SANAT VE BASKI KONSEPTİ", en: "DIPTYCH ARTWORK SPECIFICATION" })}>
+                  {t({
+                    tr: "Bu parça çift taraflı diptik bir giyilebilir sanat kompozisyonudur: Ön göğüste krom mikro-stud efektli orbital yıldız kümesi, sırtta 35mm sinematik letterbox göz bakışı serigrafisi bulunur.",
+                    en: "This piece is a dual-faced diptych wearable art composition: Front chest presents the chrome micro-stud orbital constellation, while the back reveals the cinematic 35mm letterbox eye gaze screenprint.",
+                  })}
+                </Accordion>
+              )}
               <Accordion title={t({ tr: "KARGO & TESLİMAT", en: "SHIPPING" })}>
                 {t({
                   tr: "Kuzey Kıbrıs (North Cyprus) atölyemizden tüm dünyaya express kargo ile gönderilir. Siparişler doğrudan resmi WhatsApp terminali üzerinden koordine edilir.",

@@ -33,6 +33,10 @@ export const MOCK_PRODUCTS = SEED_PRODUCTS.map((p, idx) => ({
   variants: p.variants,
   mediaUrls: p.mediaUrls,
   isBestseller: p.isBestseller,
+  color: p.color ?? null,
+  colorHex: p.colorHex ?? null,
+  twinProductSlug: p.twinProductSlug ?? null,
+  isDiptych: Boolean(p.isDiptych),
   createdAt: new Date("2026-01-01T00:00:00Z"),
   updatedAt: new Date("2026-01-01T00:00:00Z"),
 }));

@@ -23,6 +23,160 @@ export interface DropDetailProps {
   whatsappNumber?: string;
 }
 
+function DropProductCard({
+  product,
+  allProducts,
+  imageFor,
+  currency,
+  lang,
+  t,
+}: {
+  product: Product;
+  allProducts: Product[];
+  imageFor: (p: Product) => string;
+  currency: string;
+  lang: "tr" | "en";
+  t: (input: { tr: string; en: string }) => string;
+}) {
+  const [activeSlug, setActiveSlug] = useState(product.slug);
+  const [activeSide, setActiveSide] = useState<"front" | "back">("front");
+
+  const displayProduct =
+    activeSlug === product.slug
+      ? product
+      : allProducts.find((p) => p.slug === activeSlug) || product;
+
+  const twin = displayProduct.twinProductSlug
+    ? allProducts.find((p) => p.slug === displayProduct.twinProductSlug)
+    : null;
+
+  const isDiptych = Boolean(
+    displayProduct.isDiptych ||
+      (displayProduct.mediaUrls && displayProduct.mediaUrls.length >= 2)
+  );
+
+  const frontImg = imageFor(displayProduct);
+  const backImg = displayProduct.mediaUrls?.[1] || frontImg;
+  const currentImg = activeSide === "back" ? backImg : frontImg;
+  const isOutOfStock = displayProduct.stock <= 0;
+
+  return (
+    <article className="group relative flex flex-col justify-between overflow-hidden bg-[#EDEDEB] border border-black/15 transition-all duration-300 hover:border-black select-none">
+      <Link
+        href={`/products/${displayProduct.slug}`}
+        aria-label={`View ${displayProduct.name}`}
+        className="absolute inset-0 z-[1] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+      />
+
+      {/* Top Interactive Badges (Twin Colorways & Diptych Flip) */}
+      <div className="relative z-10 px-2.5 sm:px-3 pt-2.5 flex items-center justify-between pointer-events-none">
+        {twin ? (
+          <div className="pointer-events-auto flex items-center gap-1.5 bg-white/80 backdrop-blur-xs px-2 py-0.5 border border-black/15 shadow-xs">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setActiveSlug(product.slug);
+              }}
+              className={cn(
+                "w-3 h-3 rounded-full border transition-all",
+                activeSlug === product.slug
+                  ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
+                  : "opacity-60 hover:opacity-100 border-black/30"
+              )}
+              style={{ backgroundColor: product.colorHex || "#FAF8F3" }}
+              aria-label={`Switch to ${product.color || product.name}`}
+              title={product.color || "Primary colorway"}
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setActiveSlug(twin.slug);
+              }}
+              className={cn(
+                "w-3 h-3 rounded-full border transition-all",
+                activeSlug === twin.slug
+                  ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
+                  : "opacity-60 hover:opacity-100 border-black/30"
+              )}
+              style={{ backgroundColor: twin.colorHex || "#0A0A0A" }}
+              aria-label={`Switch to ${twin.color || twin.name}`}
+              title={twin.color || "Twin colorway"}
+            />
+            <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-wider text-black font-bold pl-0.5">
+              {displayProduct.color || "COLOR"}
+            </span>
+          </div>
+        ) : (
+          <span />
+        )}
+
+        {isDiptych && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveSide((s) => (s === "front" ? "back" : "front"));
+            }}
+            className="pointer-events-auto font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-white/90 hover:bg-white text-black px-2 py-0.5 border border-black/15 shadow-xs transition-colors flex items-center gap-1"
+          >
+            <span>{activeSide === "front" ? (lang === "tr" ? "ÖN" : "FRONT") : (lang === "tr" ? "ARKA" : "BACK")}</span>
+            <span className="text-[8px] text-neutral-400">⇄</span>
+          </button>
+        )}
+      </div>
+
+      {/* Sold Out Ribbon */}
+      {isOutOfStock && (
+        <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest bg-black text-white px-2.5 sm:px-3 py-1 font-bold">
+            {t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
+          </span>
+        </div>
+      )}
+
+      {/* Product Image: Responsive aspect-[3/4] */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden flex items-center justify-center p-3 sm:p-6 md:p-8">
+        <Image
+          key={`${displayProduct.id}-${activeSide}`}
+          src={currentImg}
+          alt={displayProduct.name}
+          fill
+          sizes="(max-width: 768px) 50vw, 33vw"
+          className={cn(
+            "transition-all duration-500 ease-out group-hover:scale-105",
+            currentImg.includes("/assets/editorial/")
+              ? "object-cover object-center"
+              : "object-contain object-center mix-blend-multiply",
+            isOutOfStock && "grayscale opacity-60"
+          )}
+        />
+      </div>
+
+      {/* Bottom Info Strip */}
+      <div className="relative z-[2] border-t border-black/10 bg-white/50 backdrop-blur-xs px-2.5 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 shrink-0">
+        <div className="min-w-0 pr-1">
+          <h3 className="font-mono text-[11px] sm:text-xs md:text-sm font-bold uppercase tracking-wider text-black truncate">
+            {displayProduct.name}
+          </h3>
+          {displayProduct.color && (
+            <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block truncate">
+              {displayProduct.color}
+            </span>
+          )}
+        </div>
+        <span className="font-mono text-[11px] sm:text-xs md:text-sm font-bold text-black shrink-0">
+          {formatProductPrice(displayProduct.price, currency)}
+        </span>
+      </div>
+    </article>
+  );
+}
+
 export function DropDetail({
   drop,
   products,
@@ -118,74 +272,17 @@ export function DropDetail({
           </p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 md:gap-6">
-            {products.map((product) => {
-              const isOutOfStock = product.stock <= 0;
-
-              return (
-                <article
-                  key={product.id}
-                  className="group relative flex flex-col justify-between overflow-hidden bg-[#EDEDEB] border border-black/15 transition-all duration-300 hover:border-black select-none"
-                >
-                  <Link
-                    href={`/products/${product.slug}`}
-                    aria-label={`View ${product.name}`}
-                    className="absolute inset-0 z-[1] focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
-                  />
-
-                  {/* Sold Out Ribbon */}
-                  {isOutOfStock && (
-                    <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                      <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest bg-black text-white px-2.5 sm:px-3 py-1 font-bold">
-                        {t({ tr: "TÜKENDİ", en: "SOLD OUT" })}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Product Image: Responsive aspect-[3/4] */}
-                  <div className="relative aspect-[3/4] w-full overflow-hidden flex items-center justify-center p-3 sm:p-6 md:p-8">
-                    <Image
-                      src={imageFor(product)}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className={cn(
-                        "transition-all duration-500 ease-out group-hover:scale-105",
-                        product.mediaUrls?.[1] && "group-hover:opacity-0",
-                        imageFor(product).includes("/assets/editorial/")
-                          ? "object-cover object-center"
-                          : "object-contain object-center mix-blend-multiply",
-                        isOutOfStock && "grayscale opacity-60"
-                      )}
-                    />
-                    {product.mediaUrls?.[1] && (
-                      <Image
-                        src={product.mediaUrls[1]}
-                        alt={`${product.name} - Back View`}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        className={cn(
-                          "transition-all duration-500 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105 pointer-events-none",
-                          product.mediaUrls[1].includes("/assets/editorial/")
-                            ? "object-cover object-center"
-                            : "object-contain object-center mix-blend-multiply",
-                          isOutOfStock && "grayscale opacity-60"
-                        )}
-                      />
-                    )}
-                  </div>
-
-                  {/* Bottom Info Strip */}
-                  <div className="relative z-[2] border-t border-black/10 bg-white/50 backdrop-blur-xs px-2.5 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 shrink-0">
-                    <h3 className="font-mono text-[11px] sm:text-xs md:text-sm font-bold uppercase tracking-wider text-black truncate">
-                      {product.name}
-                    </h3>
-                    <span className="font-mono text-[11px] sm:text-xs md:text-sm font-bold text-black shrink-0">
-                      {formatProductPrice(product.price, currency)}
-                    </span>
-                  </div>
-                </article>
-              );
-            })}
+            {products.map((product) => (
+              <DropProductCard
+                key={product.id}
+                product={product}
+                allProducts={products}
+                imageFor={imageFor}
+                currency={currency}
+                lang={lang}
+                t={t}
+              />
+            ))}
           </div>
         )}
       </main>

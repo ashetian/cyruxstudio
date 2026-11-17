@@ -22,11 +22,15 @@ model Product {
   description  String   @db.Text
   price        Float
   stock        Int      @default(0)
-  variants     Json     // Array of variants: [{ id: "s", name: "S", inStock: true }]
-  mediaUrls    String[] // Native Postgres string array for product gallery
-  isBestseller Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  variants        Json     // Array of variants: [{ id: "s", name: "S", inStock: true, color: "White" }]
+  mediaUrls       String[] // Native Postgres string array for product gallery
+  isBestseller    Boolean  @default(false)
+  color           String?  // Primary colorway name: e.g. "White" | "Black"
+  colorHex        String?  // Hex swatch: e.g. "#FAF8F3" | "#0A0A0A"
+  twinProductSlug String?  // Complementary twin product slug for colorway pairing
+  isDiptych       Boolean  @default(false) // Whether front & back images complete a diptych
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([isBestseller])
   @@index([createdAt])

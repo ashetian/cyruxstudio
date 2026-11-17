@@ -157,6 +157,10 @@ export async function POST(request: NextRequest) {
         variants: variantsWithCategory as unknown as Prisma.InputJsonValue,
         mediaUrls: data.mediaUrls || [],
         isBestseller: Boolean(data.isBestseller),
+        color: data.color || null,
+        colorHex: data.colorHex || null,
+        twinProductSlug: data.twinProductSlug || null,
+        isDiptych: Boolean(data.isDiptych),
       },
     });
 

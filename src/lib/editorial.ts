@@ -7,6 +7,7 @@ const EDITORIAL_URL = "/assets/editorial";
 /** Product slug -> editorial image file name. */
 export const PRODUCT_EDITORIAL_FILES: Record<string, string> = {
   "pretty-chaos-tee": "p-pretty-chaos-tee.jpg",
+  "chapter001-first-ascent": "p-first-ascent-black.jpg",
   "first-ascent-tee-white": "p-first-ascent-white.jpg",
   "first-ascent-tee-black": "p-first-ascent-black.jpg",
   "cyrux-099-orbital-tee": "p-cyrux-099-orbital.jpg",

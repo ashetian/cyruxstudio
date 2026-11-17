@@ -148,6 +148,10 @@ async function handleUpdate(
 
     if (updates.mediaUrls !== undefined) updateData.mediaUrls = updates.mediaUrls;
     if (updates.isBestseller !== undefined) updateData.isBestseller = updates.isBestseller;
+    if (updates.color !== undefined) updateData.color = updates.color;
+    if (updates.colorHex !== undefined) updateData.colorHex = updates.colorHex;
+    if (updates.twinProductSlug !== undefined) updateData.twinProductSlug = updates.twinProductSlug;
+    if (updates.isDiptych !== undefined) updateData.isDiptych = updates.isDiptych;
 
     const updated = await prisma.product.update({
       where: { id: existing.id },

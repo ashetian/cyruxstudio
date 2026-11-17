@@ -4,6 +4,10 @@ export interface ProductVariant {
   inStock: boolean;
   sku?: string;
   priceModifier?: number;
+  size?: string;
+  color?: string;
+  colorHex?: string;
+  imageUrl?: string;
 }
 
 export interface SeedProductInput {
@@ -16,6 +20,10 @@ export interface SeedProductInput {
   variants: ProductVariant[];
   mediaUrls: string[];
   isBestseller: boolean;
+  color?: string;
+  colorHex?: string;
+  twinProductSlug?: string;
+  isDiptych?: boolean;
 }
 
 export interface StoreSettingsInput {
@@ -60,7 +68,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettingsInput = {
 export const SEED_PRODUCTS: SeedProductInput[] = [
   {
     id: "prod_1",
-    name: "PRETTY CHAOS TEE",
+    name: "CYRUX PRETTY CHAOS TEE",
     slug: "pretty-chaos-tee",
     description:
       "Heavyweight 280 GSM cotton jersey oversized tee featuring signature cyber-tribal predator halftone screenprint in punk magenta and neon accents. Vintage acid wash finish with dropped shoulders and thick ribbed neck.",
@@ -80,52 +88,45 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
   },
   {
     id: "prod_2",
-    name: "FIRST ASCENT TEE - WHITE",
-    slug: "first-ascent-tee-white",
+    name: "Chapter001 – First Ascent",
+    slug: "chapter001-first-ascent",
     description:
-      "Boxy silhouette streetwear tee crafted from 300 GSM combed cotton. High-density screenprinted albino viper emblem and cyrux brandmark. Chapter 00 First Ascent release with reinforced double-needle seams.",
+      "Boxy silhouette dropped-shoulder streetwear tee crafted from 300 GSM combed cotton. High-contrast albino viper screenprint and brutalist cyrux studio typography. Available in washed black and off-white colorways. Chapter 00 First Ascent release.",
     price: 95.0,
-    stock: 30,
+    stock: 80,
     isBestseller: true,
     variants: [
-      { id: "fa-w-s", name: "S", inStock: true, sku: "FA-WHT-S" },
-      { id: "fa-w-m", name: "M", inStock: true, sku: "FA-WHT-M" },
-      { id: "fa-w-l", name: "L", inStock: true, sku: "FA-WHT-L" },
-      { id: "fa-w-xl", name: "XL", inStock: false, sku: "FA-WHT-XL" },
+      { id: "fa-b-s", name: "BLACK / S", size: "S", color: "Black", colorHex: "#0A0A0A", inStock: true, sku: "FA-BLK-S", imageUrl: "/assets/products/first-ascent-black.png" },
+      { id: "fa-b-m", name: "BLACK / M", size: "M", color: "Black", colorHex: "#0A0A0A", inStock: true, sku: "FA-BLK-M", imageUrl: "/assets/products/first-ascent-black.png" },
+      { id: "fa-b-l", name: "BLACK / L", size: "L", color: "Black", colorHex: "#0A0A0A", inStock: true, sku: "FA-BLK-L", imageUrl: "/assets/products/first-ascent-black.png" },
+      { id: "fa-b-xl", name: "BLACK / XL", size: "XL", color: "Black", colorHex: "#0A0A0A", inStock: true, sku: "FA-BLK-XL", imageUrl: "/assets/products/first-ascent-black.png" },
+      { id: "fa-w-s", name: "WHITE / S", size: "S", color: "White", colorHex: "#FAF8F3", inStock: true, sku: "FA-WHT-S", imageUrl: "/assets/products/first-ascent-white.png" },
+      { id: "fa-w-m", name: "WHITE / M", size: "M", color: "White", colorHex: "#FAF8F3", inStock: true, sku: "FA-WHT-M", imageUrl: "/assets/products/first-ascent-white.png" },
+      { id: "fa-w-l", name: "WHITE / L", size: "L", color: "White", colorHex: "#FAF8F3", inStock: true, sku: "FA-WHT-L", imageUrl: "/assets/products/first-ascent-white.png" },
+      { id: "fa-w-xl", name: "WHITE / XL", size: "XL", color: "White", colorHex: "#FAF8F3", inStock: false, sku: "FA-WHT-XL", imageUrl: "/assets/products/first-ascent-white.png" },
     ],
-    mediaUrls: ["/assets/products/first-ascent-white.png"],
-  },
-  {
-    id: "prod_3",
-    name: "FIRST ASCENT TEE - BLACK",
-    slug: "first-ascent-tee-black",
-    description:
-      "Pitch black heavyweight dropped-shoulder boxy tee with high-contrast albino viper graphics and brutalist cyrux studio typography. Ribbed collar and raw garment-dyed treatment.",
-    price: 95.0,
-    stock: 50,
-    isBestseller: true,
-    variants: [
-      { id: "fa-b-s", name: "S", inStock: true, sku: "FA-BLK-S" },
-      { id: "fa-b-m", name: "M", inStock: true, sku: "FA-BLK-M" },
-      { id: "fa-b-l", name: "L", inStock: true, sku: "FA-BLK-L" },
-      { id: "fa-b-xl", name: "XL", inStock: true, sku: "FA-BLK-XL" },
+    mediaUrls: [
+      "/assets/products/first-ascent-black.png",
+      "/assets/products/first-ascent-white.png",
     ],
-    mediaUrls: ["/assets/products/first-ascent-black.png"],
   },
   {
     id: "prod_4",
-    name: "CYRUX 099 ORBITAL TEE",
+    name: "CYRUX STUDIO 099 — THE NEW ERA OF WEARABLE ART",
     slug: "cyrux-099-orbital-tee",
     description:
       "Astronomical cybernetic motif tee in deep washed charcoal. Front features center orbital star constellation with specular chrome micro-stud effect. Back features cinematic 35mm letterbox eye gaze screenprint with brutalist studio text treatment. Chapter 00 release.",
     price: 110.0,
     stock: 25,
     isBestseller: true,
+    color: "Washed Charcoal",
+    colorHex: "#222224",
+    isDiptych: true,
     variants: [
-      { id: "orb-s", name: "S", inStock: true, sku: "ORB-099-S" },
-      { id: "orb-m", name: "M", inStock: true, sku: "ORB-099-M" },
-      { id: "orb-l", name: "L", inStock: true, sku: "ORB-099-L" },
-      { id: "orb-xl", name: "XL", inStock: true, sku: "ORB-099-XL" },
+      { id: "orb-s", name: "S", size: "S", inStock: true, sku: "ORB-099-S" },
+      { id: "orb-m", name: "M", size: "M", inStock: true, sku: "ORB-099-M" },
+      { id: "orb-l", name: "L", size: "L", inStock: true, sku: "ORB-099-L" },
+      { id: "orb-xl", name: "XL", size: "XL", inStock: true, sku: "ORB-099-XL" },
     ],
     mediaUrls: [
       "/assets/products/cyrux-099-orbital.png",
@@ -171,67 +172,20 @@ export const INITIAL_DROPS: InitialDropInput[] = [
       en: "NOVEMBER 2026",
     },
     edition: {
-      tr: "4 MODEL • ÖZEL ARŞİV DROPU",
-      en: "4 GARMENTS • ARCHIVAL DROP",
+      tr: "3 MODEL • ÖZEL ARŞİV DROPU",
+      en: "3 GARMENTS • ARCHIVAL DROP",
     },
     description: {
-      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 4 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kuzey Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
-      en: "Chapter 00 First Ascent consists of 4 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our North Cyprus atelier. Never restocked.",
+      tr: "Chapter 00 İlk Drop; hazır modanın tekdüze kalıplarını reddeden 3 giyilebilir sanat parçasından oluşur. 280-300 GSM ağır taranmış pamuk, el işçiliği asit yıkama ve avangart serigrafi baskılarla Kuzey Kıbrıs atölyemizde üretilmiştir. Asla tekrar basılmayacaktır.",
+      en: "Chapter 00 First Ascent consists of 3 wearable art sculptures rejecting fast fashion templates. Crafted from 280-300 GSM combed cotton with vintage acid washes and raw serigraphy at our North Cyprus atelier. Never restocked.",
     },
     productSlugs: [
       "pretty-chaos-tee",
-      "first-ascent-tee-white",
-      "first-ascent-tee-black",
+      "chapter001-first-ascent",
       "cyrux-099-orbital-tee",
     ],
     bannerImage: "/assets/editorial/hero-desktop.jpg",
-    totalPieces: 168,
-  },
-  {
-    id: "drop-00",
-    slug: "prototype-zero",
-    number: "00",
-    chapter: "GENESIS",
-    title: "PROTOTYPE ZERO",
-    status: "archived",
-    releaseDate: {
-      tr: "EKİM 2025",
-      en: "OCTOBER 2025",
-    },
-    edition: {
-      tr: "50 PARÇA (KASADA SAKLANDI / TÜKENDİ)",
-      en: "50 PIECES (VAULTED / SOLD OUT)",
-    },
-    description: {
-      tr: "Cyrux Studio'nun fiziksel giysi formlarını ve siber-noir silüetlerini test ettiği ilk prototip serisi. Tüm drop tükenmiş ve stüdyo kasasına kaldırılmıştır.",
-      en: "The experimental genesis run testing Cyrux Studio's brutalist silhouettes and cyber-noir garments. Entire run vaulted in the permanent studio archive.",
-    },
-    productSlugs: [],
-    bannerImage: "/assets/brand/hero-cyber-portrait.webp",
-    totalPieces: 50,
-  },
-  {
-    id: "drop-02",
-    slug: "neon-predator",
-    number: "02",
-    chapter: "CHAPTER 01",
-    title: "NEON PREDATOR",
-    status: "upcoming",
-    releaseDate: {
-      tr: "OCAK 2027",
-      en: "JANUARY 2027",
-    },
-    edition: {
-      tr: "ATÖLYE PROTOTİP AŞAMASINDA",
-      en: "IN ATELIER PROTOTYPING",
-    },
-    description: {
-      tr: "Ağır bomber ceketler, modüler fermuarlı kargo pantolonlar ve 3D yansıtıcı mikro-aplikeler. Kuzey Kıbrıs atölyemizde prototip üretimi devam etmektedir.",
-      en: "Heavyweight technical puffers, modular cargo trousers, and specular 3D chrome details. Currently in atelier prototyping in North Cyprus.",
-    },
-    productSlugs: [],
-    bannerImage: "/assets/campaign/campaign-card-puffer.webp",
-    totalPieces: 120,
+    totalPieces: 150,
   },
 ];
 

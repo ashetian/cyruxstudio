@@ -13,6 +13,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   let { slug } = await params;
   if (slug === "eyes-never-lie-tee") slug = "cyrux-099-orbital-tee";
+  if (slug === "first-ascent-tee-white" || slug === "first-ascent-tee-black") {
+    slug = "chapter001-first-ascent";
+  }
   const product = await prisma.product.findUnique({ where: { slug } });
   if (!product) return { title: "Product Not Found" };
   const image = resolveEditorialAssets([product]).productImages[product.slug] || "/og-image.jpg";
@@ -49,6 +52,9 @@ export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   if (slug === "eyes-never-lie-tee") {
     redirect("/products/cyrux-099-orbital-tee");
+  }
+  if (slug === "first-ascent-tee-white" || slug === "first-ascent-tee-black") {
+    redirect("/products/chapter001-first-ascent");
   }
   const [product, others, settings] = await Promise.all([
     prisma.product.findUnique({ where: { slug } }),

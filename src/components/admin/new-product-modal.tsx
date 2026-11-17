@@ -46,6 +46,10 @@ export function NewProductModal({
   const [category, setCategory] = useState("outerwear");
   const [isBestseller, setIsBestseller] = useState(false);
   const [description, setDescription] = useState("");
+  const [color, setColor] = useState("");
+  const [colorHex, setColorHex] = useState("");
+  const [twinProductSlug, setTwinProductSlug] = useState("");
+  const [isDiptych, setIsDiptych] = useState(false);
   const [variants, setVariants] = useState<Array<{ size: string; stock: number }>>([
     { size: "S", stock: 5 },
     { size: "M", stock: 5 },
@@ -64,6 +68,10 @@ export function NewProductModal({
       setStock(String(productToEdit.stock ?? 10));
       setCategory(productToEdit.category || "outerwear");
       setIsBestseller(Boolean(productToEdit.isBestseller));
+      setColor(productToEdit.color || "");
+      setColorHex(productToEdit.colorHex || "");
+      setTwinProductSlug(productToEdit.twinProductSlug || "");
+      setIsDiptych(Boolean(productToEdit.isDiptych));
       setDescription(productToEdit.description || "");
       if (Array.isArray(productToEdit.variants)) {
         const cleanVars = productToEdit.variants
@@ -95,6 +103,10 @@ export function NewProductModal({
       setStock("10");
       setCategory("outerwear");
       setIsBestseller(false);
+      setColor("");
+      setColorHex("");
+      setTwinProductSlug("");
+      setIsDiptych(false);
       setDescription("");
       setVariants([
         { size: "S", stock: 5 },
@@ -234,6 +246,10 @@ export function NewProductModal({
           stock: numericStock,
           category,
           isBestseller,
+          color: color.trim() || undefined,
+          colorHex: colorHex.trim() || undefined,
+          twinProductSlug: twinProductSlug.trim() || undefined,
+          isDiptych,
           description,
           variants,
           mediaUrls,
@@ -421,6 +437,67 @@ export function NewProductModal({
                 >
                   FEATURE AS ATELIER BESTSELLER (★ PROMO FLAG)
                 </label>
+              </div>
+
+              {/* Colorway & Twin Pairing */}
+              <div className="p-3 bg-[#141414] border border-[#282828] flex flex-col gap-3">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#AAAAAA]">
+                  COLORWAY & TWIN DUALITY
+                </span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] uppercase text-[#888888]">COLOR NAME</label>
+                    <input
+                      type="text"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      placeholder="e.g. White or Noir"
+                      className="bg-[#1C1C1C] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] text-xs px-2.5 py-1.5 outline-none font-mono"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] uppercase text-[#888888]">SWATCH HEX</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={colorHex && colorHex.startsWith("#") ? colorHex : "#FAF8F3"}
+                        onChange={(e) => setColorHex(e.target.value)}
+                        className="w-7 h-7 bg-transparent border-0 cursor-pointer p-0"
+                      />
+                      <input
+                        type="text"
+                        value={colorHex}
+                        onChange={(e) => setColorHex(e.target.value)}
+                        placeholder="#FAF8F3"
+                        className="flex-1 bg-[#1C1C1C] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] text-xs px-2 py-1.5 outline-none font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] uppercase text-[#888888]">TWIN PRODUCT SLUG (COLOR PAIRING)</label>
+                  <input
+                    type="text"
+                    value={twinProductSlug}
+                    onChange={(e) => setTwinProductSlug(e.target.value)}
+                    placeholder="e.g. first-ascent-tee-black"
+                    className="bg-[#1C1C1C] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] text-xs px-2.5 py-1.5 outline-none font-mono"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2.5 pt-1 border-t border-[#222222]">
+                  <input
+                    type="checkbox"
+                    id="modalIsDiptych"
+                    checked={isDiptych}
+                    onChange={(e) => setIsDiptych(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-[#FAF8F3] cursor-pointer"
+                  />
+                  <label htmlFor="modalIsDiptych" className="text-[11px] uppercase font-bold text-[#FAF8F3] cursor-pointer tracking-wider">
+                    DIPTYCH ARTWORK (FRONT & BACK COMPLETION)
+                  </label>
+                </div>
               </div>
 
               {/* Description */}
