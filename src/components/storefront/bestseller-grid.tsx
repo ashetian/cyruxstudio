@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Heart, Search, X } from "lucide-react";
 import { Product } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -52,29 +52,6 @@ export const ASYMMETRIC_COLUMN_CONFIG = [
 
 export const CARD_LAYOUT = ASYMMETRIC_COLUMN_CONFIG;
 
-const gridSlideVariants: Variants = {
-  enter: (dir: number) => ({
-    x: dir > 0 ? "100%" : "-100%",
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: {
-      x: { type: "spring" as const, stiffness: 320, damping: 32 },
-      opacity: { duration: 0.2 },
-    },
-  },
-  exit: (dir: number) => ({
-    x: dir < 0 ? "100%" : "-100%",
-    opacity: 0,
-    transition: {
-      x: { type: "spring" as const, stiffness: 320, damping: 32 },
-      opacity: { duration: 0.2 },
-    },
-  }),
-};
-
 function BestsellerMobileCard({
   product,
   index,
@@ -101,7 +78,6 @@ function BestsellerMobileCard({
   t: (input: { tr: string; en: string }) => string;
 }) {
   const [activeSlug, setActiveSlug] = useState(product.slug);
-  const [slideDir, setSlideDir] = useState<number>(1);
   const [activeSide, setActiveSide] = useState<"front" | "back">("front");
 
   useEffect(() => {
@@ -163,11 +139,10 @@ function BestsellerMobileCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setSlideDir(-1);
                   setActiveSlug(product.slug);
                 }}
                 className={cn(
-                  "w-3.5 h-3.5 rounded-full border transition-all cursor-pointer",
+                  "w-3.5 h-3.5 rounded-full border transition-all",
                   activeSlug === product.slug
                     ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
                     : "opacity-60 hover:opacity-100 border-black/30"
@@ -181,11 +156,10 @@ function BestsellerMobileCard({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setSlideDir(1);
                   setActiveSlug(twin.slug);
                 }}
                 className={cn(
-                  "w-3.5 h-3.5 rounded-full border transition-all cursor-pointer",
+                  "w-3.5 h-3.5 rounded-full border transition-all",
                   activeSlug === twin.slug
                     ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
                     : "opacity-60 hover:opacity-100 border-black/30"
@@ -247,59 +221,22 @@ function BestsellerMobileCard({
       )}
 
       {/* Center Massive Garment Presentation */}
-      <div className="relative flex-1 w-full min-h-[360px] overflow-hidden my-auto bg-[#EDEDEB]">
-        {isDiptych ? (
-          <div className="grid grid-cols-2 gap-0 w-full h-full">
-            <div className="relative w-full h-full border-r border-black/10 overflow-hidden">
-              <Image
-                src={frontImg}
-                alt={`${displayProduct.name} - Front`}
-                fill
-                sizes="(max-width: 1024px) 50vw, 20vw"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-              />
-              <span className="absolute bottom-2 left-2 z-10 bg-black/80 text-white font-mono text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">
-                01. {lang === "tr" ? "ÖN" : "FRONT"}
-              </span>
-            </div>
-            <div className="relative w-full h-full overflow-hidden">
-              <Image
-                src={backImg}
-                alt={`${displayProduct.name} - Back`}
-                fill
-                sizes="(max-width: 1024px) 50vw, 20vw"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-              />
-              <span className="absolute bottom-2 left-2 z-10 bg-black/80 text-white font-mono text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">
-                02. {lang === "tr" ? "ARKA" : "BACK"}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <AnimatePresence mode="popLayout" custom={slideDir} initial={false}>
-            <motion.div
-              key={displayProduct.id}
-              custom={slideDir}
-              variants={gridSlideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className="relative w-full h-full"
-            >
-              <Image
-                src={currentImg}
-                alt={displayProduct.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 30vw"
-                className={cn(
-                  "transition-all duration-500 ease-out group-active:scale-95 group-hover:scale-105 object-cover object-center",
-                  isOutOfStock && "grayscale opacity-50"
-                )}
-                priority={index < 2}
-              />
-            </motion.div>
-          </AnimatePresence>
-        )}
+      <div className="relative flex-1 w-full min-h-[360px] flex items-center justify-center p-6 sm:p-10 my-auto">
+        <Image
+          key={`${displayProduct.id}-${activeSide}`}
+          src={currentImg}
+          alt={displayProduct.name}
+          fill
+          sizes="(max-width: 1024px) 100vw, 30vw"
+          className={cn(
+            "transition-all duration-500 ease-out group-active:scale-95 group-hover:scale-105",
+            currentImg.includes("/assets/editorial/")
+              ? "object-cover object-center"
+              : "object-contain object-center mix-blend-multiply p-4 sm:p-8",
+            isOutOfStock && "grayscale opacity-50"
+          )}
+          priority={index < 2}
+        />
       </div>
 
       {/* Bottom Information Strip */}
@@ -354,7 +291,6 @@ function BestsellerDesktopItem({
   t: (input: { tr: string; en: string }) => string;
 }) {
   const [activeSlug, setActiveSlug] = useState(product.slug);
-  const [slideDir, setSlideDir] = useState<number>(1);
   const [activeSide, setActiveSide] = useState<"front" | "back">("front");
 
   useEffect(() => {
@@ -421,11 +357,10 @@ function BestsellerDesktopItem({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setSlideDir(-1);
                       setActiveSlug(product.slug);
                     }}
                     className={cn(
-                      "w-3.5 h-3.5 rounded-full border transition-all cursor-pointer",
+                      "w-3.5 h-3.5 rounded-full border transition-all",
                       activeSlug === product.slug
                         ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
                         : "opacity-60 hover:opacity-100 border-black/30"
@@ -439,11 +374,10 @@ function BestsellerDesktopItem({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setSlideDir(1);
                       setActiveSlug(twin.slug);
                     }}
                     className={cn(
-                      "w-3.5 h-3.5 rounded-full border transition-all cursor-pointer",
+                      "w-3.5 h-3.5 rounded-full border transition-all",
                       activeSlug === twin.slug
                         ? "scale-125 ring-1.5 ring-black border-black shadow-xs"
                         : "opacity-60 hover:opacity-100 border-black/30"
@@ -509,59 +443,22 @@ function BestsellerDesktopItem({
           )}
 
           {/* Center Massive Garment Presentation */}
-          <div className="relative flex-1 w-full min-h-0 overflow-hidden my-auto bg-[#EDEDEB]">
-            {isDiptych ? (
-              <div className="grid grid-cols-2 gap-0 w-full h-full">
-                <div className="relative w-full h-full border-r border-black/10 overflow-hidden">
-                  <Image
-                    src={frontImg}
-                    alt={`${displayProduct.name} - Front`}
-                    fill
-                    sizes="(max-width: 1536px) 25vw, 20vw"
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <span className="absolute bottom-2 left-2 z-10 bg-black/80 text-white font-mono text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">
-                    01. {lang === "tr" ? "ÖN" : "FRONT"}
-                  </span>
-                </div>
-                <div className="relative w-full h-full overflow-hidden">
-                  <Image
-                    src={backImg}
-                    alt={`${displayProduct.name} - Back`}
-                    fill
-                    sizes="(max-width: 1536px) 25vw, 20vw"
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <span className="absolute bottom-2 left-2 z-10 bg-black/80 text-white font-mono text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider">
-                    02. {lang === "tr" ? "ARKA" : "BACK"}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <AnimatePresence mode="popLayout" custom={slideDir} initial={false}>
-                <motion.div
-                  key={displayProduct.id}
-                  custom={slideDir}
-                  variants={gridSlideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  className="relative w-full h-full"
-                >
-                  <Image
-                    src={currentImg}
-                    alt={displayProduct.name}
-                    fill
-                    sizes="(max-width: 1536px) 50vw, 40vw"
-                    className={cn(
-                      "transition-transform duration-700 ease-out group-hover:scale-105 object-cover object-center",
-                      isOutOfStock && "grayscale opacity-50"
-                    )}
-                    priority={index === 0}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            )}
+          <div className="relative flex-1 w-full min-h-0 overflow-hidden flex items-center justify-center p-6 xl:p-10 my-auto">
+            <Image
+              key={`${displayProduct.id}-${activeSide}`}
+              src={currentImg}
+              alt={displayProduct.name}
+              fill
+              sizes="(max-width: 1536px) 50vw, 40vw"
+              className={cn(
+                "transition-transform duration-700 ease-out group-hover:scale-105",
+                currentImg.includes("/assets/editorial/")
+                  ? "object-cover object-center"
+                  : "object-contain object-center mix-blend-multiply p-4 xl:p-8",
+                isOutOfStock && "grayscale opacity-50"
+              )}
+              priority={index === 0}
+            />
           </div>
 
           {/* Bottom Information Strip */}
