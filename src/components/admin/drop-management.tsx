@@ -274,7 +274,7 @@ export function DropManagement({ onDropMutated }: DropManagementProps = {}) {
 
           <div className="col-span-1 border-l border-[#222222] pl-3 sm:pl-6">
             <span className="text-[#666666] block uppercase tracking-wider text-[9px] md:text-[10px]">
-              ACTIVE DROP
+              NAVBAR LATEST DROP
             </span>
             <span className="text-emerald-400 font-bold text-xs md:text-sm tracking-wider flex items-center gap-1.5 truncate">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -290,6 +290,52 @@ export function DropManagement({ onDropMutated }: DropManagementProps = {}) {
           <Plus className="w-4 h-4" />
           <span>[ + NEW DROP SPEC ]</span>
         </button>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 1.5 NAVBAR LATEST DROP SELECTOR                                 */}
+      {/* ============================================================== */}
+      <div className="bg-[#0F1412] border border-emerald-500/40 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-bold text-[#FAF8F3] uppercase tracking-widest">
+              NAVBAR &quot;LATEST DROP&quot; SEÇİMİ (/drops/latest)
+            </span>
+          </div>
+          <p className="text-[11px] text-[#888888]">
+            Mağaza üst barı, yüzen menü ve çekmecedeki &quot;Son Drop / Latest Drop&quot; bağlantısının yönlendireceği aktif koleksiyonu buradan seçin.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <select
+            aria-label="Select Navbar Latest Drop"
+            value={activeDrop?.id || ""}
+            onChange={(e) => {
+              const target = drops.find((d) => d.id === e.target.value);
+              if (target && target.id !== activeDrop?.id) {
+                handleActivateDrop(target.id, target.title);
+              }
+            }}
+            disabled={activatingId !== null || drops.length === 0}
+            className="min-h-[42px] bg-[#0A0A0A] border border-emerald-500/50 text-[#FAF8F3] text-xs font-mono uppercase px-3.5 py-2 cursor-pointer focus:outline-none focus:border-emerald-400"
+          >
+            {drops.map((d) => (
+              <option key={d.id} value={d.id}>
+                DROP {d.number} — {d.title} {d.status === "active" ? "(AKTİF)" : ""}
+              </option>
+            ))}
+          </select>
+          <Link
+            href="/drops/latest"
+            target="_blank"
+            className="min-h-[42px] px-3.5 py-2 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/50 text-emerald-300 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0"
+          >
+            <span>ÖNİZLE</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
 
       {/* Notifications */}

@@ -71,6 +71,8 @@ export function MenuDrawer({
     return `${sorted[0]}–${sorted[sorted.length - 1]}`;
   }, [dropsList]);
 
+  const activeDrop = useMemo(() => dropsList.find((d) => d.status === "active") || dropsList[0], [dropsList]);
+
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -201,11 +203,26 @@ export function MenuDrawer({
                 ))}
                 <li>
                   <Link
+                    href="/drops/latest"
+                    onClick={onClose}
+                    className="w-full text-left py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-white transition-colors focus:outline-none focus-visible:underline flex items-center justify-between group"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span>{t({ tr: "Son Drop", en: "Latest Drop" })}</span>
+                    </span>
+                    <span className="text-xs px-2.5 py-1 bg-white text-black font-bold uppercase tracking-wider group-hover:bg-neutral-200">
+                      {activeDrop ? `DROP ${activeDrop.number}` : "LIVE"}
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/drops"
                     onClick={onClose}
                     className="w-full text-left py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-white transition-colors focus:outline-none focus-visible:underline flex items-center justify-between"
                   >
-                    <span>{t({ tr: "Droplar", en: "Drops" })}</span>
+                    <span>{t({ tr: "Tüm Droplar", en: "Drops & Archive" })}</span>
                     {dropsRangeBadge && (
                       <span className="text-xs px-2 py-0.5 border border-white/20 text-neutral-400 font-normal">
                         {dropsRangeBadge}
