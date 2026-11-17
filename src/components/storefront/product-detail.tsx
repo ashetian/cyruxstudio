@@ -176,22 +176,6 @@ export function ProductDetail({
       ];
     }
 
-    // 3. Complementary dual image colorways (e.g. Chapter001 First Ascent black + white):
-    if (gallery.length >= 2) {
-      return gallery.map((img, idx) => {
-        const isWhite =
-          img.toLowerCase().includes("white") ||
-          (idx === 1 && !img.toLowerCase().includes("black"));
-        const name = isWhite ? "WHITE" : "BLACK";
-        const hex = isWhite ? "#FAF8F3" : "#0A0A0A";
-        return {
-          name,
-          hex,
-          imageUrl: img,
-        };
-      });
-    }
-
     if (currentProduct.color) {
       return [
         {
@@ -204,6 +188,10 @@ export function ProductDetail({
 
     return [];
   }, [variants, currentProduct, twinProduct, gallery, productImages]);
+
+  const isFrontBackDiptych = Boolean(
+    isDiptych && (currentProduct.slug === "cyrux-099-orbital-tee" || colorOptions.length <= 1)
+  );
 
   const [selectedColor, setSelectedColor] = useState<string>(() => {
     return colorOptions[0]?.name || (currentProduct.color || "BLACK").toUpperCase();
@@ -492,26 +480,69 @@ export function ProductDetail({
           {/* Gallery */}
           <motion.div {...fade()} className="lg:col-span-7 flex flex-col gap-3">
             {isDiptych && gallery.length >= 2 ? (
-              <div className="grid grid-cols-2 gap-0 border border-black/15 bg-[#EDEDEF] w-full aspect-[2/1] overflow-hidden m-0 p-0 shadow-xs">
-                <div className="relative aspect-square w-full h-full border-r border-black/10 m-0 p-0 overflow-hidden">
-                  <Image
-                    src={gallery[0]}
-                    alt={`${currentProduct.name} - Front`}
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 50vw, 35vw"
-                    className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply"
-                  />
+              <div className="flex flex-col border border-black/20 bg-[#EDEDEF] w-full overflow-hidden shadow-xs">
+                {/* Continuous Seamless Diptych (0 gap, 0 border between images) */}
+                <div className="relative grid grid-cols-2 gap-0 w-full aspect-[2/1] overflow-hidden m-0 p-0">
+                  {/* Panel 01: Front */}
+                  <div className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden">
+                    <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10 pointer-events-none select-none">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black text-[#FAF8F3] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] shadow-xs">
+                        {isFrontBackDiptych
+                          ? `01 • ${t({ tr: "ÖN", en: "FRONT" })}`
+                          : `01 • ${colorOptions[0]?.name || "NOIR"}`}
+                      </span>
+                    </div>
+                    <Image
+                      src={gallery[0]}
+                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Ön", en: "Front" }) : "1"}`}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 50vw, 35vw"
+                      className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply select-none"
+                    />
+                  </div>
+
+                  {/* Panel 02: Back */}
+                  <div className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden">
+                    <div className="absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 z-10 pointer-events-none select-none">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black text-[#FAF8F3] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] shadow-xs">
+                        {isFrontBackDiptych
+                          ? `02 • ${t({ tr: "ARKA", en: "BACK" })}`
+                          : `02 • ${colorOptions[1]?.name || "BLANC"}`}
+                      </span>
+                    </div>
+                    <Image
+                      src={gallery[1]}
+                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Arka", en: "Back" }) : "2"}`}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 50vw, 35vw"
+                      className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply select-none"
+                    />
+                  </div>
                 </div>
-                <div className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden">
-                  <Image
-                    src={gallery[1]}
-                    alt={`${currentProduct.name} - Back`}
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 50vw, 35vw"
-                    className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply"
-                  />
+
+                {/* Archival Diptych Status Bar */}
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-t border-black/10 bg-[#FAF8F3]/90 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-neutral-600">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0" />
+                    <span className="font-bold text-black">
+                      {isFrontBackDiptych
+                        ? t({ tr: "DİPTİK GÖRÜNÜM", en: "DIPTYCH STUDY" })
+                        : t({ tr: "MONOKROM İKİLİ", en: "MONOCHROME DUO" })}
+                    </span>
+                    <span className="text-neutral-400 hidden sm:inline">•</span>
+                    <span className="text-neutral-500 hidden sm:inline">
+                      {isFrontBackDiptych
+                        ? t({ tr: "ÖN VE ARKA PERSPEKTİF", en: "FRONT & REVERSE PERSPECTIVE" })
+                        : t({ tr: "ÇİFT VARYANT EŞLEŞMESİ", en: "DUAL COLORWAY PAIRING" })}
+                    </span>
+                  </div>
+                  <span className="text-neutral-500 font-medium tracking-widest">
+                    {isFrontBackDiptych
+                      ? t({ tr: "ÇİFT YÜZLÜ SANAT", en: "DUAL PERSPECTIVE" })
+                      : t({ tr: "İKİLİ KOLEKSİYON", en: "TWIN COLLECTION" })}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -579,18 +610,40 @@ export function ProductDetail({
 
           {/* Info */}
           <motion.div {...fade(0.1)} className="lg:col-span-5 lg:sticky lg:top-24 self-start">
-            <h1 className="font-mono text-xl sm:text-2xl md:text-4xl font-bold uppercase tracking-tight">
+            {/* Provenance & Series Tag */}
+            <div className="flex items-center gap-2.5 mb-2.5 flex-wrap">
+              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-neutral-500 font-bold">
+                CHAPTER 00 • ARCHIVE
+              </span>
+              {isDiptych && (
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 bg-black text-[#FAF8F3] font-bold">
+                  {isFrontBackDiptych ? "DIPTYCH STUDY" : "DUAL COLORWAY"}
+                </span>
+              )}
+              {currentProduct.stock <= 5 && currentProduct.stock > 0 && (
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 bg-red-100 text-red-800 border border-red-300 font-bold">
+                  {t({ tr: `SON ${currentProduct.stock} ADET`, en: `ONLY ${currentProduct.stock} LEFT` })}
+                </span>
+              )}
+            </div>
+
+            <h1 className="font-mono text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold uppercase tracking-tight leading-[1.05]">
               {currentProduct.name}
             </h1>
-            <p className="mt-2 sm:mt-3 font-mono text-base sm:text-lg font-bold">
-              {formatProductPrice(currentProduct.price, currency)}
-            </p>
+            <div className="mt-3 flex items-baseline gap-3">
+              <span className="font-mono text-lg sm:text-xl font-bold tracking-tight">
+                {formatProductPrice(currentProduct.price, currency)}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+                {t({ tr: "KDV DAHİL • EXPRESS KARGO", en: "VAT INCL. • EXPRESS DISPATCH" })}
+              </span>
+            </div>
             <p className="mt-4 sm:mt-5 font-mono text-xs leading-relaxed text-neutral-700">
               {currentProduct.description}
             </p>
 
-            {/* Colorway Options (Defining each other) */}
-            {colorOptions.length > 0 && (
+            {/* Colorway Options (Only rendered when there are genuinely multiple colors to pick from) */}
+            {colorOptions.length > 1 && (
               <div className="mt-6 sm:mt-7" role="group" aria-label="Select color">
                 <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
                   {t({ tr: "RENK", en: "COLOR" })}: <strong className="text-black font-bold">{selectedColor}</strong>
@@ -627,10 +680,15 @@ export function ProductDetail({
 
             {displayedVariants.length > 0 && (
               <div className="mt-6 sm:mt-7" role="group" aria-label="Select size">
-                <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
-                  Size{size ? `: ${size}` : ""}
-                </span>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
+                    {t({ tr: "BEDEN", en: "SIZE" })}{size ? `: ${size}` : ""}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+                    ARCHIVAL OVERSIZED FIT
+                  </span>
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-2">
                   {displayedVariants.map((v) => {
                     const label = v.size || v.name.replace(/^(BLACK|WHITE)\s*\/\s*/i, "");
                     const isSelected = size === label || size === v.name;
@@ -645,12 +703,12 @@ export function ProductDetail({
                           setHint(null);
                         }}
                         className={cn(
-                          "min-w-11 h-11 px-3 font-mono text-xs uppercase border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer",
+                          "min-w-12 h-11 px-3.5 font-mono text-xs font-bold uppercase border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer",
                           !v.inStock || soldOut
-                            ? "border-black/10 text-black/30 line-through cursor-not-allowed"
+                            ? "border-black/10 text-black/30 line-through cursor-not-allowed bg-neutral-100"
                             : isSelected
-                            ? "border-black bg-black text-white"
-                            : "border-black/30 hover:border-black"
+                            ? "border-black bg-black text-[#FAF8F3] shadow-xs"
+                            : "border-black/25 hover:border-black bg-white hover:bg-neutral-50"
                         )}
                       >
                         {label}
@@ -743,10 +801,30 @@ export function ProductDetail({
 
             <div className="mt-8 border-t border-black/20">
               <Accordion title={t({ tr: "DETAYLAR", en: "DETAILS" })}>
-                {currentProduct.description || t({
-                  tr: "Ağır gramaj tok kumaş, mimari oversize kesim. cyrux studio sınırlı arşiv serisi.",
-                  en: "Heavyweight construction, oversized fit. Part of the cyrux studio archival run.",
-                })}
+                <div className="space-y-3 font-mono text-xs">
+                  <p className="leading-relaxed text-neutral-700">
+                    {currentProduct.description || t({
+                      tr: "Ağır gramaj tok kumaş, mimari oversize kesim. cyrux studio sınırlı arşiv serisi.",
+                      en: "Heavyweight construction, oversized fit. Part of the cyrux studio archival run.",
+                    })}
+                  </p>
+                  <div className="pt-2 border-t border-black/10 grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px]">
+                    <span className="text-neutral-500 uppercase">{t({ tr: "KUMAŞ", en: "FABRIC" })}:</span>
+                    <span className="font-semibold text-black">100% Cotton (280-300 GSM)</span>
+                    <span className="text-neutral-500 uppercase">{t({ tr: "KESİM", en: "FIT" })}:</span>
+                    <span className="font-semibold text-black">Architectural Oversize</span>
+                    {currentProduct.color && (
+                      <>
+                        <span className="text-neutral-500 uppercase">{t({ tr: "RENK", en: "COLOR" })}:</span>
+                        <span className="font-semibold text-black">{currentProduct.color}</span>
+                      </>
+                    )}
+                    <span className="text-neutral-500 uppercase">{t({ tr: "BASKI TEKNİĞİ", en: "PRINT TECHNIQUE" })}:</span>
+                    <span className="font-semibold text-black">Precision Halftone Serigraphy</span>
+                    <span className="text-neutral-500 uppercase">{t({ tr: "MENŞEİ", en: "EDITION" })}:</span>
+                    <span className="font-semibold text-black">Atelier Cyprus / Limited Archive</span>
+                  </div>
+                </div>
               </Accordion>
               {isDiptych && (
                 <Accordion title={t({ tr: "DIPTYCH SANAT VE BASKI KONSEPTİ", en: "DIPTYCH ARTWORK SPECIFICATION" })}>
