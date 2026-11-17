@@ -124,8 +124,9 @@ export function ProductDetail({
 
   const isDiptych = Boolean(
     currentProduct.isDiptych ||
+    currentProduct.slug === "chapter001-first-ascent" ||
     currentProduct.slug === "cyrux-099-orbital-tee" ||
-    (currentProduct.mediaUrls && currentProduct.mediaUrls.length >= 2 && currentProduct.slug.includes("099"))
+    (currentProduct.mediaUrls && currentProduct.mediaUrls.length >= 2 && (currentProduct.slug.includes("099") || currentProduct.slug.includes("first-ascent")))
   );
 
   const gallery = Array.from(
@@ -476,54 +477,98 @@ export function ProductDetail({
           </div>
         </header>
 
-        <section className="max-w-7xl mx-auto px-4 md:px-12 py-6 sm:py-8 md:py-14 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-14">
+        <section className="max-w-[1536px] mx-auto px-4 sm:px-6 md:px-10 lg:px-12 py-6 sm:py-8 md:py-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14">
           {/* Gallery */}
-          <motion.div {...fade()} className="lg:col-span-7 flex flex-col gap-3">
+          <motion.div {...fade()} className="lg:col-span-8 flex flex-col gap-3">
             {isDiptych && gallery.length >= 2 ? (
               <div className="flex flex-col border border-black/20 bg-[#EDEDEF] w-full overflow-hidden shadow-xs">
                 {/* Continuous Seamless Diptych (0 gap, 0 border between images) */}
                 <div className="relative grid grid-cols-2 gap-0 w-full aspect-[2/1] overflow-hidden m-0 p-0">
-                  {/* Panel 01: Front */}
-                  <div className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden">
-                    <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-10 pointer-events-none select-none">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black text-[#FAF8F3] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] shadow-xs">
-                        {isFrontBackDiptych
-                          ? `01 • ${t({ tr: "ÖN", en: "FRONT" })}`
-                          : `01 • ${colorOptions[0]?.name || "NOIR"}`}
+                  {/* Panel 01: Front / Color 1 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isFrontBackDiptych && colorOptions[0]) {
+                        handleColorOptionClick(colorOptions[0]);
+                      }
+                      setActive(0);
+                    }}
+                    className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none"
+                  >
+                    <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 z-20 pointer-events-none">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
+                          (isFrontBackDiptych ? active === 0 : selectedColor.toLowerCase() === (colorOptions[0]?.name || "").toLowerCase())
+                            ? "bg-black text-[#FAF8F3] border-black"
+                            : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
+                        )}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
+                          style={{ backgroundColor: colorOptions[0]?.hex || "#0A0A0A" }}
+                        />
+                        <span>
+                          {isFrontBackDiptych
+                            ? `01 • ${t({ tr: "ÖN", en: "FRONT" })}`
+                            : `01 • ${colorOptions[0]?.name || "NOIR"}`}
+                        </span>
                       </span>
                     </div>
                     <Image
                       src={gallery[0]}
-                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Ön", en: "Front" }) : "1"}`}
+                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Ön", en: "Front" }) : colorOptions[0]?.name || "1"}`}
                       fill
                       priority
-                      sizes="(max-width: 1024px) 50vw, 35vw"
+                      sizes="(max-width: 1024px) 50vw, 42vw"
                       className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply select-none"
                     />
-                  </div>
+                  </button>
 
-                  {/* Panel 02: Back */}
-                  <div className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden">
-                    <div className="absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 z-10 pointer-events-none select-none">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black text-[#FAF8F3] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] shadow-xs">
-                        {isFrontBackDiptych
-                          ? `02 • ${t({ tr: "ARKA", en: "BACK" })}`
-                          : `02 • ${colorOptions[1]?.name || "BLANC"}`}
+                  {/* Panel 02: Back / Color 2 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isFrontBackDiptych && colorOptions[1]) {
+                        handleColorOptionClick(colorOptions[1]);
+                      }
+                      setActive(1);
+                    }}
+                    className="relative aspect-square w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none"
+                  >
+                    <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 z-20 pointer-events-none">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
+                          (isFrontBackDiptych ? active === 1 : selectedColor.toLowerCase() === (colorOptions[1]?.name || "").toLowerCase())
+                            ? "bg-black text-[#FAF8F3] border-black"
+                            : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
+                        )}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
+                          style={{ backgroundColor: colorOptions[1]?.hex || "#FAF8F3" }}
+                        />
+                        <span>
+                          {isFrontBackDiptych
+                            ? `02 • ${t({ tr: "ARKA", en: "BACK" })}`
+                            : `02 • ${colorOptions[1]?.name || "BLANC"}`}
+                        </span>
                       </span>
                     </div>
                     <Image
                       src={gallery[1]}
-                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Arka", en: "Back" }) : "2"}`}
+                      alt={`${currentProduct.name} - ${isFrontBackDiptych ? t({ tr: "Arka", en: "Back" }) : colorOptions[1]?.name || "2"}`}
                       fill
                       priority
-                      sizes="(max-width: 1024px) 50vw, 35vw"
+                      sizes="(max-width: 1024px) 50vw, 42vw"
                       className="w-full h-full m-0 p-0 object-cover object-center mix-blend-multiply select-none"
                     />
-                  </div>
+                  </button>
                 </div>
 
                 {/* Archival Diptych Status Bar */}
-                <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-t border-black/10 bg-[#FAF8F3]/90 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-neutral-600">
+                <div className="flex items-center justify-between px-3.5 sm:px-4 py-2 border-t border-black/10 bg-[#FAF8F3]/90 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-neutral-600">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-black shrink-0" />
                     <span className="font-bold text-black">
@@ -535,7 +580,7 @@ export function ProductDetail({
                     <span className="text-neutral-500 hidden sm:inline">
                       {isFrontBackDiptych
                         ? t({ tr: "ÖN VE ARKA PERSPEKTİF", en: "FRONT & REVERSE PERSPECTIVE" })
-                        : t({ tr: "ÇİFT VARYANT EŞLEŞMESİ", en: "DUAL COLORWAY PAIRING" })}
+                        : `${colorOptions[0]?.name || "BLACK"} & ${colorOptions[1]?.name || "WHITE"}`}
                     </span>
                   </div>
                   <span className="text-neutral-500 font-medium tracking-widest">
@@ -609,7 +654,7 @@ export function ProductDetail({
           </motion.div>
 
           {/* Info */}
-          <motion.div {...fade(0.1)} className="lg:col-span-5 lg:sticky lg:top-24 self-start">
+          <motion.div {...fade(0.1)} className="lg:col-span-4 lg:sticky lg:top-24 self-start">
             {/* Provenance & Series Tag */}
             <div className="flex items-center gap-2.5 mb-2.5 flex-wrap">
               <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-neutral-500 font-bold">
@@ -642,39 +687,11 @@ export function ProductDetail({
               {currentProduct.description}
             </p>
 
-            {/* Colorway Options (Only rendered when there are genuinely multiple colors to pick from) */}
+            {/* Colorway Indicator (Clean, Minimal Typography — No Cluttered Buttons) */}
             {colorOptions.length > 1 && (
-              <div className="mt-6 sm:mt-7" role="group" aria-label="Select color">
-                <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
-                  {t({ tr: "RENK", en: "COLOR" })}: <strong className="text-black font-bold">{selectedColor}</strong>
-                </span>
-                <div className="mt-2 flex items-center gap-2.5 flex-wrap">
-                  {colorOptions.map((opt) => {
-                    const isSel = selectedColor.toLowerCase() === opt.name.toLowerCase();
-                    return (
-                      <button
-                        key={opt.name}
-                        type="button"
-                        onClick={() => handleColorOptionClick(opt)}
-                        className={cn(
-                          "flex items-center gap-2 px-3.5 py-2 border font-mono text-xs uppercase tracking-wider transition-all cursor-pointer",
-                          isSel
-                            ? "border-black bg-black text-white"
-                            : "border-black/30 hover:border-black bg-white/70 text-black hover:scale-105"
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "w-3.5 h-3.5 rounded-full border shadow-xs shrink-0",
-                            isSel ? "border-white/50" : "border-black/40"
-                          )}
-                          style={{ backgroundColor: opt.hex }}
-                        />
-                        <span className="font-bold">{opt.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="mt-5 sm:mt-6 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500">
+                <span>{t({ tr: "RENK", en: "COLOR" })}:</span>
+                <strong className="text-black font-bold">{selectedColor}</strong>
               </div>
             )}
 
@@ -845,7 +862,7 @@ export function ProductDetail({
         </section>
 
         {others.length > 0 && (
-          <section aria-label="You may also like" className="max-w-7xl mx-auto px-4 md:px-12 pb-12 sm:pb-16">
+          <section aria-label="You may also like" className="max-w-[1536px] mx-auto px-4 sm:px-6 md:px-10 lg:px-12 pb-12 sm:pb-16">
             <h2 className="font-mono text-lg md:text-2xl font-bold uppercase tracking-tight mb-6">
               {t({ tr: "İLGİNİZİ ÇEKEBİLİR", en: "YOU MAY ALSO LIKE" })}
             </h2>
