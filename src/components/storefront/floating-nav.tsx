@@ -17,10 +17,11 @@ export interface NavItem {
 export const FLOATING_NAV_ITEMS = [
   { id: "hero", label: { tr: "cyrux", en: "cyrux" }, href: "#hero", isBrand: true },
   { id: "shop", label: { tr: "Mağaza", en: "Shop" }, href: "#shop", isBrand: false },
+  { id: "latest-drop", label: { tr: "Son Drop", en: "Latest Drop" }, href: "/drops/latest", isBrand: false },
   { id: "about", label: { tr: "Hakkında", en: "About" }, href: "#about", isBrand: false },
 ];
 
-export const VALID_SECTIONS = ["hero", "shop", "about"] as const;
+export const VALID_SECTIONS = ["hero", "shop", "latest-drop", "about"] as const;
 export type NavSection = (typeof VALID_SECTIONS)[number];
 
 /**
@@ -123,6 +124,7 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("/")) return;
     e.preventDefault();
     const targetId = href.replace("#", "");
     const targetEl = document.getElementById(targetId);
@@ -133,7 +135,7 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
           ? (window as unknown as { __lenis?: { scrollTo: (target: HTMLElement | string, options?: object) => void } }).__lenis
           : undefined;
       if (lenis) {
-        lenis.scrollTo(targetEl, { duration: 1.2, offset: targetId === "hero" ? 0 : -20 });
+        lenis.scrollTo(targetEl, { duration: 1.2, offset: targetId === "shop" ? -20 : 0 });
       } else {
         targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -141,6 +143,8 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
       if (typeof window !== "undefined") {
         window.history.pushState(null, "", href);
       }
+    } else if (typeof window !== "undefined") {
+      window.location.assign(`/${href}`);
     }
   };
 
@@ -154,6 +158,7 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
       )}
     >
       {FLOATING_NAV_ITEMS.map((item) => {
+        const isRoute = item.href.startsWith("/");
         const targetId = item.href.replace("#", "");
         const isActive = activeSection === targetId;
 
@@ -186,17 +191,21 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
           );
         }
 
+        const LinkTag = isRoute ? Link : "a";
+        const linkProps = isRoute
+          ? { href: item.href }
+          : { href: item.href, onClick: (e: React.MouseEvent<HTMLAnchorElement>) => handleNavClick(e, item.href) };
+
         return (
           <React.Fragment key={item.href}>
             {/* Minimalist vertical divider */}
             <span className="text-neutral-500/40 select-none text-[9px] sm:text-[10px] px-0.5 sm:px-1 shrink-0">|</span>
 
-            <a
-              href={item.href}
-              onClick={(e) => handleNavClick(e, item.href)}
+            <LinkTag
+              {...linkProps}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative shrink-0 px-2 sm:px-2.5 py-1 text-[9.5px] sm:text-[11px] uppercase tracking-normal sm:tracking-wider transition-colors duration-200 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80",
+                "relative shrink-0 px-2 sm:px-2.5 py-1 text-[9.5px] sm:text-[11px] uppercase tracking-normal sm:tracking-wider transition-colors duration-200 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer",
                 isActive
                   ? "text-white font-bold"
                   : "text-neutral-400 hover:text-white"
@@ -206,7 +215,7 @@ export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}
               {isActive && (
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
               )}
-            </a>
+            </LinkTag>
           </React.Fragment>
         );
       })}

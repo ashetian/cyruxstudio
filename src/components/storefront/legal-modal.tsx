@@ -270,6 +270,22 @@ export function LegalModal({
 
   const currentDoc = LEGAL_DOCS.find((d) => d.id === activeTab) || LEGAL_DOCS[0];
 
+  const tabRefs = React.useRef<Record<LegalTabId, HTMLButtonElement | null>>({
+    privacy: null,
+    terms: null,
+    shipping: null,
+    sales: null,
+  });
+
+  useEffect(() => {
+    if (isOpen && activeTab) {
+      const el = tabRefs.current[activeTab];
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      }
+    }
+  }, [isOpen, activeTab]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -277,7 +293,7 @@ export function LegalModal({
           role="dialog"
           aria-modal="true"
           aria-label={t(currentDoc.badge)}
-          className="fixed inset-0 z-[90] flex items-center justify-center p-0 sm:p-4 md:p-6"
+          className="fixed inset-0 z-[90] flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 md:p-6"
         >
           {/* Backdrop */}
           <motion.div
@@ -291,14 +307,19 @@ export function LegalModal({
 
           {/* Modal Container */}
           <motion.div
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 12 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 30 }}
             transition={{ duration: reduceMotion ? 0 : 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 w-full max-w-2xl max-h-[100dvh] sm:max-h-[85vh] bg-[#0A0A0A] text-[#FAF8F3] border-0 sm:border border-neutral-800 shadow-2xl flex flex-col overflow-hidden font-mono"
+            className="relative z-10 w-full max-w-2xl h-[92dvh] sm:h-auto sm:max-h-[85vh] bg-[#0A0A0A] text-[#FAF8F3] border-t sm:border border-neutral-800 shadow-2xl flex flex-col overflow-hidden font-mono rounded-t-2xl sm:rounded-none"
           >
+            {/* Mobile Drag Indicator */}
+            <div className="sm:hidden pt-2.5 pb-1 flex justify-center bg-neutral-950/95 shrink-0">
+              <span className="w-10 h-1 bg-neutral-700/80 rounded-full" />
+            </div>
+
             {/* Header */}
-            <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-neutral-800 bg-neutral-950/90 shrink-0">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-800 bg-neutral-950/90 shrink-0">
               <div className="flex items-center gap-2.5">
                 <span className="w-1.5 h-1.5 bg-[#FAF8F3]" />
                 <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#FAF8F3]">
@@ -312,40 +333,45 @@ export function LegalModal({
                 type="button"
                 onClick={onClose}
                 aria-label={t({ tr: "Kapat", en: "Close" })}
-                className="min-w-9 min-h-9 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-colors cursor-pointer"
+                className="min-w-11 min-h-11 -mr-2 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Disciplined Minimal Tab Navigation */}
-            <div className="flex items-center border-b border-neutral-800 bg-black overflow-x-auto [scrollbar-width:none] shrink-0">
-              {LEGAL_DOCS.map((doc) => {
-                const isActive = doc.id === activeTab;
-                return (
-                  <button
-                    key={doc.id}
-                    type="button"
-                    onClick={() => setActiveTab(doc.id)}
-                    className={cn(
-                      "px-3.5 sm:px-4 py-2.5 text-[10px] sm:text-[11px] uppercase tracking-wider whitespace-nowrap transition-all border-b-2 -mb-[1px] cursor-pointer flex items-center gap-1.5",
-                      isActive
-                        ? "border-[#FAF8F3] text-[#FAF8F3] bg-neutral-900/40 font-bold"
-                        : "border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-neutral-950"
-                    )}
-                  >
-                    <span>{t(doc.label)}</span>
-                  </button>
-                );
-              })}
+            <div className="relative border-b border-neutral-800 bg-black shrink-0">
+              <div className="flex items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-2 sm:px-3">
+                {LEGAL_DOCS.map((doc) => {
+                  const isActive = doc.id === activeTab;
+                  return (
+                    <button
+                      key={doc.id}
+                      ref={(el) => {
+                        tabRefs.current[doc.id] = el;
+                      }}
+                      type="button"
+                      onClick={() => setActiveTab(doc.id)}
+                      className={cn(
+                        "min-h-11 px-3.5 sm:px-4 py-2.5 text-[10px] sm:text-[11px] uppercase tracking-wider whitespace-nowrap transition-all border-b-2 -mb-[1px] cursor-pointer flex items-center gap-1.5 shrink-0 select-none",
+                        isActive
+                          ? "border-[#FAF8F3] text-[#FAF8F3] bg-neutral-900/50 font-bold"
+                          : "border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-neutral-950"
+                      )}
+                    >
+                      <span>{t(doc.label)}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Scrollable Content Body */}
-            <div className="overflow-y-auto p-5 sm:p-6 space-y-5 [scrollbar-width:thin] text-left">
+            <div className="flex-1 overflow-y-auto px-4 py-4 sm:p-6 space-y-4 sm:space-y-5 [scrollbar-width:thin] text-left overscroll-contain">
               {/* Document Banner */}
               <div className="pb-3 border-b border-neutral-800/60 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-neutral-500 uppercase tracking-widest">
+                  <p className="text-[9px] sm:text-[10px] text-neutral-500 uppercase tracking-widest">
                     {t(currentDoc.badge)}
                   </p>
                   <h3 className="text-sm sm:text-base font-bold text-[#FAF8F3] uppercase mt-0.5 tracking-tight">
@@ -358,21 +384,21 @@ export function LegalModal({
               </div>
 
               {/* Document Sections */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {currentDoc.sections.map((sec) => (
                   <div
                     key={sec.index}
-                    className="p-3.5 sm:p-4 border border-neutral-800/80 bg-neutral-950/40 space-y-1.5"
+                    className="p-3 sm:p-4 border border-neutral-800/80 bg-neutral-950/40 space-y-1.5"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-neutral-500 font-mono">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold text-neutral-500 font-mono shrink-0 pt-0.5">
                         [{sec.index}]
                       </span>
                       <h4 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-200">
                         {t(sec.title)}
                       </h4>
                     </div>
-                    <p className="text-[11px] sm:text-xs leading-relaxed text-neutral-400 font-sans pl-6">
+                    <p className="text-[11px] sm:text-xs leading-relaxed text-neutral-400 font-sans pl-5 sm:pl-6">
                       {t(sec.body)}
                     </p>
                   </div>
@@ -380,17 +406,18 @@ export function LegalModal({
               </div>
             </div>
 
-            {/* Clean Footer Bar */}
-            <div className="px-5 sm:px-6 py-3 border-t border-neutral-800 bg-neutral-950/90 flex items-center justify-between text-[10px] text-neutral-500 shrink-0">
+            {/* Clean Footer Bar with Safe-Area Padding */}
+            <div className="px-4 sm:px-6 py-2.5 sm:py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-neutral-800 bg-neutral-950/95 flex items-center justify-between text-[10px] text-neutral-500 shrink-0">
               <span className="uppercase tracking-widest text-[9px] text-neutral-600">
                 CYRUX STUDIO © {new Date().getFullYear()}
               </span>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-1 border border-neutral-700 hover:border-white text-neutral-300 hover:text-white uppercase tracking-wider text-[10px] transition-colors cursor-pointer"
+                className="min-h-10 sm:min-h-8 px-3.5 py-1.5 border border-neutral-700 hover:border-white text-neutral-200 hover:text-white uppercase tracking-wider text-[10px] sm:text-[11px] font-mono transition-colors cursor-pointer flex items-center justify-center active:scale-95"
               >
-                {t({ tr: "KAPAT [ESC]", en: "CLOSE [ESC]" })}
+                <span className="hidden sm:inline">{t({ tr: "KAPAT [ESC]", en: "CLOSE [ESC]" })}</span>
+                <span className="sm:hidden">{t({ tr: "KAPAT", en: "CLOSE" })}</span>
               </button>
             </div>
           </motion.div>

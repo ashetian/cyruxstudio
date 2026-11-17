@@ -98,6 +98,9 @@ export function ProductDetail({
   const [busy, setBusy] = useState(false);
   const [hideMobileBar, setHideMobileBar] = useState(false);
   const runwayRef = useRef<HTMLDivElement | null>(null);
+  const mobileCarouselRef = useRef<HTMLDivElement | null>(null);
+  const sizeSelectorRef = useRef<HTMLDivElement | null>(null);
+  const [mobileSlide, setMobileSlide] = useState(0);
   const hasTriggeredExit = useRef(false);
   const hideMobileBarRef = useRef(false);
 
@@ -208,6 +211,10 @@ export function ProductDetail({
 
   useEffect(() => {
     setActive(0);
+    setMobileSlide(0);
+    if (mobileCarouselRef.current) {
+      mobileCarouselRef.current.scrollTo({ left: 0, behavior: "auto" });
+    }
     setSize("");
     setQty(1);
     setHint(null);
@@ -216,6 +223,54 @@ export function ProductDetail({
     hasTriggeredExit.current = false;
     router.prefetch("/");
   }, [currentProduct.id, router]);
+
+  const scrollToSlide = (idx: number) => {
+    if (mobileCarouselRef.current) {
+      const width = mobileCarouselRef.current.clientWidth;
+      if (width > 0) {
+        mobileCarouselRef.current.scrollTo({
+          left: idx * width,
+          behavior: "smooth",
+        });
+      }
+    }
+    setMobileSlide(idx);
+    setActive(idx);
+  };
+
+  const handleMobileScroll = () => {
+    if (!mobileCarouselRef.current) return;
+    const { scrollLeft, clientWidth } = mobileCarouselRef.current;
+    if (clientWidth > 0) {
+      const nextSlide = Math.round(scrollLeft / clientWidth);
+      if (nextSlide >= 0 && nextSlide < gallery.length && nextSlide !== mobileSlide) {
+        setMobileSlide(nextSlide);
+        setActive(nextSlide);
+        if (!isFrontBackDiptych && colorOptions[nextSlide]) {
+          const opt = colorOptions[nextSlide];
+          if (opt && opt.name.toLowerCase() !== selectedColor.toLowerCase()) {
+            setSelectedColor(opt.name);
+          }
+        }
+      }
+    }
+  };
+
+  const handleMobilePillClick = (idx: number) => {
+    scrollToSlide(idx);
+    if (!isFrontBackDiptych && colorOptions[idx]) {
+      const opt = colorOptions[idx];
+      if (opt && opt.name.toLowerCase() !== selectedColor.toLowerCase()) {
+        setSelectedColor(opt.name);
+        if (opt.targetProduct && opt.targetProduct.id !== currentProduct.id) {
+          setCurrentProduct(opt.targetProduct);
+          if (typeof window !== "undefined") {
+            window.history.pushState(null, "", `/products/${opt.targetProduct.slug}`);
+          }
+        }
+      }
+    }
+  };
 
   const activeImageSrc = React.useMemo(() => {
     if (gallery[active]) return gallery[active];
@@ -250,17 +305,20 @@ export function ProductDetail({
       const idx = gallery.findIndex((src) => src === opt.imageUrl);
       if (idx !== -1) {
         setActive(idx);
+        scrollToSlide(idx);
         return;
       }
     }
     const optIdx = colorOptions.findIndex((o) => o.name.toLowerCase() === opt.name.toLowerCase());
     if (optIdx !== -1 && gallery[optIdx]) {
       setActive(optIdx);
+      scrollToSlide(optIdx);
     }
   };
 
   const handleThumbnailClick = (src: string, index: number) => {
     setActive(index);
+    scrollToSlide(index);
     const matched = colorOptions.find(
       (o) => o.imageUrl === src || src.toLowerCase().includes(o.name.toLowerCase())
     );
@@ -304,7 +362,8 @@ export function ProductDetail({
   const requireSize = (): string | null | undefined => {
     if (variants.length === 0) return null;
     if (!size) {
-      setHint("Select a size first");
+      setHint(t({ tr: "LÜTFEN BİR BEDEN SEÇİN", en: "SELECT A SIZE FIRST" }));
+      sizeSelectorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return undefined;
     }
     return size;
@@ -425,7 +484,7 @@ export function ProductDetail({
       </div>
 
       {/* Foreground Product Sheet that Slides Up on Scroll to Bottom */}
-      <main className="relative z-20 min-h-screen bg-canvas text-brand-black pb-20 sm:pb-0 shadow-[0_32px_90px_rgba(0,0,0,0.75)]">
+      <main className="relative z-20 min-h-screen bg-canvas text-brand-black pb-28 sm:pb-0 shadow-[0_32px_90px_rgba(0,0,0,0.75)]">
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-8 md:px-12 py-3 sm:py-4 bg-canvas/90 backdrop-blur border-b border-black/10">
           <div className="flex items-center gap-3 sm:gap-4">
             <button
@@ -479,9 +538,82 @@ export function ProductDetail({
           </div>
         </header>
 
-        <section className="max-w-[1536px] mx-auto px-4 sm:px-6 md:px-10 lg:px-12 py-6 sm:py-8 md:py-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14">
-          {/* Gallery */}
-          <motion.div {...fade()} className="lg:col-span-8 flex flex-col gap-3">
+        <section className="max-w-[1536px] mx-auto px-0 lg:px-12 py-0 lg:py-12 grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-10 xl:gap-14">
+          {/* Mobile End-to-End Gallery (100vw, Full Bleed, Monumental Square, lg:hidden) */}
+          <div className="relative w-full overflow-hidden bg-[#EDEDEF] border-b border-black/15 lg:hidden select-none">
+            <div
+              ref={mobileCarouselRef}
+              onScroll={handleMobileScroll}
+              className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth select-none"
+              style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+            >
+              {gallery.map((src, idx) => (
+                <div
+                  key={`mobile-slide-${src}-${idx}`}
+                  className="w-full shrink-0 snap-center relative aspect-square bg-[#EDEDEF] overflow-hidden"
+                >
+                  <Image
+                    src={src}
+                    alt={`${currentProduct.name} - ${idx + 1}`}
+                    fill
+                    priority={idx === 0}
+                    sizes="100vw"
+                    className={cn(
+                      "w-full h-full object-cover object-center select-none",
+                      src.includes("/assets/editorial/") ? "" : "mix-blend-multiply"
+                    )}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Top Right Counter Badge: 01 / 02 */}
+            {gallery.length > 1 && (
+              <div className="absolute top-3.5 right-3.5 z-20 pointer-events-none">
+                <span className="inline-flex items-center px-2.5 py-1 bg-black/85 text-[#FAF8F3] font-mono text-[9px] uppercase tracking-[0.2em] shadow-xs">
+                  {String(mobileSlide + 1).padStart(2, "0")} / {String(gallery.length).padStart(2, "0")}
+                </span>
+              </div>
+            )}
+
+            {/* Floating Switcher Controls at Bottom */}
+            {gallery.length > 1 && (
+              <div className="absolute bottom-3.5 inset-x-0 z-20 flex items-center justify-center gap-2 px-3">
+                {gallery.map((src, idx) => {
+                  const isCurrent = mobileSlide === idx;
+                  const pillLabel = isFrontBackDiptych
+                    ? (idx === 0 ? t({ tr: "ÖN", en: "FRONT" }) : t({ tr: "ARKA", en: "BACK" }))
+                    : (colorOptions[idx]?.name || (idx === 0 ? t({ tr: "GENEL", en: "MAIN" }) : t({ tr: "DETAY", en: "DETAIL" })));
+                  const swatchHex = !isFrontBackDiptych && colorOptions[idx]?.hex;
+
+                  return (
+                    <button
+                      key={`mobile-pill-${idx}`}
+                      type="button"
+                      onClick={() => handleMobilePillClick(idx)}
+                      className={cn(
+                        "min-h-9 px-3.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.18em] transition-all flex items-center gap-1.5 border shadow-sm cursor-pointer",
+                        isCurrent
+                          ? "bg-black text-[#FAF8F3] border-black scale-105"
+                          : "bg-[#FAF8F3]/90 text-neutral-800 border-black/20 hover:bg-black hover:text-white backdrop-blur-xs"
+                      )}
+                    >
+                      {swatchHex && (
+                        <span
+                          className="w-2.5 h-2.5 rounded-full border border-black/30 shrink-0"
+                          style={{ backgroundColor: swatchHex }}
+                        />
+                      )}
+                      <span>{String(idx + 1).padStart(2, "0")} • {pillLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Gallery */}
+          <motion.div {...fade()} className="hidden lg:flex lg:col-span-8 flex-col gap-3">
             {isDiptych && gallery.length >= 2 ? (
               <div className="flex flex-col border border-black/20 bg-[#EDEDEF] w-full overflow-hidden shadow-xs">
                 {/* Continuous Seamless Diptych (0 gap, 0 border between images) */}
@@ -499,11 +631,6 @@ export function ProductDetail({
                         isFirstAscent ? "aspect-[844/805]" : "aspect-square"
                       )}
                     >
-                      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 z-20 pointer-events-none">
-                        <span className="inline-flex items-center px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs bg-black text-[#FAF8F3] border border-black">
-                          01 • {t({ tr: "ÖN", en: "FRONT" })}
-                        </span>
-                      </div>
                       <Image
                         src={gallery[0]}
                         alt={`${currentProduct.name} - ${t({ tr: "Ön", en: "Front" })}`}
@@ -525,29 +652,12 @@ export function ProductDetail({
                         }
                         setActive(0);
                       }}
+                      aria-label={colorOptions[0]?.name || "Option 1"}
                       className={cn(
                         "relative w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none",
                         isFirstAscent ? "aspect-[844/805]" : "aspect-square"
                       )}
                     >
-                      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 z-20 pointer-events-none">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
-                            selectedColor.toLowerCase() === (colorOptions[0]?.name || "").toLowerCase()
-                              ? "bg-black text-[#FAF8F3] border-black"
-                              : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
-                          )}
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
-                            style={{ backgroundColor: colorOptions[0]?.hex || "#0A0A0A" }}
-                          />
-                          <span>
-                            01 • {colorOptions[0]?.name || "NOIR"}
-                          </span>
-                        </span>
-                      </div>
                       <Image
                         src={gallery[0]}
                         alt={`${currentProduct.name} - ${colorOptions[0]?.name || "1"}`}
@@ -570,11 +680,6 @@ export function ProductDetail({
                         isFirstAscent ? "aspect-[844/805]" : "aspect-square"
                       )}
                     >
-                      <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 z-20 pointer-events-none">
-                        <span className="inline-flex items-center px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs bg-black text-[#FAF8F3] border border-black">
-                          02 • {t({ tr: "ARKA", en: "BACK" })}
-                        </span>
-                      </div>
                       <Image
                         src={gallery[1]}
                         alt={`${currentProduct.name} - ${t({ tr: "Arka", en: "Back" })}`}
@@ -596,29 +701,12 @@ export function ProductDetail({
                         }
                         setActive(1);
                       }}
+                      aria-label={colorOptions[1]?.name || "Option 2"}
                       className={cn(
                         "relative w-full h-full m-0 p-0 overflow-hidden text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-black select-none",
                         isFirstAscent ? "aspect-[844/805]" : "aspect-square"
                       )}
                     >
-                      <div className="absolute top-2.5 sm:top-4 right-2.5 sm:right-4 z-20 pointer-events-none">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] shadow-xs border transition-colors",
-                            selectedColor.toLowerCase() === (colorOptions[1]?.name || "").toLowerCase()
-                              ? "bg-black text-[#FAF8F3] border-black"
-                              : "bg-white/80 text-black/70 border-black/15 hover:bg-black hover:text-white"
-                          )}
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full border border-black/30 shadow-xs shrink-0"
-                            style={{ backgroundColor: colorOptions[1]?.hex || "#FAF8F3" }}
-                          />
-                          <span>
-                            02 • {colorOptions[1]?.name || "BLANC"}
-                          </span>
-                        </span>
-                      </div>
                       <Image
                         src={gallery[1]}
                         alt={`${currentProduct.name} - ${colorOptions[1]?.name || "2"}`}
@@ -721,142 +809,192 @@ export function ProductDetail({
           </motion.div>
 
           {/* Info */}
-          <motion.div {...fade(0.1)} className="lg:col-span-4 lg:sticky lg:top-24 self-start">
+          <motion.div
+            {...fade(0.1)}
+            className="px-4 sm:px-6 lg:px-0 py-6 sm:py-8 lg:py-0 lg:col-span-4 lg:sticky lg:top-24 self-start flex flex-col"
+          >
             {/* Provenance & Series Tag */}
-            <div className="flex items-center gap-2.5 mb-2.5 flex-wrap">
-              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-neutral-500 font-bold">
+            <div className="flex items-center gap-2 mb-3 flex-wrap font-mono text-[10px] uppercase tracking-[0.2em]">
+              <span className="text-neutral-600 font-bold">
                 CHAPTER 00 • ARCHIVE
               </span>
               {isDiptych && (
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 bg-black text-[#FAF8F3] font-bold">
-                  {isFrontBackDiptych ? "DIPTYCH STUDY" : "DUAL COLORWAY"}
-                </span>
+                <>
+                  <span className="text-neutral-300">•</span>
+                  <span className="px-2 py-0.5 bg-black text-[#FAF8F3] font-bold text-[9px] tracking-[0.18em]">
+                    {isFrontBackDiptych ? "DIPTYCH STUDY" : "DUAL COLORWAY"}
+                  </span>
+                </>
               )}
               {currentProduct.stock <= 5 && currentProduct.stock > 0 && (
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 bg-red-100 text-red-800 border border-red-300 font-bold">
-                  {t({ tr: `SON ${currentProduct.stock} ADET`, en: `ONLY ${currentProduct.stock} LEFT` })}
-                </span>
+                <>
+                  <span className="text-neutral-300">•</span>
+                  <span className="px-2 py-0.5 bg-red-100 text-red-800 border border-red-200 font-bold text-[9px]">
+                    {t({ tr: `SON ${currentProduct.stock} ADET`, en: `ONLY ${currentProduct.stock} LEFT` })}
+                  </span>
+                </>
               )}
             </div>
 
-            <h1 className="font-mono text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold uppercase tracking-tight leading-[1.05]">
+            <h1 className="font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight leading-snug text-black">
               {currentProduct.name}
             </h1>
-            <div className="mt-3 flex items-baseline gap-3">
-              <span className="font-mono text-lg sm:text-xl font-bold tracking-tight">
+            <div className="mt-3.5 pb-4 border-b border-black/15 flex items-baseline justify-between gap-3 flex-wrap">
+              <span className="font-mono text-xl sm:text-2xl font-bold tracking-tight text-black">
                 {formatProductPrice(currentProduct.price, currency)}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+              <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-neutral-500">
                 {t({ tr: "KDV DAHİL • EXPRESS KARGO", en: "VAT INCL. • EXPRESS DISPATCH" })}
               </span>
             </div>
-            <p className="mt-4 sm:mt-5 font-mono text-xs leading-relaxed text-neutral-700">
-              {currentProduct.description}
-            </p>
 
-            {/* Colorway Indicator (Clean, Minimal Typography — No Cluttered Buttons) */}
-            {!isFrontBackDiptych && colorOptions.length > 1 && (
-              <div className="mt-5 sm:mt-6 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-neutral-500">
-                <span>{t({ tr: "RENK", en: "COLOR" })}:</span>
-                <strong className="text-black font-bold">{selectedColor}</strong>
-              </div>
-            )}
-
-            {displayedVariants.length > 0 && (
-              <div className="mt-6 sm:mt-7" role="group" aria-label="Select size">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">
-                    {t({ tr: "BEDEN", en: "SIZE" })}{size ? `: ${size}` : ""}
-                  </span>
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                    ARCHIVAL OVERSIZED FIT
-                  </span>
+            {/* Selection & Purchase Shelf */}
+            <div className="pt-5 space-y-5">
+              {/* Colorway Indicator (Clean, Minimal Typography & Interactive Option Switcher) */}
+              {!isFrontBackDiptych && colorOptions.length > 1 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-black">
+                      {t({ tr: "RENK", en: "COLOR" })}: <span className="font-normal text-neutral-600">{selectedColor}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {colorOptions.map((opt) => {
+                      const isSelected = selectedColor.toLowerCase() === opt.name.toLowerCase();
+                      return (
+                        <button
+                          key={opt.name}
+                          type="button"
+                          onClick={() => handleColorOptionClick(opt)}
+                          className={cn(
+                            "min-h-9 px-3.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider border transition-all flex items-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-black",
+                            isSelected
+                              ? "bg-black text-[#FAF8F3] border-black shadow-xs"
+                              : "bg-white text-neutral-800 border-black/25 hover:border-black"
+                          )}
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-black/30 shrink-0"
+                            style={{ backgroundColor: opt.hex }}
+                          />
+                          <span>{opt.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {displayedVariants.map((v) => {
-                    const label = v.size || v.name.replace(/^(BLACK|WHITE)\s*\/\s*/i, "");
-                    const isSelected = size === label || size === v.name;
-                    return (
-                      <button
-                        key={v.id}
-                        type="button"
-                        disabled={!v.inStock || soldOut}
-                        aria-pressed={isSelected}
-                        onClick={() => {
-                          setSize(label);
-                          setHint(null);
-                        }}
-                        className={cn(
-                          "min-w-12 h-11 px-3.5 font-mono text-xs font-bold uppercase border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer",
-                          !v.inStock || soldOut
-                            ? "border-black/10 text-black/30 line-through cursor-not-allowed bg-neutral-100"
-                            : isSelected
-                            ? "border-black bg-black text-[#FAF8F3] shadow-xs"
-                            : "border-black/25 hover:border-black bg-white hover:bg-neutral-50"
-                        )}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+              )}
 
-            <div className="mt-6 flex items-center gap-3">
-              <span className="font-mono text-[11px] uppercase tracking-widest text-neutral-500">Qty</span>
-              <div className="flex items-center border border-black/30">
-                <button
-                  type="button"
-                  aria-label="Decrease quantity"
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="min-w-11 min-h-11 flex items-center justify-center hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <span className="font-mono text-sm w-9 text-center" aria-live="polite">
-                  {qty}
+              {displayedVariants.length > 0 && (
+                <div ref={sizeSelectorRef} role="group" aria-label="Select size">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-black flex items-center gap-1.5">
+                      <span>{t({ tr: "BEDEN", en: "SIZE" })}</span>
+                      {size && (
+                        <span className="text-black font-bold">
+                          • {size}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400">
+                      ARCHIVAL OVERSIZED FIT
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {displayedVariants.map((v) => {
+                      const label = v.size || v.name.replace(/^(BLACK|WHITE)\s*\/\s*/i, "");
+                      const isSelected = size === label || size === v.name;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          disabled={!v.inStock || soldOut}
+                          aria-pressed={isSelected}
+                          onClick={() => {
+                            setSize(label);
+                            setHint(null);
+                          }}
+                          className={cn(
+                            "min-w-12 h-11 px-4 font-mono text-xs font-bold uppercase border transition-all flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-black cursor-pointer",
+                            !v.inStock || soldOut
+                              ? "border-black/10 text-black/30 line-through cursor-not-allowed bg-neutral-100"
+                              : isSelected
+                              ? "border-black bg-black text-[#FAF8F3] shadow-xs"
+                              : "border-black/30 hover:border-black bg-white hover:bg-neutral-50 text-black"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <span className="block font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-black mb-2">
+                  {t({ tr: "ADET", en: "QUANTITY" })}
                 </span>
+                <div className="inline-flex items-center border border-black/30 bg-white h-11 shadow-xs">
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    className="w-11 h-11 flex items-center justify-center hover:bg-black/5 active:bg-black/10 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-black cursor-pointer"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="font-mono text-xs font-bold w-12 text-center select-none" aria-live="polite">
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() => setQty((q) => Math.min(20, q + 1))}
+                    className="w-11 h-11 flex items-center justify-center hover:bg-black/5 active:bg-black/10 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-black cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {hint && (
+                <div
+                  role="alert"
+                  className="p-3 bg-red-50 border border-red-300 font-mono text-[11px] font-bold uppercase tracking-wider text-red-700 flex items-center justify-between"
+                >
+                  <span>{hint}</span>
+                  <span className="text-xs">!</span>
+                </div>
+              )}
+
+              {/* Action Buttons (Desktop inline; Mobile uses fixed bottom bar) */}
+              <div className="pt-2 hidden sm:flex flex-col gap-2.5">
                 <button
                   type="button"
-                  aria-label="Increase quantity"
-                  onClick={() => setQty((q) => Math.min(20, q + 1))}
-                  className="min-w-11 min-h-11 flex items-center justify-center hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  onClick={handleAdd}
+                  disabled={soldOut}
+                  className="w-full h-12 border-2 border-black bg-white hover:bg-black hover:text-[#FAF8F3] font-mono text-xs font-bold uppercase tracking-[0.2em] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  {soldOut ? t({ tr: "TÜKENDİ", en: "SOLD OUT" }) : t({ tr: "SEPETE EKLE", en: "ADD TO BAG" })}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={soldOut || busy}
+                  className="w-full h-12 bg-black hover:bg-neutral-800 text-[#FAF8F3] font-mono text-xs font-bold uppercase tracking-[0.2em] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs flex items-center justify-center gap-2"
+                >
+                  {busy
+                    ? t({ tr: "İŞLENİYOR...", en: "PROCESSING..." })
+                    : t({ tr: "HEMEN AL →", en: "BUY NOW →" })}
                 </button>
               </div>
             </div>
 
-            <div className="mt-7 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={soldOut}
-                className="w-full min-h-12 border border-black py-3.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-[#FAF8F3] disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-              >
-                {soldOut ? t({ tr: "TÜKENDİ", en: "SOLD OUT" }) : t({ tr: "SEPETE EKLE", en: "ADD TO BAG" })}
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={soldOut || busy}
-                className="w-full min-h-12 bg-black text-[#FAF8F3] py-3.5 font-mono text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black"
-              >
-                {busy
-                  ? t({ tr: "İŞLENİYOR...", en: "PROCESSING..." })
-                  : t({ tr: "HEMEN AL →", en: "BUY NOW →" })}
-              </button>
-              {hint && (
-                <p role="alert" className="font-mono text-[11px] uppercase tracking-wider text-red-700">
-                  {hint}
-                </p>
-              )}
-
-              {/* Complementary Twin Set Duo CTA */}
-              {twinProduct && (
-                <div className="mt-3 p-4 border border-black bg-[#EDEDEB] flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
+            {/* Complementary Twin Set Duo CTA */}
+            {twinProduct && (
+              <div className="mt-4 p-4 border border-black bg-[#EDEDEB] flex flex-col gap-3">
+                <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-black">
                       {t({ tr: "CHAPTER 00 • TAMAMLAYICI İKİLİ SET", en: "CHAPTER 00 • COMPLEMENTARY TWIN SET" })}
                     </span>
@@ -881,18 +1019,22 @@ export function ProductDetail({
                   </button>
                 </div>
               )}
-            </div>
 
-            <div className="mt-8 border-t border-black/20">
+            <div className="mt-8 border-t border-black/20 pt-6">
+              {currentProduct.description && (
+                <div className="mb-6">
+                  <span className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2 font-bold">
+                    {t({ tr: "AÇIKLAMA", en: "DESCRIPTION" })}
+                  </span>
+                  <p className="font-mono text-xs leading-relaxed text-neutral-700">
+                    {currentProduct.description}
+                  </p>
+                </div>
+              )}
+
               <Accordion title={t({ tr: "DETAYLAR", en: "DETAILS" })}>
                 <div className="space-y-3 font-mono text-xs">
-                  <p className="leading-relaxed text-neutral-700">
-                    {currentProduct.description || t({
-                      tr: "Ağır gramaj tok kumaş, mimari oversize kesim. cyrux studio sınırlı arşiv serisi.",
-                      en: "Heavyweight construction, oversized fit. Part of the cyrux studio archival run.",
-                    })}
-                  </p>
-                  <div className="pt-2 border-t border-black/10 grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px]">
+                  <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px]">
                     <span className="text-neutral-500 uppercase">{t({ tr: "KUMAŞ", en: "FABRIC" })}:</span>
                     <span className="font-semibold text-black">100% Cotton (280-300 GSM)</span>
                     <span className="text-neutral-500 uppercase">{t({ tr: "KESİM", en: "FIT" })}:</span>
@@ -976,7 +1118,7 @@ export function ProductDetail({
       {/* Mobile Sticky Bottom Bar (hides automatically as curtain reveal starts) */}
       <div
         className={cn(
-          "fixed bottom-0 inset-x-0 z-30 sm:hidden bg-[#FAF8F3]/95 backdrop-blur-md border-t border-black/15 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex gap-2.5 transition-all duration-200",
+          "fixed bottom-0 inset-x-0 z-30 sm:hidden bg-[#FAF8F3]/95 backdrop-blur-md border-t border-black/15 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex gap-2.5 transition-all duration-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]",
           hideMobileBar && "translate-y-full opacity-0 pointer-events-none"
         )}
       >
@@ -984,7 +1126,7 @@ export function ProductDetail({
           type="button"
           onClick={handleAdd}
           disabled={soldOut}
-          className="flex-1 min-h-11 border border-black font-mono text-[11px] font-bold uppercase tracking-wider active:bg-black active:text-[#FAF8F3] disabled:opacity-40"
+          className="flex-1 min-h-12 border border-black font-mono text-[11px] font-bold uppercase tracking-wider active:bg-black active:text-[#FAF8F3] disabled:opacity-40 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
         >
           {soldOut ? t({ tr: "TÜKENDİ", en: "SOLD OUT" }) : t({ tr: "SEPETE EKLE", en: "ADD TO BAG" })}
         </button>
@@ -992,7 +1134,7 @@ export function ProductDetail({
           type="button"
           onClick={handleBuyNow}
           disabled={soldOut || busy}
-          className="flex-1 min-h-11 bg-black text-[#FAF8F3] font-mono text-[11px] font-bold uppercase tracking-wider active:bg-neutral-800 disabled:opacity-40"
+          className="flex-1 min-h-12 bg-black text-[#FAF8F3] font-mono text-[11px] font-bold uppercase tracking-wider active:bg-neutral-800 disabled:opacity-40 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
         >
           {busy
             ? t({ tr: "BEKLEYİN...", en: "WAIT..." })

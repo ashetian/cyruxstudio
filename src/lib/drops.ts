@@ -116,6 +116,9 @@ export async function getActiveDropAsync(): Promise<DropData> {
 export function getDropBySlug(slug: string): DropData | undefined {
   if (!slug) return undefined;
   const normalized = slug.toLowerCase().trim();
+  if (normalized === "latest" || normalized === "current" || normalized === "active") {
+    return getActiveDrop();
+  }
   return memoryCache.find(
     (d) =>
       d.slug.toLowerCase() === normalized ||
@@ -127,6 +130,9 @@ export function getDropBySlug(slug: string): DropData | undefined {
 export async function getDropBySlugAsync(slug: string): Promise<DropData | undefined> {
   if (!slug) return undefined;
   const normalized = slug.toLowerCase().trim();
+  if (normalized === "latest" || normalized === "current" || normalized === "active") {
+    return getActiveDropAsync();
+  }
   try {
     const record = await prisma.drop.findFirst({
       where: {

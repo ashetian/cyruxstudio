@@ -197,35 +197,35 @@ export function StudioFooter({
         </div>
 
         {/* Discreet Legal Links (Inconspicuous / Nizami) */}
-        <div className="flex flex-wrap items-center justify-center gap-x-2.5 sm:gap-x-3 gap-y-1 text-[9px] sm:text-[10px] text-neutral-600 tracking-wider">
+        <div className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 gap-y-0 text-[9px] sm:text-[10px] text-neutral-600 tracking-wider">
           <button
             type="button"
             onClick={() => openLegal("privacy")}
-            className="hover:text-neutral-300 transition-colors cursor-pointer"
+            className="hover:text-neutral-300 transition-colors cursor-pointer py-2 px-1 min-h-[36px] sm:min-h-0 sm:py-0 inline-flex items-center"
           >
             {t({ tr: "GİZLİLİK", en: "PRIVACY" })}
           </button>
-          <span className="text-neutral-800">•</span>
+          <span className="text-neutral-800 select-none">•</span>
           <button
             type="button"
             onClick={() => openLegal("terms")}
-            className="hover:text-neutral-300 transition-colors cursor-pointer"
+            className="hover:text-neutral-300 transition-colors cursor-pointer py-2 px-1 min-h-[36px] sm:min-h-0 sm:py-0 inline-flex items-center"
           >
             {t({ tr: "KOŞULLAR", en: "TERMS" })}
           </button>
-          <span className="text-neutral-800">•</span>
+          <span className="text-neutral-800 select-none">•</span>
           <button
             type="button"
             onClick={() => openLegal("shipping")}
-            className="hover:text-neutral-300 transition-colors cursor-pointer"
+            className="hover:text-neutral-300 transition-colors cursor-pointer py-2 px-1 min-h-[36px] sm:min-h-0 sm:py-0 inline-flex items-center"
           >
             {t({ tr: "TESLİMAT & İADE", en: "SHIPPING & RETURNS" })}
           </button>
-          <span className="text-neutral-800">•</span>
+          <span className="text-neutral-800 select-none">•</span>
           <button
             type="button"
             onClick={() => openLegal("sales")}
-            className="hover:text-neutral-300 transition-colors cursor-pointer"
+            className="hover:text-neutral-300 transition-colors cursor-pointer py-2 px-1 min-h-[36px] sm:min-h-0 sm:py-0 inline-flex items-center"
           >
             {t({ tr: "MESAFELİ SATIŞ", en: "LEGAL NOTICE" })}
           </button>
