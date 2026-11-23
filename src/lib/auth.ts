@@ -55,23 +55,41 @@ export function constantTimeCompare(a: string, b: string): boolean {
 }
 
 /**
+ * Returns normalized list of accepted admin login identifiers from env or fallback.
+ */
+export function getExpectedAdminIdentifiers(): string[] {
+  const candidates = [process.env.ADMIN_EMAIL, process.env.ADMIN_USERNAME]
+    .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+    .map((v) => v.trim().toLowerCase());
+  return candidates.length > 0 ? candidates : [FALLBACK_ADMIN_EMAIL.toLowerCase()];
+}
+
+/**
  * Validates admin credentials against environment variables with timing-attack immunity.
  */
-export function verifyAdminCredentials(email: string, password: string): boolean {
-  if (!email || !password || typeof email !== "string" || typeof password !== "string") {
+export function verifyAdminCredentials(identifier: string, password: string): boolean {
+  if (
+    !identifier ||
+    !password ||
+    typeof identifier !== "string" ||
+    typeof password !== "string"
+  ) {
     return false;
   }
 
-  const expectedEmail = process.env.ADMIN_EMAIL || FALLBACK_ADMIN_EMAIL;
+  const expectedIdentifiers = getExpectedAdminIdentifiers();
   const expectedPassword = process.env.ADMIN_PASSWORD || FALLBACK_ADMIN_PASSWORD;
+  const normalizedInput = identifier.trim().toLowerCase();
 
-  const emailMatches = constantTimeCompare(
-    email.trim().toLowerCase(),
-    expectedEmail.trim().toLowerCase()
-  );
+  let identifierMatches = false;
+  for (const expected of expectedIdentifiers) {
+    if (constantTimeCompare(normalizedInput, expected)) {
+      identifierMatches = true;
+    }
+  }
   const passwordMatches = constantTimeCompare(password, expectedPassword);
 
-  return emailMatches && passwordMatches;
+  return identifierMatches && passwordMatches;
 }
 
 /**

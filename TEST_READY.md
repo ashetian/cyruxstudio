@@ -1,99 +1,81 @@
 # TEST_READY: cyrux studio
 
-**Status**: READY FOR MILESTONE VERIFICATION  
-**Test Suite**: Comprehensive Opaque-Box E2E Testing Suite  
+**Status**: PHASE 1 PASSING (141/141) — PHASE 2 EXPANSION SUITE REGISTERED (M7–M10 IN PROGRESS)  
+**Test Suite**: Comprehensive Opaque-Box E2E Testing Suite (Phase 1 + Phase 2)  
 **Runner Command**: `npm test` or `npx tsx tests/runner.ts`  
-**Execution Time**: ~4.0 seconds (130 automated tests)  
-**Pass Rate**: 100% (130/130 Passed)  
-**Security Status**: Verified Safe (0 credentials exposed, zero `.env.local` access)
+**Total Registered Tests**: 228 automated tests across 42 suites (141 Phase 1 + 87 Phase 2)  
+**Phase 1 Baseline**: 100% (141/141 Passed)  
+**Security Status**: Verified Safe (0 credentials exposed, zero `.env.local` access, zero `any` types in Phase 2 tests)
 
 ---
 
 ## 1. Test Architecture Summary
 
-| Tier | Tier Name | Suites | Test Count | Pass Rate | Scope |
-|------|-----------|--------|------------|-----------|-------|
-| **Tier 1** | Feature Coverage | 21 suites | 105 tests | 100% (105/105) | Strict unit & contract coverage (>=5 tests per feature) across all 21 features in Feature Inventory |
-| **Tier 2** | Boundary & Corner Cases | 1 suite | 12 tests | 100% (12/12) | Extreme prices, negative/fractional stocks, advanced XSS payloads, SQLi, Unicode, 50k char inputs, phone normalization, 23k credit off-by-one, subdomain spoofing |
-| **Tier 3** | Cross-Feature Combinations | 1 suite | 8 tests | 100% (8/8) | Pairwise interactions: StoreSettings + WhatsApp URL, JWT Auth + Blob Delete, Credit Budget + AI Trigger, CRUD + Bestseller Grid, Stock Depletion + CTA State, Prompt Dedup + Credit Ledger |
-| **Tier 4** | Real-World Workloads | 1 suite | 5 tests | 100% (5/5) | Multi-step end-user purchasing journey, Admin catalog overhaul drop, Credit-guarded asset generation lifecycle, 50-order burst test, Adversarial penetration attack defense |
-| **TOTAL** | **All Tiers Combined** | **24 suites** | **130 tests** | **100% (130/130)** | **Complete Opaque-Box Verification** |
+| Tier | Tier Name | Suites | Test Count | Scope |
+|------|-----------|--------|------------|-------|
+| **Tier 1** | Feature Coverage (`f01`–`f36`) | 36 suites | 185 tests | Strict unit & contract coverage (`>=5` tests per feature across Features 1–36) |
+| **Tier 2** | Boundary & Corner Cases | 2 suites | 20 tests | Phase 1 numerical/XSS/credit/JWT bounds + Phase 2 CMS/discount/coupon/order/320px overflow & `<44px` target bounds |
+| **Tier 3** | Cross-Feature Combinations | 2 suites | 14 tests | Phase 1 pairwise + Phase 2 CMS->Storefront, Coupon->Order->Customer, Order->KPI, Collection->Products, Filter-before-paginate |
+| **Tier 4** | Real-World Workloads | 2 suites | 9 tests | Phase 1 journeys & stress + Phase 2 Mobile Rebrand, Full Discount Commerce Lifecycle, Global Pure UI Audit, Zero-`any` & Architecture Audit |
+| **TOTAL** | **All Tiers Combined** | **42 suites** | **228 tests** | **Complete Phase 1 + Phase 2 Opaque-Box Verification** |
 
 ---
 
-## 2. Feature Coverage Checklist (Tier 1)
+## 2. Phase 1 Feature Coverage Checklist (Features 1–23)
 
-Every feature defined in `PROJECT.md` Feature Inventory is verified with >=5 dedicated automated tests:
-
-- [x] **Feature 1: Next.js App Router & TypeScript Skeleton** (`tests/tier1-feature/f01-app-skeleton.ts` - 5 tests)
-  - Directory structure, `@/*` path mapping, Node >= 20 runtime, brutalist theme tokens, App Router layout structure.
-- [x] **Feature 2: PostgreSQL & Prisma Schema Setup** (`tests/tier1-feature/f02-database-schema.ts` - 5 tests)
-  - Models: Product, StoreSettings, ElevenLabsAsset, CreditUsageLog; ledger balance integrity, positive price/stock constraints.
-- [x] **Feature 3: Seed Data & Brand Asset Pipeline** (`tests/tier1-feature/f03-seed-assets.ts` - 5 tests)
-  - Presence of 8 raw media files in `assets/`, 5 seeded apparel products, TIFF->WebP conversion rule, MOV->MP4 conversion rule, MIME mapping.
-- [x] **Feature 4: Dark High-Contrast Hero & Search Pill** (`tests/tier1-feature/f04-hero-search.ts` - 5 tests)
-  - `#0A0A0A` background & `#FAF8F3` cream tokens, search pill UI spec, "cyrux" display typography, product search query filtering, header elements.
-- [x] **Feature 5: Bottom Floating Pill Nav** (`tests/tier1-feature/f05-floating-nav.ts` - 5 tests)
-  - Nav links `[cyrux] Shop | New collection | About`, frosted glass backdrop filter, bottom centering calculations, active section state, keyboard accessibility.
-- [x] **Feature 6: Asymmetric 4-Column Bestseller Grid** (`tests/tier1-feature/f06-bestseller-grid.ts` - 5 tests)
-  - Monospace "Bestseller Now" header, 4-column asymmetric CSS grid, staggered height ratios, wishlist heart toggle state, price formatting.
-- [x] **Feature 7: Brutalist Monospace CTA** (`tests/tier1-feature/f07-brutalist-cta.ts` - 5 tests)
-  - `BUY NOW →` text contract, monospace underline style, stock <= 0 disabled state ("OUT OF STOCK"), variant selector modal trigger, direct WhatsApp trigger.
-- [x] **Feature 8: Editorial Campaign Block** (`tests/tier1-feature/f08-campaign-block.ts` - 5 tests)
-  - 2 stacked left cards + 1 large right video layout, play/pause controller, audio mute/unmute policy, centered circular play overlay, missing video fallback poster.
-- [x] **Feature 9: Smooth Motion & Animation Engine** (`tests/tier1-feature/f09-smooth-motion.ts` - 5 tests)
-  - Lenis inertial smooth scroll provider config, GSAP split character reveal parameters, Framer Motion springs, `prefers-reduced-motion` compliance, scroll progress clamping.
-- [x] **Feature 10: Custom Brutalist Cursor** (`tests/tier1-feature/f10-custom-cursor.ts` - 5 tests)
-  - Lerp mouse coordinate smoothing, hover state scale & label morphing ("VIEW"), touch device suppression, viewport boundary clamping, pointer-events: none.
-- [x] **Feature 11: WhatsApp Order Payload Validation** (`tests/tier1-feature/f11-whatsapp-validation.ts` - 5 tests)
-  - Clean payload validation, `<script>` XSS sanitization, `<img onerror>` tag stripping, missing `productId` rejection, 500-character max limit on notes.
-- [x] **Feature 12: Dynamic WhatsApp URL Generation** (`tests/tier1-feature/f12-whatsapp-url.ts` - 5 tests)
-  - Turkish format phone normalization (`+90 532...`), US format phone normalization (`+1 (555)...`), omission of optional fields, non-digit rejection, dynamic store currency reflection.
-- [x] **Feature 13: Jose JWT Admin Authentication** (`tests/tier1-feature/f13-jwt-auth.ts` - 5 tests)
-  - HS256 signed JWT generation & verification, tampered signature detection, expired token rejection, `crypto.timingSafeEqual` credential check, middleware route guard (401 API / 307 redirect).
-- [x] **Feature 14: Admin Dashboard & Product CRUD** (`tests/tier1-feature/f14-admin-crud.ts` - 5 tests)
-  - Product creation with variants and bestseller flag, invalid slug rejection, price/stock updates, product deletion, 404 non-existent product handling.
-- [x] **Feature 15: Store Settings Management** (`tests/tier1-feature/f15-store-settings.ts` - 5 tests)
-  - Default settings retrieval, E.164 WhatsApp number update, invalid phone format rejection, currency switching (USD/EUR/TRY/GBP), unsupported currency rejection.
-- [x] **Feature 16: Authenticated Vercel Blob Storage** (`tests/tier1-feature/f16-vercel-blob.ts` - 5 tests)
-  - Valid image upload (WebP), valid video upload (MP4), disallowed MIME type rejection (`text/html`, `.exe`), 15MB/50MB file size limits, deletion domain validation (`*.blob.vercel-storage.com`).
-- [x] **Feature 17: ElevenLabs Image/Video Generation** (`tests/tier1-feature/f17-elevenlabs-generation.ts` - 5 tests)
-  - Image generation payload validation (120 credits), video generation payload validation (450 credits), prompt length boundary (5–1000 chars), zero client-exposure contract for `ELEVENLABS_API_KEY`, response formatting with 23k ceiling cap.
-- [x] **Feature 18: Strict 23k Credit Budget Guard** (`tests/tier1-feature/f18-credit-guard.ts` - 5 tests)
-  - Normal budget allowance, exact boundary check (22,880 + 120 = 23,000 PASS), single credit overshoot rejection (22,881 + 120 = 23,001 `CreditLimitExceededError`), zero allowance at cap, negative cost rejection.
-- [x] **Feature 19: SHA-256 Prompt Hashing Deduplication** (`tests/tier1-feature/f19-prompt-dedup.ts` - 5 tests)
-  - Deterministic 64-char hex hash, case and whitespace normalization, options key order normalization, mediaType distinct hashing, cache hit instant return with 0 credits deducted.
-- [x] **Feature 20: Two-Phase Admin Confirmation Modal** (`tests/tier1-feature/f20-admin-confirmation.ts` - 5 tests)
-  - Phase 1 cost preview calculation (image), Phase 1 cost preview calculation (video), unconfirmed request rejection (`confirmed: false`), insufficient budget rejection even if confirmed, successful confirmed execution.
-- [x] **Feature 21: ElevenLabs CLI Onboarding Verification** (`tests/tier1-feature/f21-elevenlabs-cli.ts` - 5 tests)
-  - `.env.local` existence without secret inspection, `.gitignore` registration verification, live execution of `elevenlabs onboard check --answered --env-path .env.local` (Exit 0), SDK package resolution, missing env simulation handling.
+- [x] **Features 1–21** (`tests/tier1-feature/f01-*.ts` – `f21-*.ts`, 105 tests) — 100% passing
+- [x] **Feature 22: Dynamic Site-Wide Search & Command Palette** (`tests/tier1-feature/f22-dynamic-search.ts`, 5 tests) — 100% passing
+- [x] **Feature 23: Dynamic Atelier Drop System & Admin Persistence** (`tests/tier1-feature/f23-drop-system.ts`, 5 tests) — 100% passing
 
 ---
 
-## 3. How to Run Tests
+## 3. Phase 2 Feature Coverage Checklist (Features 24–36)
+
+Every Phase 2 feature defined in `PROJECT.md` is registered in `tests/runner.ts` with `>=5` dedicated automated opaque-box tests using progressive dynamic imports so the runner compiles cleanly throughout M7–M10:
+
+- [x] **Feature 24: Extended Prisma Schema & Resilient File-Backed Store** (`tests/tier1-feature/f24-extended-schema-persistence.ts` — 6 tests)
+- [x] **Feature 25: Typed CMS Service & Public Storefront APIs** (`tests/tier1-feature/f25-cms-service-public-apis.ts` — 6 tests)
+- [x] **Feature 26: Admin Commerce & CMS APIs + Query Fixes** (`tests/tier1-feature/f26-admin-commerce-cms-apis.ts` — 6 tests)
+- [x] **Feature 27: White Atelier Admin Theme & Pure UI Remediation** (`tests/tier1-feature/f27-white-atelier-pure-ui.ts` — 5 tests)
+- [x] **Feature 28: Mobile-First Bottom Nav, Bottom Sheets & Overview Dashboard** (`tests/tier1-feature/f28-mobile-bottom-nav-overview.ts` — 5 tests)
+- [x] **Feature 29: Mobile Products, Variants, Collections & Drops Ops** (`tests/tier1-feature/f29-mobile-products-collections-drops.ts` — 5 tests)
+- [x] **Feature 30: Mobile Orders, Customers & Coupons/Campaigns Ops** (`tests/tier1-feature/f30-mobile-orders-customers-coupons.ts` — 5 tests)
+- [x] **Feature 31: Admin Hero, Marquee & Lookbook/Archive CMS Editors** (`tests/tier1-feature/f31-cms-hero-marquee-lookbook.ts` — 5 tests)
+- [x] **Feature 32: Admin Brand Pages CMS Editors (Manifesto, FAQ, Contact, Legal)** (`tests/tier1-feature/f32-cms-brand-pages.ts` — 5 tests)
+- [x] **Feature 33: Admin Global Navigation, SEO, Footer & StoreSettings Editors** (`tests/tier1-feature/f33-cms-nav-seo-footer-settings.ts` — 5 tests)
+- [x] **Feature 34: Dynamic Storefront Metadata, Navigation & Hero/Marquee** (`tests/tier1-feature/f34-dynamic-storefront-hero-nav.ts` — 5 tests)
+- [x] **Feature 35: Dynamic Storefront Catalog, Lookbook, Cart & Product Specs** (`tests/tier1-feature/f35-dynamic-storefront-catalog-cart.ts` — 5 tests)
+- [x] **Feature 36: Dynamic Brand Routes & Storefront Pure UI Cleanup** (`tests/tier1-feature/f36-dynamic-brand-routes-pure-ui.ts` — 6 tests)
+- [x] **Phase 2 Tier 2 Boundary & Corner Cases** (`tests/tier2-boundary/phase2-boundary-cases.ts` — 8 tests)
+- [x] **Phase 2 Tier 3 Cross-Feature Combinations** (`tests/tier3-combination/phase2-combinations.ts` — 6 tests)
+- [x] **Phase 2 Tier 4 Real-World Scenarios & Pure UI Audit** (`tests/tier4-scenario/phase2-scenarios.ts` — 4 tests)
+
+---
+
+## 4. How to Run Tests
 
 ```bash
-# Execute entire test suite (all 130 tests across Tiers 1-4)
+# Execute entire test suite (all 228 tests across Tiers 1-4)
 npm test
 # or directly:
 npx tsx tests/runner.ts
 
 # Execute specific tier
-npx tsx tests/runner.ts --tier 1   # Tier 1: Feature Coverage (105 tests)
-npx tsx tests/runner.ts --tier 2   # Tier 2: Boundary & Corner Cases (12 tests)
-npx tsx tests/runner.ts --tier 3   # Tier 3: Cross-Feature Combinations (8 tests)
-npx tsx tests/runner.ts --tier 4   # Tier 4: Real-World Workloads (5 tests)
+npx tsx tests/runner.ts --tier 1   # Tier 1: Feature Coverage (185 tests)
+npx tsx tests/runner.ts --tier 2   # Tier 2: Boundary & Corner Cases (20 tests)
+npx tsx tests/runner.ts --tier 3   # Tier 3: Cross-Feature Combinations (14 tests)
+npx tsx tests/runner.ts --tier 4   # Tier 4: Real-World Workloads (9 tests)
 
-# Filter by pattern
-npx tsx tests/runner.ts --filter "whatsapp"
-npx tsx tests/runner.ts --filter "credit"
-npx tsx tests/runner.ts --filter "jwt"
+# Filter by Phase 2 feature or pattern
+npx tsx tests/runner.ts --filter "Feature 2[4-9]|Feature 3[0-6]"
+npx tsx tests/runner.ts --filter "White Atelier"
+npx tsx tests/runner.ts --filter "cms"
 ```
 
 ---
 
-## 4. Quality & Compliance Sign-Off
+## 5. Quality & Compliance Sign-Off
 
-- **Progressive Testability**: All tests run autonomously and execute cleanly in Node.js 26 without external test runner bloat.
-- **Contract Enforcement**: Adheres 100% to specifications in `PROJECT.md` and user requirements in `ORIGINAL_REQUEST.md`.
-- **Confidentiality Maintained**: Zero inspection of `.env.local` contents; zero hardcoded secrets.
+- **Progressive Testability**: All Phase 2 tests use safe dynamic imports (`tests/phase2-helpers.ts`) so `npx tsx tests/runner.ts` compiles and runs cleanly during M7–M10 without `ERR_MODULE_NOT_FOUND`.
+- **Zero `any` Policy**: All Phase 2 test files are strictly typed with zero explicit `any` types.
+- **Confidentiality Maintained**: Zero inspection of `.env` or `.env.local`; zero hardcoded secrets.

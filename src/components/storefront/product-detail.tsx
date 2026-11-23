@@ -16,6 +16,7 @@ import { HeroSection } from "./hero-section";
 import { formatProductPrice } from "./bestseller-grid";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
+import { DEFAULT_STOREFRONT_CMS, type CollectionsSectionCmsData } from "@/lib/cms";
 
 export interface ProductDetailProps {
   product: Product;
@@ -24,6 +25,8 @@ export interface ProductDetailProps {
   heroImage?: string;
   currency: string;
   whatsappNumber: string;
+  collectionsSection?: CollectionsSectionCmsData | null;
+  cms?: CollectionsSectionCmsData | null;
 }
 
 const FALLBACK_IMG = "/assets/brand/logo-emblem-dark.png";
@@ -85,6 +88,8 @@ export function ProductDetail({
   heroImage,
   currency,
   whatsappNumber,
+  collectionsSection,
+  cms,
 }: ProductDetailProps) {
   const { lang, toggleLang, t } = useLanguage();
   const { openSearch } = useSearch();
@@ -816,8 +821,19 @@ export function ProductDetail({
             {/* Provenance & Series Tag */}
             <div className="flex items-center gap-2 mb-3 flex-wrap font-mono text-[10px] uppercase tracking-[0.2em]">
               <span className="text-neutral-600 font-bold">
-                CHAPTER 00 • ARCHIVE
+                {t(
+                  (collectionsSection ?? cms ?? DEFAULT_STOREFRONT_CMS.collectionsSection)
+                    .productDetailsDefaults.provenanceTag
+                )}
               </span>
+              {currentProduct.badge && (
+                <>
+                  <span className="text-neutral-300">•</span>
+                  <span className="px-2 py-0.5 bg-black text-[#FAF8F3] font-bold text-[9px] tracking-[0.18em]">
+                    {currentProduct.badge}
+                  </span>
+                </>
+              )}
               {isDiptych && (
                 <>
                   <span className="text-neutral-300">•</span>
@@ -840,11 +856,29 @@ export function ProductDetail({
               {currentProduct.name}
             </h1>
             <div className="mt-3.5 pb-4 border-b border-black/15 flex items-baseline justify-between gap-3 flex-wrap">
-              <span className="font-mono text-xl sm:text-2xl font-bold tracking-tight text-black">
-                {formatProductPrice(currentProduct.price, currency)}
-              </span>
+              <div className="flex items-baseline gap-2.5">
+                {typeof currentProduct.discountPrice === "number" &&
+                currentProduct.discountPrice > 0 &&
+                currentProduct.discountPrice < currentProduct.price ? (
+                  <>
+                    <span className="font-mono text-sm text-neutral-400 line-through">
+                      {formatProductPrice(currentProduct.price, currency)}
+                    </span>
+                    <span className="font-mono text-xl sm:text-2xl font-bold tracking-tight text-black">
+                      {formatProductPrice(currentProduct.discountPrice, currency)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-mono text-xl sm:text-2xl font-bold tracking-tight text-black">
+                    {formatProductPrice(currentProduct.price, currency)}
+                  </span>
+                )}
+              </div>
               <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-neutral-500">
-                {t({ tr: "KDV DAHİL • EXPRESS KARGO", en: "VAT INCL. • EXPRESS DISPATCH" })}
+                {t(
+                  (collectionsSection ?? cms ?? DEFAULT_STOREFRONT_CMS.collectionsSection)
+                    .productDetailsDefaults.vatDispatchLabel
+                )}
               </span>
             </div>
 
@@ -897,7 +931,10 @@ export function ProductDetail({
                       )}
                     </span>
                     <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400">
-                      ARCHIVAL OVERSIZED FIT
+                      {t(
+                        (collectionsSection ?? cms ?? DEFAULT_STOREFRONT_CMS.collectionsSection)
+                          .productDetailsDefaults.fitLabel
+                      )}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1033,24 +1070,33 @@ export function ProductDetail({
               )}
 
               <Accordion title={t({ tr: "DETAYLAR", en: "DETAILS" })}>
-                <div className="space-y-3 font-mono text-xs">
-                  <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px]">
-                    <span className="text-neutral-500 uppercase">{t({ tr: "KUMAŞ", en: "FABRIC" })}:</span>
-                    <span className="font-semibold text-black">100% Cotton (280-300 GSM)</span>
-                    <span className="text-neutral-500 uppercase">{t({ tr: "KESİM", en: "FIT" })}:</span>
-                    <span className="font-semibold text-black">Architectural Oversize</span>
-                    {currentProduct.color && (
-                      <>
-                        <span className="text-neutral-500 uppercase">{t({ tr: "RENK", en: "COLOR" })}:</span>
-                        <span className="font-semibold text-black">{currentProduct.color}</span>
-                      </>
-                    )}
-                    <span className="text-neutral-500 uppercase">{t({ tr: "BASKI TEKNİĞİ", en: "PRINT TECHNIQUE" })}:</span>
-                    <span className="font-semibold text-black">Precision Halftone Serigraphy</span>
-                    <span className="text-neutral-500 uppercase">{t({ tr: "MENŞEİ", en: "EDITION" })}:</span>
-                    <span className="font-semibold text-black">Atelier Cyprus / Limited Archive</span>
-                  </div>
-                </div>
+                {(() => {
+                  const specs = (
+                    collectionsSection ??
+                    cms ??
+                    DEFAULT_STOREFRONT_CMS.collectionsSection
+                  ).productDetailsDefaults;
+                  return (
+                    <div className="space-y-3 font-mono text-xs">
+                      <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px]">
+                        <span className="text-neutral-500 uppercase">{t({ tr: "KUMAŞ", en: "FABRIC" })}:</span>
+                        <span className="font-semibold text-black">{specs.fabric}</span>
+                        <span className="text-neutral-500 uppercase">{t({ tr: "KESİM", en: "FIT" })}:</span>
+                        <span className="font-semibold text-black">{specs.fit}</span>
+                        {currentProduct.color && (
+                          <>
+                            <span className="text-neutral-500 uppercase">{t({ tr: "RENK", en: "COLOR" })}:</span>
+                            <span className="font-semibold text-black">{currentProduct.color}</span>
+                          </>
+                        )}
+                        <span className="text-neutral-500 uppercase">{t({ tr: "BASKI TEKNİĞİ", en: "PRINT TECHNIQUE" })}:</span>
+                        <span className="font-semibold text-black">{specs.printTechnique}</span>
+                        <span className="text-neutral-500 uppercase">{t({ tr: "MENŞEİ", en: "EDITION" })}:</span>
+                        <span className="font-semibold text-black">{specs.edition}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </Accordion>
               {isDiptych && (
                 <Accordion title={t({ tr: "DIPTYCH SANAT VE BASKI KONSEPTİ", en: "DIPTYCH ARTWORK SPECIFICATION" })}>
@@ -1061,10 +1107,10 @@ export function ProductDetail({
                 </Accordion>
               )}
               <Accordion title={t({ tr: "KARGO & TESLİMAT", en: "SHIPPING" })}>
-                {t({
-                  tr: "Kuzey Kıbrıs (North Cyprus) atölyemizden tüm dünyaya express kargo ile gönderilir. Siparişler doğrudan resmi WhatsApp terminali üzerinden koordine edilir.",
-                  en: "Dispatched from North Cyprus with worldwide express shipping. Orders are confirmed and arranged directly over WhatsApp.",
-                })}
+                {t(
+                  (collectionsSection ?? cms ?? DEFAULT_STOREFRONT_CMS.collectionsSection)
+                    .productDetailsDefaults.shippingNote
+                )}
               </Accordion>
             </div>
           </motion.div>

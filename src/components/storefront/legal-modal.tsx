@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X, ShieldCheck, FileText, Truck, Scale } from "lucide-react";
 import { useLanguage } from "@/components/providers/language-provider";
 import { cn } from "@/lib/utils";
+import { DEFAULT_STOREFRONT_CMS, type LegalCmsData } from "@/lib/cms";
 
 export type LegalTabId = "privacy" | "terms" | "shipping" | "sales";
 
@@ -12,6 +13,8 @@ export interface LegalModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: LegalTabId;
+  legalCms?: LegalCmsData | null;
+  cms?: LegalCmsData | null;
 }
 
 interface LegalSection {
@@ -243,10 +246,17 @@ export function LegalModal({
   isOpen,
   onClose,
   initialTab = "privacy",
+  legalCms,
+  cms,
 }: LegalModalProps) {
   const { t } = useLanguage();
   const reduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<LegalTabId>(initialTab);
+  const resolvedLegal = legalCms ?? cms ?? DEFAULT_STOREFRONT_CMS.legal;
+  const documents =
+    resolvedLegal.tabs && resolvedLegal.tabs.length > 0
+      ? resolvedLegal.tabs
+      : LEGAL_DOCS;
 
   useEffect(() => {
     if (isOpen && initialTab) {
@@ -268,7 +278,7 @@ export function LegalModal({
     };
   }, [isOpen, onClose]);
 
-  const currentDoc = LEGAL_DOCS.find((d) => d.id === activeTab) || LEGAL_DOCS[0];
+  const currentDoc = documents.find((d) => d.id === activeTab) || documents[0];
 
   const tabRefs = React.useRef<Record<LegalTabId, HTMLButtonElement | null>>({
     privacy: null,
@@ -323,10 +333,10 @@ export function LegalModal({
               <div className="flex items-center gap-2.5">
                 <span className="w-1.5 h-1.5 bg-[#FAF8F3]" />
                 <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#FAF8F3]">
-                  {t({ tr: "YASAL BİLGİLENDİRME", en: "LEGAL NOTICE" })}
+                  {t(resolvedLegal.modalTitle)}
                 </span>
                 <span className="hidden sm:inline-block text-[9px] px-1.5 py-0.5 border border-neutral-800 text-neutral-500 uppercase tracking-widest">
-                  CYRUX ARCHIVE
+                  {resolvedLegal.archiveTag || "CYRUX ARCHIVE"}
                 </span>
               </div>
               <button
@@ -342,7 +352,7 @@ export function LegalModal({
             {/* Disciplined Minimal Tab Navigation */}
             <div className="relative border-b border-neutral-800 bg-black shrink-0">
               <div className="flex items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-2 sm:px-3">
-                {LEGAL_DOCS.map((doc) => {
+                {documents.map((doc) => {
                   const isActive = doc.id === activeTab;
                   return (
                     <button
@@ -379,7 +389,7 @@ export function LegalModal({
                   </h3>
                 </div>
                 <div className="text-[9px] text-neutral-600 uppercase text-right hidden sm:block">
-                  CYRUX STUDIO / GIRNE
+                  {resolvedLegal.studioLocation || "CYRUX STUDIO / GIRNE"}
                 </div>
               </div>
 

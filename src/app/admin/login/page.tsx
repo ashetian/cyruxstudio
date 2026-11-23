@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("admin@cyrux.studio");
-  const [password, setPassword] = useState("AdminSecret2026!");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,130 +20,123 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+        body: JSON.stringify({
+          email: identifier.trim(),
+          password: password.trim(),
+        }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        error?: string;
+      };
 
       if (!res.ok || !data.success) {
-        setError(data.error || "ACCESS DENIED: INVALID ADMIN CREDENTIALS");
+        setError(data.error || "Invalid administrator credentials.");
         setLoading(false);
         return;
       }
 
       window.location.assign("/admin");
     } catch {
-      setError("NETWORK ERROR: FAILED TO CONNECT TO AUTH GATEWAY");
+      setError("Network error while signing in. Please try again.");
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-12 relative bg-[#0A0A0A]">
-      {/* Brutalist Grid Overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, #222222 1px, transparent 1px), linear-gradient(to bottom, #222222 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      <div className="relative z-10 w-full max-w-md">
-        {/* Brand Header */}
-        <div className="mb-6 flex flex-col gap-1">
-          <div className="flex items-center justify-between text-xs tracking-widest text-[#888888]">
-            <span>CYRUX STUDIO — GATE</span>
-            <span className="flex items-center gap-1.5 text-emerald-400">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              SESSION GUARD
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#FAF8F3] uppercase">
-            [ 00. ADMIN AUTH ]
+    <main className="min-h-screen w-full flex flex-col justify-center items-center px-4 py-12 bg-[#FAF8F3] text-[#0A0A0A]">
+      <div className="w-full max-w-md flex flex-col gap-6">
+        <div className="flex flex-col gap-1.5 text-center sm:text-left">
+          <span className="text-xs font-medium tracking-widest uppercase text-[#525252]">
+            Cyrux Studio
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#0A0A0A]">
+            Atelier Admin
           </h1>
-          <p className="text-xs text-[#666666] tracking-wider uppercase">
-            RESTRICTED TERMINAL — CRYPTOGRAPHIC HS256 SESSION ISSUANCE
+          <p className="text-sm text-[#525252]">
+            Sign in to manage catalog, orders, and storefront content.
           </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-[#121212] border border-[#262626] p-5 sm:p-8 shadow-2xl">
+        <div className="bg-[#FFFFFF] border border-[#E8E4DC] p-6 sm:p-8">
           {error && (
-            <div className="mb-6 bg-red-950/40 border border-red-500/80 text-red-300 font-mono text-xs p-3 uppercase tracking-wider">
-              [!] {error}
+            <div
+              role="alert"
+              className="mb-5 bg-red-50 border border-red-300 text-red-900 text-sm p-3.5 flex items-start gap-2.5"
+            >
+              <AlertCircle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label
-                htmlFor="admin-email"
-                className="text-xs font-bold tracking-wider text-[#AAAAAA] uppercase"
+                htmlFor="admin-identifier"
+                className="text-xs font-semibold uppercase tracking-wider text-[#0A0A0A]"
               >
-                ADMIN IDENTIFIER (EMAIL)
+                Email or Username
               </label>
               <input
-                id="admin-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ADMIN@CYRUX.STUDIO"
+                id="admin-identifier"
+                type="text"
+                autoComplete="username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="admin@cyrux.studio or username"
                 required
                 autoFocus
-                className="bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] font-mono text-base sm:text-sm px-4 py-3 rounded-none uppercase outline-none placeholder:text-[#444444]"
+                className="w-full min-h-[44px] bg-[#FFFFFF] border border-[#E8E4DC] focus:border-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A] text-[#0A0A0A] text-base px-4 py-3 rounded-none placeholder:text-[#737373]"
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
                 <label
                   htmlFor="admin-password"
-                  className="text-xs font-bold tracking-wider text-[#AAAAAA] uppercase"
+                  className="text-xs font-semibold uppercase tracking-wider text-[#0A0A0A]"
                 >
-                  MASTER PASSPHRASE
+                  Password
                 </label>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] tracking-widest text-[#888888] hover:text-[#FAF8F3] uppercase"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="min-h-[44px] min-w-[44px] px-3 text-xs font-medium text-[#525252] hover:text-[#0A0A0A] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                 >
-                  [{showPassword ? "HIDE" : "SHOW"}]
+                  {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
               <input
                 id="admin-password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
+                placeholder="Enter password"
                 required
-                className="bg-[#0A0A0A] border border-[#2E2E2E] focus:border-[#FAF8F3] text-[#FAF8F3] font-mono text-base sm:text-sm px-4 py-3 rounded-none outline-none placeholder:text-[#444444]"
+                className="w-full min-h-[44px] bg-[#FFFFFF] border border-[#E8E4DC] focus:border-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A] text-[#0A0A0A] text-base px-4 py-3 rounded-none placeholder:text-[#737373]"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full min-h-12 bg-[#FAF8F3] text-[#0A0A0A] hover:bg-white font-mono font-bold text-sm uppercase py-3.5 tracking-wider rounded-none transition-none cursor-pointer disabled:opacity-50"
+              className="mt-1 w-full min-h-[48px] bg-[#0A0A0A] text-[#FFFFFF] hover:bg-[#262626] font-medium text-sm uppercase tracking-wider py-3 px-4 rounded-none cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A] focus-visible:ring-offset-2"
             >
-              {loading ? "[ AUTHENTICATING SESSION... ]" : "[ ACCESS TERMINAL → ]"}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 flex flex-col gap-2 text-center">
+        <div className="flex justify-center">
           <Link
             href="/"
-            className="text-xs tracking-wider text-[#888888] hover:text-[#FAF8F3] uppercase underline underline-offset-4"
+            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 text-xs font-medium uppercase tracking-wider text-[#525252] hover:text-[#0A0A0A] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
           >
-            ← RETURN TO CYRUX PUBLIC STOREFRONT
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Storefront</span>
           </Link>
-          <span className="text-[10px] text-[#444444] tracking-widest uppercase">
-            JOSE JWT HS256 • HTTPONLY SAMESITE=LAX PERSISTENT COOKIE
-          </span>
         </div>
       </div>
     </main>

@@ -1,4 +1,4 @@
-import prisma from "@/lib/db";
+import prisma, { getFallbackDropsSync, syncFallbackDrops } from "@/lib/db";
 import { INITIAL_DROPS as SEED_DROPS } from "@/lib/seed-data";
 
 export interface DropData {
@@ -28,8 +28,6 @@ export interface DropData {
 }
 
 export const INITIAL_DROPS: DropData[] = SEED_DROPS as DropData[];
-
-let memoryCache: DropData[] = [...INITIAL_DROPS];
 
 function mapPrismaDrop(d: {
   id: string;
@@ -69,13 +67,17 @@ function mapPrismaDrop(d: {
     productSlugs: Array.isArray(d.productSlugs) ? d.productSlugs : [],
     bannerImage: d.bannerImage || "/assets/editorial/hero-desktop.jpg",
     totalPieces: Number(d.totalPieces) || 100,
-    createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : new Date().toISOString(),
-    updatedAt: d.updatedAt ? new Date(d.updatedAt).toISOString() : new Date().toISOString(),
+    createdAt: d.createdAt
+      ? new Date(d.createdAt).toISOString()
+      : new Date().toISOString(),
+    updatedAt: d.updatedAt
+      ? new Date(d.updatedAt).toISOString()
+      : new Date().toISOString(),
   };
 }
 
 export function getDropsSync(): DropData[] {
-  return memoryCache;
+  return getFallbackDropsSync().map(mapPrismaDrop);
 }
 
 export async function getDrops(): Promise<DropData[]> {
@@ -85,18 +87,22 @@ export async function getDrops(): Promise<DropData[]> {
     });
 
     if (records) {
-      memoryCache = records.map(mapPrismaDrop);
-      return memoryCache;
+      syncFallbackDrops(records, false);
+      return records.map(mapPrismaDrop);
     }
-    return memoryCache;
+    return getDropsSync();
   } catch (err) {
-    console.warn("[Drops DB Query Warning]: Failed to fetch drops from DB, serving memory cache:", err);
-    return memoryCache;
+    console.warn(
+      "[Drops DB Query Warning]: Failed to fetch drops from DB, serving unified store:",
+      err
+    );
+    return getDropsSync();
   }
 }
 
 export function getActiveDrop(): DropData {
-  return memoryCache.find((d) => d.status === "active") || memoryCache[0] || INITIAL_DROPS[0];
+  const list = getDropsSync();
+  return list.find((d) => d.status === "active") || list[0] || INITIAL_DROPS[0];
 }
 
 export async function getActiveDropAsync(): Promise<DropData> {
@@ -119,7 +125,7 @@ export function getDropBySlug(slug: string): DropData | undefined {
   if (normalized === "latest" || normalized === "current" || normalized === "active") {
     return getActiveDrop();
   }
-  return memoryCache.find(
+  return getDropsSync().find(
     (d) =>
       d.slug.toLowerCase() === normalized ||
       d.id.toLowerCase() === normalized ||
@@ -136,11 +142,7 @@ export async function getDropBySlugAsync(slug: string): Promise<DropData | undef
   try {
     const record = await prisma.drop.findFirst({
       where: {
-        OR: [
-          { slug: normalized },
-          { id: slug },
-          { number: slug },
-        ],
+        OR: [{ slug: normalized }, { id: slug }, { number: slug }],
       },
     });
     if (record) {
@@ -198,7 +200,6 @@ export async function saveDrop(
     } catch {}
   }
 
-  // Upsert into PostgreSQL with resilient fallback
   let saved: DropData;
   try {
     const savedRecord = await prisma.drop.upsert({
@@ -207,6 +208,31 @@ export async function saveDrop(
       update: dropPayload,
     });
     saved = mapPrismaDrop(savedRecord);
+
+    // Ensure unified fallback store reflects authoritative DB rows
+    const currentList = getFallbackDropsSync();
+    const updatedList = currentList.map((d) =>
+      dropPayload.status === "active" && d.status === "active" && d.id !== saved.id
+        ? { ...d, status: "archived" }
+        : d
+    );
+    const idx = updatedList.findIndex(
+      (d) => d.id === saved.id || d.slug === saved.slug
+    );
+    if (idx !== -1) {
+      updatedList[idx] = {
+        ...updatedList[idx],
+        ...dropPayload,
+        updatedAt: new Date(saved.updatedAt || Date.now()),
+      };
+    } else {
+      updatedList.push({
+        ...dropPayload,
+        createdAt: new Date(saved.createdAt || Date.now()),
+        updatedAt: new Date(saved.updatedAt || Date.now()),
+      });
+    }
+    syncFallbackDrops(updatedList, false);
   } catch {
     saved = {
       id: dropId,
@@ -224,19 +250,22 @@ export async function saveDrop(
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-  }
-
-  // Update memory cache
-  const idx = memoryCache.findIndex((d) => d.id === saved.id || d.slug === saved.slug);
-  if (dropPayload.status === "active") {
-    memoryCache.forEach((d) => {
-      if (d.status === "active") d.status = "archived";
-    });
-  }
-  if (idx !== -1) {
-    memoryCache[idx] = saved;
-  } else {
-    memoryCache.unshift(saved);
+    const currentList = getFallbackDropsSync().map((d) =>
+      dropPayload.status === "active" && d.status === "active"
+        ? { ...d, status: "archived" }
+        : d
+    );
+    const idx = currentList.findIndex(
+      (d) => d.id === saved.id || d.slug === saved.slug
+    );
+    const record = {
+      ...dropPayload,
+      createdAt: new Date(saved.createdAt || Date.now()),
+      updatedAt: new Date(saved.updatedAt || Date.now()),
+    };
+    if (idx !== -1) currentList[idx] = record;
+    else currentList.unshift(record);
+    syncFallbackDrops(currentList, true);
   }
 
   // Synchronize active drop into StoreSettings brandMetadata
@@ -264,13 +293,6 @@ export async function saveDrop(
 }
 
 export async function setActiveDrop(id: string): Promise<DropData | null> {
-  const memTarget = memoryCache.find((d) => d.id === id || d.slug === id);
-  if (memTarget) {
-    memoryCache.forEach((d) => {
-      d.status = d.id === memTarget.id || d.slug === memTarget.slug ? "active" : "archived";
-    });
-  }
-
   try {
     const target = await prisma.drop.findFirst({
       where: {
@@ -279,13 +301,11 @@ export async function setActiveDrop(id: string): Promise<DropData | null> {
     });
 
     if (target) {
-      // Archive all active
       await prisma.drop.updateMany({
         where: { status: "active" },
         data: { status: "archived" },
       });
 
-      // Set target active
       const updated = await prisma.drop.update({
         where: { id: target.id },
         data: { status: "active" },
@@ -293,12 +313,12 @@ export async function setActiveDrop(id: string): Promise<DropData | null> {
 
       const mapped = mapPrismaDrop(updated);
 
-      // Update memory cache with fresh DB record
-      memoryCache.forEach((d) => {
-        d.status = d.id === mapped.id ? "active" : "archived";
-      });
+      const syncedList = getFallbackDropsSync().map((d) => ({
+        ...d,
+        status: d.id === mapped.id || d.slug === mapped.slug ? "active" : "archived",
+      }));
+      syncFallbackDrops(syncedList, false);
 
-      // Synchronize to StoreSettings
       try {
         const settings = await prisma.storeSettings.findFirst();
         if (settings) {
@@ -320,24 +340,22 @@ export async function setActiveDrop(id: string): Promise<DropData | null> {
       return mapped;
     }
   } catch {
-    // If DB pooler fails or is offline, return memory target
+    // Fallback to unified store if DB pooler fails
   }
 
-  return memTarget || null;
+  const fallbackList = getFallbackDropsSync();
+  const targetIdx = fallbackList.findIndex((d) => d.id === id || d.slug === id);
+  if (targetIdx === -1) return null;
+  const nextList = fallbackList.map((d, idx) => ({
+    ...d,
+    status: idx === targetIdx ? "active" : "archived",
+    updatedAt: new Date(),
+  }));
+  syncFallbackDrops(nextList, true);
+  return mapPrismaDrop(nextList[targetIdx]);
 }
 
 export async function deleteDrop(id: string): Promise<boolean> {
-  const memIdx = memoryCache.findIndex((d) => d.id === id || d.slug === id);
-  let removed = false;
-  if (memIdx !== -1) {
-    const deletedStatus = memoryCache[memIdx].status;
-    memoryCache = memoryCache.filter((d) => d.id !== id && d.slug !== id);
-    if (deletedStatus === "active" && memoryCache.length > 0) {
-      setActiveDrop(memoryCache[0].id).catch(() => {});
-    }
-    removed = true;
-  }
-
   try {
     const target = await prisma.drop.findFirst({
       where: {
@@ -345,15 +363,36 @@ export async function deleteDrop(id: string): Promise<boolean> {
       },
     });
 
-    if (target) {
-      await prisma.drop.delete({
-        where: { id: target.id },
-      });
-      return true;
+    if (!target) {
+      return false;
     }
-  } catch {}
 
-  return removed;
+    const wasActive = target.status === "active";
+    await prisma.drop.delete({
+      where: { id: target.id },
+    });
+
+    const remaining = getFallbackDropsSync().filter(
+      (d) => d.id !== target.id && d.slug !== target.slug
+    );
+    syncFallbackDrops(remaining, false);
+
+    if (wasActive && remaining.length > 0) {
+      await setActiveDrop(remaining[0].id);
+    }
+    return true;
+  } catch {
+    const current = getFallbackDropsSync();
+    const target = current.find((d) => d.id === id || d.slug === id);
+    if (!target) return false;
+    const wasActive = target.status === "active";
+    const remaining = current.filter((d) => d.id !== target.id && d.slug !== target.slug);
+    syncFallbackDrops(remaining, true);
+    if (wasActive && remaining.length > 0) {
+      await setActiveDrop(remaining[0].id);
+    }
+    return true;
+  }
 }
 
 export const CURRENT_ACTIVE_DROP: DropData = new Proxy({} as DropData, {

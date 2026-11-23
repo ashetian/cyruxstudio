@@ -4,6 +4,7 @@ import {
   adminProductUpdateSchema,
   normalizeProductResponse,
 } from "@/lib/validations";
+import { revalidateStorefrontPaths } from "@/lib/revalidate";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -99,7 +100,6 @@ async function handleUpdate(
 
     const updates = validation.data;
 
-    // Check slug collision
     if (updates.slug && updates.slug !== existing.slug) {
       const conflict = await prisma.product.findUnique({
         where: { slug: updates.slug },
@@ -112,36 +112,91 @@ async function handleUpdate(
       }
     }
 
+    const existingRec = existing as unknown as {
+      price: number;
+      discountPrice?: number | null;
+      category?: string;
+    };
+    const effectivePrice =
+      updates.price !== undefined ? updates.price : existingRec.price;
+    const effectiveDiscountPrice =
+      updates.discountPrice !== undefined
+        ? updates.discountPrice
+        : existingRec.discountPrice;
+
+    if (
+      effectiveDiscountPrice != null &&
+      effectiveDiscountPrice >= effectivePrice
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Discount price must be less than price",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (updates.collectionId) {
+      const col = await prisma.collection.findUnique({
+        where: { id: updates.collectionId },
+      });
+      if (!col) {
+        return NextResponse.json(
+          { success: false, error: "Referenced collection not found" },
+          { status: 400 }
+        );
+      }
+    }
+
     const updateData: Record<string, unknown> = {};
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.slug !== undefined) updateData.slug = updates.slug;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.price !== undefined) updateData.price = updates.price;
+    if (updates.discountPrice !== undefined) updateData.discountPrice = updates.discountPrice;
     if (updates.stock !== undefined) updateData.stock = updates.stock;
+    if (updates.category !== undefined) updateData.category = updates.category;
+    if (updates.badge !== undefined) updateData.badge = updates.badge;
+    if (updates.sku !== undefined) updateData.sku = updates.sku;
+    if (updates.collectionId !== undefined) updateData.collectionId = updates.collectionId;
+    if (updates.sortOrder !== undefined) updateData.sortOrder = updates.sortOrder;
+    if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
 
-    // Handle category & variants preservation
-    if (updates.variants !== undefined || updates.category !== undefined) {
-      const baseVariants = (
-        updates.variants !== undefined ? updates.variants : (existing.variants as unknown[])
-      ) || [];
-      const cleanVariants = (Array.isArray(baseVariants) ? baseVariants : []).filter(
-        (v) => !(v && typeof v === "object" && "_metadata" in v)
-      );
+    const existingVariantsArr = Array.isArray(existing.variants)
+      ? (existing.variants as unknown[])
+      : [];
+    const existingHasMetadata = existingVariantsArr.some(
+      (v) => v && typeof v === "object" && "_metadata" in v
+    );
 
-      let resolvedCategory = updates.category;
-      if (!resolvedCategory && Array.isArray(existing.variants)) {
-        const meta = (existing.variants as unknown[]).find(
+    if (
+      updates.variants !== undefined ||
+      updates.category !== undefined ||
+      existingHasMetadata
+    ) {
+      const baseVariants =
+        updates.variants !== undefined ? updates.variants : existingVariantsArr;
+      const cleanVariants = (
+        Array.isArray(baseVariants) ? baseVariants : []
+      ).filter((v) => !(v && typeof v === "object" && "_metadata" in v));
+
+      if (updates.category === undefined && !existingRec.category) {
+        const meta = [
+          ...(Array.isArray(baseVariants) ? baseVariants : []),
+          ...existingVariantsArr,
+        ].find(
           (v) => v && typeof v === "object" && "_metadata" in v
-        ) as { _metadata?: { category?: string } } | undefined;
-        resolvedCategory = meta?._metadata?.category;
+        ) as { _metadata?: { category?: unknown } } | undefined;
+        if (
+          typeof meta?._metadata?.category === "string" &&
+          meta._metadata.category.trim().length > 0
+        ) {
+          updateData.category = meta._metadata.category.trim();
+        }
       }
 
-      if (resolvedCategory) {
-        updateData.variants = [
-          ...cleanVariants,
-          { _metadata: { category: resolvedCategory } },
-        ];
-      } else {
+      if (updates.variants !== undefined || existingHasMetadata) {
         updateData.variants = cleanVariants;
       }
     }
@@ -157,6 +212,8 @@ async function handleUpdate(
       where: { id: existing.id },
       data: updateData,
     });
+
+    revalidateStorefrontPaths(["/", "/shop", `/products/${updated.slug}`]);
 
     return NextResponse.json({
       success: true,
@@ -196,6 +253,8 @@ export async function DELETE(
     await prisma.product.delete({
       where: { id: existing.id },
     });
+
+    revalidateStorefrontPaths(["/", "/shop"]);
 
     return NextResponse.json({
       success: true,

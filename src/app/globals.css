@@ -70,3 +70,30 @@ body {
     cursor: default;
   }
 }
+
+/* Marquee / Announcement Ticker */
+@keyframes cyrux-marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.cyrux-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: cyrux-marquee var(--marquee-duration, 28s) linear infinite;
+}
+
+.cyrux-marquee-pause:hover .cyrux-marquee-track,
+.cyrux-marquee-pause:focus-within .cyrux-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyrux-marquee-track {
+    animation: none;
+  }
+}

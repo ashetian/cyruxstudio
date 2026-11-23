@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { resolveEditorialAssets } from "@/lib/editorial";
+import { getStorefrontCms } from "@/lib/cms";
 import { ProductDetail } from "@/components/storefront/product-detail";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ export default async function ProductPage({ params }: PageProps) {
   if (slug === "first-ascent-tee-white" || slug === "first-ascent-tee-black") {
     redirect("/products/chapter001-first-ascent");
   }
-  const [product, others, settings] = await Promise.all([
+  const [product, others, settings, cms] = await Promise.all([
     prisma.product.findUnique({ where: { slug } }),
     prisma.product.findMany({
       where: { slug: { not: slug } },
@@ -64,6 +65,7 @@ export default async function ProductPage({ params }: PageProps) {
       take: 8,
     }),
     prisma.storeSettings.findFirst(),
+    getStorefrontCms().catch(() => null),
   ]);
   if (!product) notFound();
 
@@ -80,6 +82,7 @@ export default async function ProductPage({ params }: PageProps) {
       heroImage={editorial.hero}
       currency={settings?.currency || "USD"}
       whatsappNumber={settings?.whatsappNumber || "+905551234567"}
+      collectionsSection={cms?.collectionsSection}
     />
   );
 }

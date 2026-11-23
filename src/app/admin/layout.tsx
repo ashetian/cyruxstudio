@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "CYRUX STUDIO — ADMIN CONSOLE",
-  description: "Restricted administrative terminal for cyrux studio operations.",
+  title: "CYRUX STUDIO — ATELIER ADMIN",
+  description: "Atelier catalog, orders, and storefront management for Cyrux Studio.",
   robots: {
     index: false,
     follow: false,
@@ -16,7 +16,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#FAF8F3] font-mono selection:bg-[#FAF8F3] selection:text-[#0A0A0A]">
+    <div className="min-h-screen bg-[#FAF8F3] text-[#0A0A0A] font-sans overflow-x-hidden selection:bg-black selection:text-[#FAF8F3]">
       {children}
     </div>
   );

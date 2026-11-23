@@ -9,6 +9,7 @@ import { Product } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/language-provider";
 import { CURRENT_ACTIVE_DROP, type DropData } from "@/lib/drops";
+import { DEFAULT_STOREFRONT_CMS, type CollectionsSectionCmsData } from "@/lib/cms";
 
 export interface BestsellerGridProps {
   products: Product[];
@@ -20,6 +21,8 @@ export interface BestsellerGridProps {
   searchQuery?: string;
   onClearSearch?: () => void;
   activeDrop?: DropData;
+  collectionsSection?: CollectionsSectionCmsData | null;
+  cms?: CollectionsSectionCmsData | null;
 }
 
 /**
@@ -126,9 +129,16 @@ function BestsellerMobileCard({
 
       {/* Top Runway Header */}
       <div className="relative z-10 p-4 sm:p-5 flex items-center justify-between">
-        <span className="font-mono text-[11px] font-bold tracking-widest text-black bg-white/70 backdrop-blur-xs px-2.5 py-1 border border-black/10">
-          [{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}]
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[11px] font-bold tracking-widest text-black bg-white/70 backdrop-blur-xs px-2.5 py-1 border border-black/10">
+            [{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}]
+          </span>
+          {displayProduct.badge && (
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider bg-black text-[#FAF8F3] px-2 py-0.5">
+              {displayProduct.badge}
+            </span>
+          )}
+        </div>
 
         {/* Center Interactive Pills: Twin Yin-Yang Colorways or Diptych Front/Back Flip */}
         <div className="relative z-20 flex items-center gap-2">
@@ -251,9 +261,24 @@ function BestsellerMobileCard({
             </span>
           )}
         </div>
-        <span className="font-mono text-xs sm:text-sm font-bold text-black shrink-0">
-          {formatProductPrice(displayProduct.price, currency)}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {typeof displayProduct.discountPrice === "number" &&
+          displayProduct.discountPrice > 0 &&
+          displayProduct.discountPrice < displayProduct.price ? (
+            <>
+              <span className="font-mono text-[10px] text-neutral-400 line-through">
+                {formatProductPrice(displayProduct.price, currency)}
+              </span>
+              <span className="font-mono text-xs sm:text-sm font-bold text-black">
+                {formatProductPrice(displayProduct.discountPrice, currency)}
+              </span>
+            </>
+          ) : (
+            <span className="font-mono text-xs sm:text-sm font-bold text-black">
+              {formatProductPrice(displayProduct.price, currency)}
+            </span>
+          )}
+        </div>
       </div>
     </motion.article>
   );
@@ -409,7 +434,7 @@ function BestsellerDesktopItem({
               )}
 
               <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 hidden xl:inline">
-                [DROP {drop.number} • ATELIER SPECIMEN]
+                [DROP {drop.number} • {displayProduct.badge || "ATELIER EDITION"}]
               </span>
             </div>
 
@@ -474,9 +499,24 @@ function BestsellerDesktopItem({
               )}
             </div>
             <div className="flex items-center gap-4 shrink-0">
-              <span className="font-mono text-sm xl:text-base font-bold text-black">
-                {formatProductPrice(displayProduct.price, currency)}
-              </span>
+              <div className="flex items-center gap-2">
+                {typeof displayProduct.discountPrice === "number" &&
+                displayProduct.discountPrice > 0 &&
+                displayProduct.discountPrice < displayProduct.price ? (
+                  <>
+                    <span className="font-mono text-xs text-neutral-400 line-through">
+                      {formatProductPrice(displayProduct.price, currency)}
+                    </span>
+                    <span className="font-mono text-sm xl:text-base font-bold text-black">
+                      {formatProductPrice(displayProduct.discountPrice, currency)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-mono text-sm xl:text-base font-bold text-black">
+                    {formatProductPrice(displayProduct.price, currency)}
+                  </span>
+                )}
+              </div>
               <Link
                 href={`/products/${displayProduct.slug}`}
                 data-cursor="VIEW"
@@ -510,7 +550,14 @@ function BestsellerDesktopItem({
 
           <div className="w-full pt-2 border-t border-black/10 text-center">
             <span className="font-mono text-[11px] font-bold text-black/70 block truncate">
-              {formatProductPrice(product.price, currency)}
+              {formatProductPrice(
+                typeof product.discountPrice === "number" &&
+                  product.discountPrice > 0 &&
+                  product.discountPrice < product.price
+                  ? product.discountPrice
+                  : product.price,
+                currency
+              )}
             </span>
           </div>
         </div>
@@ -527,10 +574,14 @@ export function BestsellerGrid({
   searchQuery = "",
   onClearSearch,
   activeDrop,
+  collectionsSection,
+  cms,
 }: BestsellerGridProps) {
   const { lang, t } = useLanguage();
   const reduceMotion = useReducedMotion();
   const drop = activeDrop || CURRENT_ACTIVE_DROP;
+  const sectionCopy =
+    collectionsSection ?? cms ?? DEFAULT_STOREFRONT_CMS.collectionsSection;
   const imageFor = (p: Product): string =>
     productImages[p.slug] || p.mediaUrls[0] || "/assets/brand/logo-emblem-dark.png";
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -562,13 +613,10 @@ export function BestsellerGrid({
       <div className="mb-8 md:mb-14 flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
         <div>
           <h2 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold uppercase tracking-tight text-brand-black">
-            {t({ tr: "Bestseller Now", en: "Bestseller Now" })}
+            {t(sectionCopy.bestsellerTitle)}
           </h2>
           <p className="font-mono text-xs text-neutral-500 uppercase tracking-widest mt-1">
-            {t({
-              tr: "Stüdyo Seçkisi • Koleksiyon Parçaları",
-              en: "Studio Selection • Collection Pieces",
-            })}
+            {t(sectionCopy.bestsellerSubtitle)}
           </p>
         </div>
 
@@ -629,9 +677,6 @@ export function BestsellerGrid({
         </div>
       ) : (
         <>
-          {/* =========================================================================
-              MOBILE: PODYUM POSTER AKIŞI (Fullscreen Runway Poster Scroll)
-              ========================================================================= */}
           <div className="flex flex-col gap-6 lg:hidden">
             {gridProducts.map((product, index) => (
               <BestsellerMobileCard
@@ -651,9 +696,6 @@ export function BestsellerGrid({
             ))}
           </div>
 
-          {/* =========================================================================
-              DESKTOP: INTERACTIVE MORPHING LUNCHBOX TRAY (Accordion Bento)
-              ========================================================================= */}
           <div
             className="hidden lg:flex w-full h-[640px] xl:h-[700px] bg-[#E8E7E3] border border-black/20 p-2 gap-2 overflow-hidden select-none"
             onMouseLeave={() => setActiveIdx(0)}
@@ -690,7 +732,7 @@ export function BestsellerGrid({
           href={`/drops/${drop.slug}`}
           className="group inline-flex items-center gap-2 font-bold uppercase tracking-widest text-black hover:opacity-50 transition-opacity"
         >
-          <span>SEE DROP</span>
+          <span>{t(sectionCopy.seeDropCta)}</span>
           <span className="transition-transform group-hover:translate-x-1">→</span>
         </Link>
       </div>

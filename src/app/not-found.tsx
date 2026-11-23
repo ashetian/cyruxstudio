@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-black text-[#FAF8F3] flex flex-col items-center justify-center px-4 font-mono select-none">
       <div className="max-w-md w-full border border-neutral-800 bg-[#0C0C0D] p-8 text-center shadow-2xl">
         <span className="text-xs text-neutral-500 uppercase tracking-widest block mb-2">
-          {"// 404 ERROR //"}
+          404 • ARCHIVE NOT FOUND
         </span>
         <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-tight mb-4">
           PARÇA BULUNAMADI
@@ -15,7 +15,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="inline-block w-full py-3 px-4 border border-white bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-transparent hover:text-white transition-colors"
+          className="min-h-[44px] inline-flex items-center justify-center w-full py-3 px-4 border border-white bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-transparent hover:text-white transition-colors cursor-pointer"
         >
           [ ANA SAYFAYA DÖN ]
         </Link>

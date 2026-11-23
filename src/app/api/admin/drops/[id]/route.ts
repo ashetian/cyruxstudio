@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDropBySlugAsync, saveDrop, deleteDrop } from "@/lib/drops";
+import { getDropBySlugAsync, saveDrop, deleteDrop, type DropData } from "@/lib/drops";
+import { adminDropSchema } from "@/lib/validations";
+import { revalidateStorefrontPaths } from "@/lib/revalidate";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -70,11 +72,24 @@ async function handleUpdate(
       );
     }
 
+    const parsed = adminDropSchema.partial().safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: parsed.error.issues[0]?.message || "Validation failed",
+        },
+        { status: 400 }
+      );
+    }
+
     const updated = await saveDrop({
       ...existing,
-      ...body,
+      ...(parsed.data as Partial<DropData>),
       id: existing.id,
     });
+
+    revalidateStorefrontPaths(["/", "/drops", "/drops/latest", `/drops/${updated.slug}`]);
 
     return NextResponse.json({
       success: true,
@@ -103,6 +118,8 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    revalidateStorefrontPaths(["/", "/drops", "/drops/latest"]);
 
     return NextResponse.json({
       success: true,

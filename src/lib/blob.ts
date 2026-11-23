@@ -63,10 +63,57 @@ export function validateUploadFile(file: { name: string; type: string; size: num
   return { isVideo, limit };
 }
 
+export function isSafeLocalUploadUrl(rawUrl: string): {
+  valid: boolean;
+  filename?: string;
+  error?: string;
+} {
+  if (!rawUrl.startsWith("/uploads/")) {
+    return { valid: false, error: "Not a local upload URL" };
+  }
+  if (
+    rawUrl.includes("..") ||
+    rawUrl.includes("\\") ||
+    rawUrl.includes("?") ||
+    rawUrl.includes("#") ||
+    rawUrl.includes("\0") ||
+    /%2e|%2f|%5c/i.test(rawUrl)
+  ) {
+    return { valid: false, error: "Path traversal sequence detected in local upload URL" };
+  }
+
+  const filename = rawUrl.slice("/uploads/".length);
+  if (
+    !filename ||
+    filename.includes("/") ||
+    path.basename(filename) !== filename ||
+    !/^[a-zA-Z0-9._-]+$/.test(filename)
+  ) {
+    return { valid: false, error: "Invalid local upload filename" };
+  }
+
+  const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
+  const targetPath = path.resolve(uploadsDir, filename);
+  if (!targetPath.startsWith(uploadsDir + path.sep)) {
+    return { valid: false, error: "Path traversal outside uploads directory" };
+  }
+
+  return { valid: true, filename };
+}
+
 export function validateDeleteUrl(rawUrl: string): { url: string; pathname: string } {
   if (!rawUrl || typeof rawUrl !== "string") {
     throw new Error("URL is required");
   }
+
+  if (rawUrl.startsWith("/uploads/")) {
+    const check = isSafeLocalUploadUrl(rawUrl);
+    if (!check.valid || !check.filename) {
+      throw new Error(check.error || "Path traversal or invalid local upload path detected");
+    }
+    return { url: rawUrl, pathname: `uploads/${check.filename}` };
+  }
+
   let parsed: URL;
   try {
     parsed = new URL(rawUrl);
@@ -84,7 +131,7 @@ export function validateDeleteUrl(rawUrl: string): { url: string; pathname: stri
     );
   }
 
-  if (parsed.pathname.includes("..")) {
+  if (parsed.pathname.includes("..") || rawUrl.includes("..")) {
     throw new Error("Path traversal sequence detected in blob URL");
   }
 
@@ -151,7 +198,24 @@ export async function uploadBlob(
 }
 
 export async function deleteBlob(url: string): Promise<BlobDeleteResult> {
-  validateDeleteUrl(url);
+  const validated = validateDeleteUrl(url);
+
+  if (url.startsWith("/uploads/")) {
+    const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
+    const targetPath = path.resolve(uploadsDir, path.basename(validated.pathname));
+    if (!targetPath.startsWith(uploadsDir + path.sep)) {
+      throw new Error("Path traversal outside uploads directory");
+    }
+    try {
+      if (fs.existsSync(targetPath)) {
+        fs.unlinkSync(targetPath);
+      }
+    } catch (err) {
+      console.warn("[deleteBlob] Failed to unlink local upload:", err);
+    }
+    mockBlobRegistry.delete(url);
+    return { success: true, deletedUrl: url };
+  }
 
   if (isVercelBlobConfigured()) {
     await del(url);
@@ -162,6 +226,17 @@ export async function deleteBlob(url: string): Promise<BlobDeleteResult> {
   // Mock deletion
   mockBlobRegistry.delete(url);
   return { success: true, deletedUrl: url };
+}
+
+function guessContentTypeFromFilename(filename: string): string | undefined {
+  const ext = path.extname(filename).toLowerCase();
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".png") return "image/png";
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".avif") return "image/avif";
+  if (ext === ".mp4") return "video/mp4";
+  if (ext === ".mov") return "video/quicktime";
+  return undefined;
 }
 
 export async function listAllBlobs(): Promise<BlobListItem[]> {
@@ -179,12 +254,41 @@ export async function listAllBlobs(): Promise<BlobListItem[]> {
     }
   }
 
-  // Return recorded mock blobs
-  return Array.from(mockBlobRegistry.values()).map((b) => ({
-    url: b.url,
-    pathname: b.pathname,
-    size: b.size,
-    uploadedAt: b.uploadedAt,
-    contentType: b.contentType,
-  }));
+  const byUrl = new Map<string, BlobListItem>();
+
+  for (const item of mockBlobRegistry.values()) {
+    byUrl.set(item.url, {
+      url: item.url,
+      pathname: item.pathname,
+      size: item.size,
+      uploadedAt: item.uploadedAt,
+      contentType: item.contentType,
+    });
+  }
+
+  try {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    if (fs.existsSync(uploadsDir)) {
+      const entries = fs.readdirSync(uploadsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isFile() || entry.name.startsWith(".")) continue;
+        const fullPath = path.join(uploadsDir, entry.name);
+        const stat = fs.statSync(fullPath);
+        const url = `/uploads/${entry.name}`;
+        byUrl.set(url, {
+          url,
+          pathname: `uploads/${entry.name}`,
+          size: stat.size,
+          uploadedAt: stat.mtime,
+          contentType: guessContentTypeFromFilename(entry.name),
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("[listAllBlobs] Failed to scan public/uploads:", err);
+  }
+
+  return Array.from(byUrl.values()).sort(
+    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+  );
 }

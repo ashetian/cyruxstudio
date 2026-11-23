@@ -1,15 +1,100 @@
 import { INITIAL_STORE_SETTINGS } from "@/lib/seed-data";
 
+export interface FormattedStoreSettings {
+  id: string;
+  whatsappNumber: string;
+  currency: string;
+  storeName: string;
+  brandBio: string;
+  announcement: string;
+  socialLinks: Record<string, string>;
+  socialHandles: Record<string, string>;
+  supportEmail: string;
+  whatsappFormatted: string;
+  location: string;
+  heroDesktopImage: string;
+  heroMobileImage: string;
+  aboutDesktopImage: string;
+  aboutMobileImage: string;
+  freeShippingThreshold: number | null;
+  shippingFee: number;
+  lowStockThreshold: number;
+  activeTheme: "light" | "dark" | "atelier" | "white-atelier";
+  announcementEnabled: boolean;
+  defaultLang: "tr" | "en";
+  updatedAt: string;
+}
+
 export function formatStoreSettings(record: {
   id: string;
   whatsappNumber: string;
   currency: string;
   brandMetadata: unknown;
+  freeShippingThreshold?: number | null;
+  shippingFee?: number | null;
+  lowStockThreshold?: number | null;
+  activeTheme?: string | null;
+  announcementEnabled?: boolean | null;
   updatedAt?: Date | string;
-} | null) {
+} | null): FormattedStoreSettings {
   const brandMeta =
     (record?.brandMetadata as Record<string, unknown>) ||
     INITIAL_STORE_SETTINGS.brandMetadata;
+
+  const announcement =
+    typeof brandMeta.announcement === "string"
+      ? (brandMeta.announcement as string)
+      : "";
+
+  const rawThreshold =
+    record?.freeShippingThreshold !== undefined
+      ? record.freeShippingThreshold
+      : typeof brandMeta.freeShippingThreshold === "number"
+      ? brandMeta.freeShippingThreshold
+      : brandMeta.freeShippingThreshold === null
+      ? null
+      : INITIAL_STORE_SETTINGS.freeShippingThreshold ?? null;
+
+  const freeShippingThreshold =
+    typeof rawThreshold === "number" && Number.isFinite(rawThreshold)
+      ? rawThreshold
+      : null;
+
+  const rawShippingFee =
+    typeof record?.shippingFee === "number"
+      ? record.shippingFee
+      : typeof brandMeta.shippingFee === "number"
+      ? brandMeta.shippingFee
+      : INITIAL_STORE_SETTINGS.shippingFee ?? 0;
+
+  const rawLowStock =
+    typeof record?.lowStockThreshold === "number"
+      ? record.lowStockThreshold
+      : typeof brandMeta.lowStockThreshold === "number"
+      ? brandMeta.lowStockThreshold
+      : INITIAL_STORE_SETTINGS.lowStockThreshold ?? 3;
+
+  const rawTheme =
+    (typeof record?.activeTheme === "string" && record.activeTheme) ||
+    (typeof brandMeta.activeTheme === "string" && brandMeta.activeTheme) ||
+    INITIAL_STORE_SETTINGS.activeTheme ||
+    "white-atelier";
+
+  const activeTheme = (
+    ["light", "dark", "atelier", "white-atelier"].includes(rawTheme)
+      ? rawTheme
+      : "white-atelier"
+  ) as FormattedStoreSettings["activeTheme"];
+
+  const announcementEnabled =
+    typeof record?.announcementEnabled === "boolean"
+      ? record.announcementEnabled
+      : typeof brandMeta.announcementEnabled === "boolean"
+      ? brandMeta.announcementEnabled
+      : INITIAL_STORE_SETTINGS.announcementEnabled ?? true;
+
+  const defaultLang =
+    brandMeta.defaultLang === "en" ? "en" : "tr";
 
   return {
     id: record?.id || "default",
@@ -26,12 +111,13 @@ export function formatStoreSettings(record: {
       (brandMeta.brandBio as string) ||
       (brandMeta.description as string) ||
       "wearable art & brutalist luxury",
-    announcement:
-      typeof brandMeta.announcement === "string"
-        ? (brandMeta.announcement as string)
-        : "",
-    socialLinks: (brandMeta.socialLinks as Record<string, string>) ||
-      INITIAL_STORE_SETTINGS.brandMetadata.socialLinks,
+    announcement,
+    socialLinks:
+      (brandMeta.socialLinks as Record<string, string>) ||
+      (INITIAL_STORE_SETTINGS.brandMetadata.socialLinks as Record<string, string>),
+    socialHandles:
+      (brandMeta.socialHandles as Record<string, string>) ||
+      (INITIAL_STORE_SETTINGS.brandMetadata.socialHandles as Record<string, string>),
     supportEmail:
       (brandMeta.supportEmail as string) ||
       (INITIAL_STORE_SETTINGS.brandMetadata.supportEmail as string) ||
@@ -39,7 +125,7 @@ export function formatStoreSettings(record: {
     whatsappFormatted:
       (brandMeta.whatsappFormatted as string) ||
       (INITIAL_STORE_SETTINGS.brandMetadata.whatsappFormatted as string) ||
-      "+90 533 873 77 12",
+      "+90 (533) 873 77 12",
     location:
       (brandMeta.location as string) ||
       (INITIAL_STORE_SETTINGS.brandMetadata.location as string) ||
@@ -56,6 +142,12 @@ export function formatStoreSettings(record: {
     aboutMobileImage:
       (brandMeta.aboutMobileImage as string) ||
       "/assets/editorial/about-mobile.jpg",
+    freeShippingThreshold,
+    shippingFee: Number.isFinite(rawShippingFee) ? rawShippingFee : 0,
+    lowStockThreshold: Number.isFinite(rawLowStock) ? rawLowStock : 3,
+    activeTheme,
+    announcementEnabled,
+    defaultLang,
     updatedAt: record?.updatedAt
       ? new Date(record.updatedAt).toISOString()
       : new Date().toISOString(),

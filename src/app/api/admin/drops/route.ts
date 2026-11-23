@@ -8,6 +8,8 @@ import {
   type DropData,
 } from "@/lib/drops";
 import prisma from "@/lib/db";
+import { adminDropSchema } from "@/lib/validations";
+import { revalidateStorefrontPaths } from "@/lib/revalidate";
 
 export async function GET() {
   try {
@@ -38,7 +40,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Action: Set Active Drop
     if (body.action === "setActive") {
       const dropId = body.id || body.slug;
       if (!dropId) {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const updated = await setActiveDrop(dropId);
+      const updated = await setActiveDrop(String(dropId));
       if (!updated) {
         return NextResponse.json(
           { success: false, error: "Drop not found" },
@@ -56,7 +57,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Sync active drop into StoreSettings brandMetadata
       try {
         const settings = await prisma.storeSettings.findFirst();
         if (settings) {
@@ -77,6 +77,8 @@ export async function POST(request: NextRequest) {
         console.error("[StoreSettings sync error]:", err);
       }
 
+      revalidateStorefrontPaths(["/", "/drops", "/drops/latest"]);
+
       return NextResponse.json({
         success: true,
         message: `Drop ${updated.number} (${updated.title}) is now active on storefront`,
@@ -85,16 +87,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 2. Action: Create or Update Drop
-    const { number, title, chapter } = body;
-    if (!number?.trim() || !title?.trim() || !chapter?.trim()) {
+    const parsed = adminDropSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "Number, Title, and Chapter are required" },
+        {
+          success: false,
+          error:
+            parsed.error.issues[0]?.message ||
+            "Number, Title, and Chapter are required",
+        },
         { status: 400 }
       );
     }
 
-    const saved = await saveDrop(body as Partial<DropData> & { title: string; number: string; chapter: string });
+    const saved = await saveDrop(
+      parsed.data as Partial<DropData> & {
+        title: string;
+        number: string;
+        chapter: string;
+      }
+    );
+
+    revalidateStorefrontPaths(["/", "/drops", "/drops/latest"]);
 
     return NextResponse.json({
       success: true,
@@ -130,6 +144,8 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    revalidateStorefrontPaths(["/", "/drops", "/drops/latest"]);
 
     return NextResponse.json({
       success: true,

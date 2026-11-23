@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteBlob, validateDeleteUrl } from "@/lib/blob";
 import { verifyAdminSession } from "@/lib/auth";
+import { blobDeleteSchema } from "@/lib/validations";
 
 export async function DELETE(request: NextRequest) {
   return handleDelete(request);
@@ -12,7 +13,6 @@ export async function POST(request: NextRequest) {
 
 async function handleDelete(request: NextRequest) {
   try {
-    // Defense-in-depth: check admin auth if not already intercepted by middleware
     const session = await verifyAdminSession(request);
     if (!session.valid) {
       return NextResponse.json(
@@ -31,8 +31,18 @@ async function handleDelete(request: NextRequest) {
 
     const url = String(rawBody.url).trim();
     validateDeleteUrl(url);
+    const parsed = blobDeleteSchema.safeParse({ url });
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: parsed.error.issues[0]?.message || "Invalid blob URL",
+        },
+        { status: 400 }
+      );
+    }
 
-    const result = await deleteBlob(url);
+    const result = await deleteBlob(parsed.data.url);
 
     return NextResponse.json({
       success: true,

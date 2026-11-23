@@ -7,6 +7,11 @@ import { CartProvider } from "@/components/storefront/cart-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
 import { CustomCursor } from "@/components/ui/custom-cursor";
 
+import prisma from "@/lib/db";
+import { getStorefrontCms } from "@/lib/cms";
+import { formatStoreSettings } from "@/lib/settings";
+import { SearchProvider } from "@/components/providers/search-provider";
+
 const fontMono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -45,11 +50,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://cyruxstudio.com";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
+    default: "CYRUX STUDIO | Wearable Art & Archival Streetwear",
     template: "%s | CYRUX STUDIO",
   },
   description:
-    "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our North Cyprus atelier.",
+    "Avant-garde archival streetwear, high-contrast monochrome silhouettes and sculptural physical garments crafted at our North Cyprus atelier.",
   applicationName: "CYRUX STUDIO",
   authors: [{ name: "CYRUX STUDIO", url: "https://instagram.com/ashetian_" }],
   creator: "ashetian_",
@@ -59,8 +64,8 @@ export const metadata: Metadata = {
     "cyrux studio",
     "cyrux",
     "wearable art",
-    "brutalist streetwear",
-    "cyberpunk fashion",
+    "archival streetwear",
+    "archival fashion",
     "avant-garde streetwear",
     "north cyprus atelier",
     "monochrome fashion",
@@ -77,24 +82,24 @@ export const metadata: Metadata = {
     alternateLocale: ["en_US"],
     url: siteUrl,
     siteName: "CYRUX STUDIO",
-    title: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
+    title: "CYRUX STUDIO | Wearable Art & Archival Streetwear",
     description:
-      "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments engineered at our North Cyprus atelier.",
+      "Avant-garde archival streetwear, high-contrast monochrome silhouettes and sculptural physical garments crafted at our North Cyprus atelier.",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "CYRUX STUDIO - Wearable Art & Brutalist Streetwear",
+        alt: "CYRUX STUDIO - Wearable Art & Archival Streetwear",
         type: "image/jpeg",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CYRUX STUDIO | Wearable Art & Brutalist Streetwear",
+    title: "CYRUX STUDIO | Wearable Art & Archival Streetwear",
     description:
-      "Avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments.",
+      "Avant-garde archival streetwear, high-contrast monochrome silhouettes and sculptural physical garments.",
     creator: "@ashetian_",
     site: "@cyruxstudio",
     images: ["/og-image.jpg"],
@@ -125,20 +130,28 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
-import { SearchProvider } from "@/components/providers/search-provider";
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [cms, settings] = await Promise.all([
+    getStorefrontCms().catch(() => null),
+    prisma.storeSettings.findFirst().catch(() => null),
+  ]);
+  const formattedSettings = formatStoreSettings(
+    settings as unknown as Parameters<typeof formatStoreSettings>[0]
+  );
+  const htmlLang = cms?.seo?.defaultLang === "en" ? "en" : "tr";
+  const popularTags = cms?.collectionsSection?.popularSearchTags;
+
   return (
-    <html lang="tr" className={`dark ${fontMono.variable} ${fontSans.variable} ${fontSekuya.variable}`}>
+    <html lang={htmlLang} className={`${fontMono.variable} ${fontSans.variable} ${fontSekuya.variable}`}>
       <body className="min-h-screen bg-canvas font-sans text-brand-black antialiased selection:bg-black selection:text-white">
         <LanguageProvider>
           <CustomCursor />
           <CartProvider>
-            <SearchProvider>
+            <SearchProvider currency={formattedSettings.currency} popularTags={popularTags}>
               <SmoothScrollProvider>
                 {children}
               </SmoothScrollProvider>

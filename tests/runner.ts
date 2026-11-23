@@ -42,14 +42,32 @@ import './tier1-feature/f21-elevenlabs-cli.ts';
 import './tier1-feature/f22-dynamic-search.ts';
 import './tier1-feature/f23-drop-system.ts';
 
+// Tier 1: Phase 2 Feature Coverage (Features 24 to 36)
+import './tier1-feature/f24-extended-schema-persistence.ts';
+import './tier1-feature/f25-cms-service-public-apis.ts';
+import './tier1-feature/f26-admin-commerce-cms-apis.ts';
+import './tier1-feature/f27-white-atelier-pure-ui.ts';
+import './tier1-feature/f28-mobile-bottom-nav-overview.ts';
+import './tier1-feature/f29-mobile-products-collections-drops.ts';
+import './tier1-feature/f30-mobile-orders-customers-coupons.ts';
+import './tier1-feature/f31-cms-hero-marquee-lookbook.ts';
+import './tier1-feature/f32-cms-brand-pages.ts';
+import './tier1-feature/f33-cms-nav-seo-footer-settings.ts';
+import './tier1-feature/f34-dynamic-storefront-hero-nav.ts';
+import './tier1-feature/f35-dynamic-storefront-catalog-cart.ts';
+import './tier1-feature/f36-dynamic-brand-routes-pure-ui.ts';
+
 // Tier 2: Boundary & Corner Cases
 import './tier2-boundary/boundary-corner-cases.ts';
+import './tier2-boundary/phase2-boundary-cases.ts';
 
 // Tier 3: Cross-Feature Combinations
 import './tier3-combination/cross-feature-combinations.ts';
+import './tier3-combination/phase2-combinations.ts';
 
 // Tier 4: Real-World Workloads
 import './tier4-scenario/real-world-workloads.ts';
+import './tier4-scenario/phase2-scenarios.ts';
 
 // -------------------------------------------------------------
 // 2. Parse CLI Arguments

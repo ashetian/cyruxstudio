@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
 
 export interface BlobUploaderProps {
   onUploadSuccess?: (result: {
@@ -21,8 +22,8 @@ const ALLOWED_TYPES = [
   "video/quicktime",
 ];
 
-const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 
 export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderProps) {
   const [dragActive, setDragActive] = useState(false);
@@ -43,14 +44,12 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
     try {
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
-        // Validate MIME
         if (!ALLOWED_TYPES.includes(file.type)) {
           throw new Error(
             `Unsupported media type: ${file.type || "unknown"}. Allowed: WebP, PNG, JPEG, AVIF, MP4, MOV.`
           );
         }
 
-        // Validate Size
         const isVideo = file.type.startsWith("video/");
         const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
         if (file.size > limit) {
@@ -69,20 +68,33 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
           body: formData,
         });
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.success) {
+        const data = (await res.json().catch(() => ({}))) as {
+          success?: boolean;
+          error?: string;
+          url?: string;
+          pathname?: string;
+          contentType?: string;
+          size?: number;
+        };
+
+        if (!res.ok || !data.success || !data.url) {
           throw new Error(data.error || `Upload failed for ${file.name}`);
         }
 
         successCount++;
         setProgress(Math.round(((i + 1) / fileList.length) * 100));
         if (onUploadSuccess) {
-          onUploadSuccess(data);
+          onUploadSuccess({
+            url: data.url,
+            pathname: data.pathname || file.name,
+            contentType: data.contentType || file.type,
+            size: data.size ?? file.size,
+          });
         }
       }
 
       setSuccessMsg(
-        `[SUCCESS] UPLOADED ${successCount} ASSET${successCount > 1 ? "S" : ""} TO VERCEL BLOB`
+        `Uploaded ${successCount} asset${successCount > 1 ? "s" : ""} to media library.`
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Upload error";
@@ -113,20 +125,31 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      inputRef.current?.click();
+    }
+  };
+
   return (
-    <div className="w-full flex flex-col gap-3 font-mono">
+    <div className="w-full flex flex-col gap-3">
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Select or drop media asset files"
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed transition-none cursor-pointer flex flex-col items-center justify-center text-center ${
-          compact ? "p-4" : "p-8"
+        onKeyDown={handleKeyDown}
+        className={`min-h-[44px] border border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A] ${
+          compact ? "p-4" : "p-7"
         } ${
           dragActive
-            ? "border-[#FAF8F3] bg-[#1E1E1E]"
-            : "border-[#333333] hover:border-[#888888] bg-[#0E0E0E]"
+            ? "border-[#0A0A0A] bg-[#F4F1EA]"
+            : "border-[#D4CFC4] hover:border-[#0A0A0A] bg-[#FAF8F3]"
         }`}
       >
         <input
@@ -138,17 +161,18 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
           className="hidden"
         />
 
-        <div className="text-xs uppercase font-bold tracking-widest text-[#FAF8F3]">
-          {uploading ? "[ UPLOADING FILE TO VERCEL BLOB... ]" : "[ SELECT OR DROP ASSET HERE ]"}
+        <Upload className="w-4 h-4 text-[#0A0A0A] mb-1.5" />
+        <div className="text-xs font-semibold uppercase tracking-wider text-[#0A0A0A]">
+          {uploading ? "Uploading asset..." : "Select or drop asset"}
         </div>
-        <p className="mt-1 text-[11px] text-[#666666] tracking-wider uppercase">
-          IMAGES &le; 15MB (WEBP, PNG, JPEG, AVIF) • VIDEOS &le; 50MB (MP4, MOV)
+        <p className="mt-1 text-[11px] text-[#525252]">
+          Images up to 15MB (WebP, PNG, JPEG, AVIF) • Videos up to 50MB (MP4, MOV)
         </p>
 
         {progress !== null && (
-          <div className="mt-4 w-full max-w-xs bg-[#222222] h-1.5 overflow-hidden">
+          <div className="mt-3 w-full max-w-xs bg-[#E8E4DC] h-1.5 overflow-hidden">
             <div
-              className="bg-[#FAF8F3] h-full transition-all duration-300"
+              className="bg-[#0A0A0A] h-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -156,14 +180,19 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
       </div>
 
       {error && (
-        <div className="bg-red-950/40 border border-red-500/80 text-red-300 text-xs p-3 uppercase tracking-wider">
-          [!] {error}
+        <div
+          role="alert"
+          className="bg-red-50 border border-red-300 text-red-900 text-xs p-3 flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-700" />
+          <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="bg-emerald-950/40 border border-emerald-500/80 text-emerald-300 text-xs p-3 uppercase tracking-wider">
-          {successMsg}
+        <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs p-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-700" />
+          <span>{successMsg}</span>
         </div>
       )}
     </div>

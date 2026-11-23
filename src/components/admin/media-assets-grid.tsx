@@ -2,6 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { BlobUploader } from "./blob-uploader";
+import { AdminBottomSheet } from "./admin-bottom-sheet";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  Trash2,
+  AlertCircle,
+  Search,
+  X,
+} from "lucide-react";
 
 export interface BlobAssetItem {
   url: string;
@@ -30,8 +40,13 @@ export function MediaAssetsGrid() {
   const fetchBlobs = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch("/api/admin/blob");
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        blobs?: BlobAssetItem[];
+        error?: string;
+      };
       if (res.ok && data.success) {
         setBlobs(data.blobs || []);
       } else {
@@ -66,131 +81,139 @@ export function MediaAssetsGrid() {
       if (res.ok) {
         setBlobs((prev) => prev.filter((b) => b.url !== url));
       } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Failed to delete blob");
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(data.error || "Failed to delete media asset");
       }
     } catch {
-      setError("Network error deleting blob");
+      setError("Network error deleting media asset");
     } finally {
       setDeletingUrl(null);
       setConfirmDeleteUrl(null);
     }
   };
 
+  const isVideoAsset = (item: BlobAssetItem) =>
+    item.pathname.endsWith(".mp4") ||
+    item.pathname.endsWith(".mov") ||
+    Boolean(item.contentType?.startsWith("video/"));
+
   const filtered = blobs.filter((b) => {
-    const isVideo = b.pathname.endsWith(".mp4") || b.pathname.endsWith(".mov") || b.contentType?.startsWith("video/");
+    const isVideo = isVideoAsset(b);
     if (filterType === "images" && isVideo) return false;
     if (filterType === "videos" && !isVideo) return false;
     if (search.trim()) {
-      return b.pathname.toLowerCase().includes(search.toLowerCase()) || b.url.toLowerCase().includes(search.toLowerCase());
+      return (
+        b.pathname.toLowerCase().includes(search.toLowerCase()) ||
+        b.url.toLowerCase().includes(search.toLowerCase())
+      );
     }
     return true;
   });
 
   return (
-    <div className="flex flex-col gap-6 font-mono">
-      {/* Storage Status Ribbon */}
-      <div className="bg-[#121212] border border-[#222222] p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[#FAF8F3] font-bold uppercase tracking-wider">
-            STORAGE GATEWAY: VERCEL BLOB RESILIENT VAULT
-          </span>
-        </div>
-        <div className="text-[11px] text-[#777777] uppercase tracking-wider">
-          LIMITS: &le;15MB IMAGES • &le;50MB VIDEOS • PUBLIC CDN ACCESS
-        </div>
+    <div className="flex flex-col gap-5 bg-[#FAF8F3] text-[#0A0A0A]">
+      {/* Storage Summary */}
+      <div className="bg-[#FFFFFF] border border-[#E8E4DC] p-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="font-semibold uppercase tracking-wider text-[#0A0A0A]">
+          Media Library ({blobs.length} assets)
+        </span>
+        <span className="text-[#525252]">
+          Images up to 15MB • Videos up to 50MB
+        </span>
       </div>
 
       {/* Uploader Card */}
-      <div className="bg-[#121212] border border-[#222222] p-6 flex flex-col gap-3">
-        <div className="text-xs uppercase text-[#AAAAAA] font-bold tracking-wider">
-          [ DIRECT ASSET INGESTION ]
-        </div>
+      <div className="bg-[#FFFFFF] border border-[#E8E4DC] p-4 sm:p-5 flex flex-col gap-3">
+        <h3 className="text-xs uppercase font-semibold tracking-wider text-[#0A0A0A]">
+          Upload New Media
+        </h3>
         <BlobUploader onUploadSuccess={() => fetchBlobs()} />
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#121212] border border-[#222222] p-3.5 sm:p-4">
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <button
-            onClick={() => setFilterType("all")}
-            className={`min-h-[40px] px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-none border whitespace-nowrap cursor-pointer ${
-              filterType === "all"
-                ? "bg-[#FAF8F3] text-[#0A0A0A] border-[#FAF8F3]"
-                : "bg-transparent text-[#777777] border-[#333333] hover:text-[#FAF8F3] active:bg-[#1A1A1A]"
-            }`}
-          >
-            [ HEPSİ ({blobs.length}) ]
-          </button>
-          <button
-            onClick={() => setFilterType("images")}
-            className={`min-h-[40px] px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-none border whitespace-nowrap cursor-pointer ${
-              filterType === "images"
-                ? "bg-[#FAF8F3] text-[#0A0A0A] border-[#FAF8F3]"
-                : "bg-transparent text-[#777777] border-[#333333] hover:text-[#FAF8F3] active:bg-[#1A1A1A]"
-            }`}
-          >
-            [ FOTOĞRAF ]
-          </button>
-          <button
-            onClick={() => setFilterType("videos")}
-            className={`min-h-[40px] px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-none border whitespace-nowrap cursor-pointer ${
-              filterType === "videos"
-                ? "bg-[#FAF8F3] text-[#0A0A0A] border-[#FAF8F3]"
-                : "bg-transparent text-[#777777] border-[#333333] hover:text-[#FAF8F3] active:bg-[#1A1A1A]"
-            }`}
-          >
-            [ VİDEO ]
-          </button>
+      {/* Filter & Search Bar */}
+      <div className="bg-[#FFFFFF] border border-[#E8E4DC] p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {(
+            [
+              { id: "all", label: `All (${blobs.length})` },
+              { id: "images", label: "Images" },
+              { id: "videos", label: "Videos" },
+            ] as const
+          ).map((tab) => {
+            const active = filterType === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setFilterType(tab.id)}
+                className={`min-h-[44px] px-4 py-2 text-xs font-medium uppercase tracking-wider border whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A] ${
+                  active
+                    ? "bg-[#0A0A0A] text-[#FFFFFF] border-[#0A0A0A]"
+                    : "bg-[#FFFFFF] text-[#525252] border-[#E8E4DC] hover:text-[#0A0A0A] hover:border-[#0A0A0A]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="DOSYA ADI ARA..."
-          className="bg-[#0A0A0A] border border-[#333333] focus:border-[#FAF8F3] text-[#FAF8F3] text-base md:text-xs px-3.5 py-2.5 rounded-none outline-none uppercase min-w-[200px] min-h-[44px] md:min-h-0"
-        />
+        <div className="relative w-full sm:w-64">
+          <Search className="w-4 h-4 text-[#737373] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search filename..."
+            aria-label="Search media filename"
+            className="w-full min-h-[44px] bg-[#FAF8F3] border border-[#E8E4DC] focus:border-[#0A0A0A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A] text-[#0A0A0A] text-base md:text-xs pl-9 pr-9 py-2.5 rounded-none placeholder:text-[#737373]"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 text-[#525252] hover:text-[#0A0A0A] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
-        <div className="bg-red-950/40 border border-red-500/80 text-red-300 text-xs p-3 uppercase tracking-wider">
-          [!] {error}
+        <div
+          role="alert"
+          className="bg-red-50 border border-red-300 text-red-900 text-xs p-3.5 flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-700" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Grid */}
+      {/* Media Grid */}
       {loading ? (
-        <div className="py-16 text-center text-[#666666] tracking-widest uppercase text-xs">
-          [ SCANNING VERCEL BLOB ASSET REGISTRY... ]
+        <div className="py-12 text-center text-xs uppercase tracking-wider text-[#525252] bg-[#FFFFFF] border border-[#E8E4DC]">
+          Loading media assets...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center text-[#666666] tracking-widest uppercase text-xs border border-[#222222] bg-[#0E0E0E]">
-          [ BU GÖRÜNÜMDE ASSET BULUNAMADI ]
+        <div className="py-12 text-center text-xs uppercase tracking-wider text-[#525252] bg-[#FFFFFF] border border-[#E8E4DC]">
+          No media assets match your filter.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {filtered.map((item, idx) => {
-            const isVideo =
-              item.pathname.endsWith(".mp4") ||
-              item.pathname.endsWith(".mov") ||
-              item.contentType?.startsWith("video/");
+            const isVideo = isVideoAsset(item);
             const sizeFormatted = formatSize(item.size);
+            const displayName = item.pathname.replace(/^uploads\/\d+-/, "");
 
             return (
               <div
                 key={item.url || idx}
-                onClick={() => {
-                  // On mobile screens, tapping opens the action sheet
-                  if (typeof window !== "undefined" && window.innerWidth < 768) {
-                    setSelectedAsset(item);
-                  }
-                }}
-                className="bg-[#121212] border border-[#222222] p-2.5 sm:p-3 flex flex-col justify-between hover:border-[#444444] active:scale-[0.99] transition-transform cursor-pointer md:cursor-default"
+                className="bg-[#FFFFFF] border border-[#E8E4DC] p-2.5 sm:p-3 flex flex-col justify-between gap-2.5 min-w-0"
               >
                 {/* Visual */}
-                <div className="w-full h-32 sm:h-44 bg-[#0A0A0A] border border-[#1E1E1E] overflow-hidden flex items-center justify-center relative">
+                <div className="w-full h-32 sm:h-44 bg-[#FAF8F3] border border-[#E8E4DC] overflow-hidden flex items-center justify-center relative">
                   {isVideo ? (
                     <video
                       src={item.url}
@@ -203,75 +226,88 @@ export function MediaAssetsGrid() {
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={item.url}
-                      alt={item.pathname}
+                      alt={displayName}
                       loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   )}
-                  <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-black/85 text-[8px] sm:text-[9px] px-1.5 py-0.5 text-[#CCCCCC] uppercase tracking-wider">
+                  <span className="absolute top-1.5 left-1.5 bg-[#FFFFFF]/90 border border-[#E8E4DC] text-[10px] font-mono font-medium px-1.5 py-0.5 text-[#0A0A0A] uppercase">
                     {isVideo ? "MP4" : "IMG"}
                   </span>
-                  <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-black/85 text-[8px] sm:text-[9px] px-1.5 py-0.5 text-[#888888]">
+                  <span className="absolute top-1.5 right-1.5 bg-[#FFFFFF]/90 border border-[#E8E4DC] text-[10px] font-mono px-1.5 py-0.5 text-[#525252]">
                     {sizeFormatted}
                   </span>
                 </div>
 
                 {/* Details */}
-                <div className="mt-2.5 flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 min-w-0">
                   <div
                     title={item.pathname}
-                    className="text-[11px] sm:text-xs text-[#FAF8F3] font-bold truncate uppercase"
+                    className="text-xs text-[#0A0A0A] font-medium truncate"
                   >
-                    {item.pathname.replace(/^uploads\/\d+-/, "")}
+                    {displayName}
                   </div>
-                  <div className="hidden sm:block text-[10px] text-[#666666] truncate font-mono">
+                  <div className="hidden sm:block text-[10px] text-[#737373] truncate font-mono">
                     {item.url}
                   </div>
                 </div>
 
-                {/* Mobile tap indicator */}
-                <div className="md:hidden mt-2 pt-2 border-t border-[#1E1E1E] flex items-center justify-between text-[9px] text-[#777777] uppercase font-bold tracking-wider">
-                  <span>İŞLEMLER</span>
-                  <span className="text-[#FAF8F3]">[DOKUN ↗]</span>
-                </div>
+                {/* Mobile Detail Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedAsset(item)}
+                  className="md:hidden min-h-[44px] w-full border border-[#E8E4DC] bg-[#FAF8F3] hover:border-[#0A0A0A] text-xs font-medium text-[#0A0A0A] uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
+                >
+                  <span>Details & Actions</span>
+                </button>
 
                 {/* Desktop Action Buttons */}
-                <div className="hidden md:flex mt-4 pt-3 border-t border-[#1E1E1E] items-center justify-between gap-2">
+                <div className="hidden md:flex pt-2 border-t border-[#E8E4DC] items-center justify-between gap-2">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyToClipboard(item.url);
-                    }}
-                    className="text-[11px] text-[#FAF8F3] hover:underline uppercase tracking-wider cursor-pointer"
+                    type="button"
+                    onClick={() => copyToClipboard(item.url)}
+                    className="min-h-[44px] px-2.5 border border-[#E8E4DC] bg-[#FAF8F3] hover:border-[#0A0A0A] text-[11px] font-medium text-[#0A0A0A] uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                   >
-                    {copiedUrl === item.url ? "[ COPIED! ✓ ]" : "[ COPY URL ]"}
+                    {copiedUrl === item.url ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy URL</span>
+                      </>
+                    )}
                   </button>
 
                   {confirmDeleteUrl === item.url ? (
-                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1.5">
                       <button
+                        type="button"
                         onClick={() => handleDelete(item.url)}
                         disabled={deletingUrl === item.url}
-                        className="bg-red-600 hover:bg-red-500 text-white text-[10px] px-1.5 py-0.5 uppercase"
+                        className="min-h-[44px] px-2.5 bg-red-700 hover:bg-red-800 text-[#FFFFFF] text-[11px] font-medium uppercase cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                       >
-                        {deletingUrl === item.url ? "..." : "CONFIRM?"}
+                        {deletingUrl === item.url ? "..." : "Confirm"}
                       </button>
                       <button
+                        type="button"
                         onClick={() => setConfirmDeleteUrl(null)}
-                        className="text-[10px] text-[#777777]"
+                        aria-label="Cancel delete"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center border border-[#E8E4DC] text-[#525252] hover:text-[#0A0A0A] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                       >
-                        ✕
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmDeleteUrl(item.url);
-                      }}
-                      className="text-red-400 hover:text-red-300 text-[11px] uppercase tracking-wider cursor-pointer"
+                      type="button"
+                      onClick={() => setConfirmDeleteUrl(item.url)}
+                      aria-label={`Delete ${displayName}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center border border-[#E8E4DC] text-red-700 hover:bg-red-50 hover:border-red-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                     >
-                      [DELETE ✕]
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -282,48 +318,27 @@ export function MediaAssetsGrid() {
       )}
 
       {/* Mobile Asset Action Bottom Sheet */}
-      {selectedAsset && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Backdrop */}
-          <div
-            onClick={() => {
-              setSelectedAsset(null);
-              setConfirmDeleteUrl(null);
-            }}
-            className="fixed inset-0 bg-black/85 backdrop-blur-sm"
-          />
-
-          {/* Action Sheet Panel */}
-          <div className="relative bg-[#121212] border-t-2 border-[#FAF8F3] p-5 pb-8 flex flex-col gap-4 max-h-[85vh] overflow-y-auto z-10">
-            {/* Grab Bar */}
-            <div className="w-10 h-1 bg-[#444444] rounded-full mx-auto" />
-
-            {/* Header */}
-            <div className="flex items-start justify-between pb-2 border-b border-[#222222]">
-              <div className="flex flex-col gap-0.5 max-w-[80%]">
-                <span className="text-[10px] text-[#777777] uppercase tracking-widest font-mono">
-                  [ MEDYA DETAYI ]
-                </span>
-                <span className="text-xs font-bold text-[#FAF8F3] truncate uppercase font-mono">
-                  {selectedAsset.pathname.replace(/^uploads\/\d+-/, "")}
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setSelectedAsset(null);
-                  setConfirmDeleteUrl(null);
-                }}
-                className="w-8 h-8 flex items-center justify-center text-[#777777] hover:text-[#FAF8F3] border border-[#2E2E2E] text-xs font-mono"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Large Visual Preview */}
-            <div className="w-full max-h-56 bg-[#0A0A0A] border border-[#222222] flex items-center justify-center overflow-hidden">
-              {selectedAsset.pathname.endsWith(".mp4") ||
-              selectedAsset.pathname.endsWith(".mov") ||
-              selectedAsset.contentType?.startsWith("video/") ? (
+      <AdminBottomSheet
+        isOpen={Boolean(selectedAsset)}
+        onClose={() => {
+          setSelectedAsset(null);
+          setConfirmDeleteUrl(null);
+        }}
+        title={
+          selectedAsset
+            ? selectedAsset.pathname.replace(/^uploads\/\d+-/, "")
+            : "Media Details"
+        }
+        subtitle={
+          selectedAsset
+            ? `${formatSize(selectedAsset.size)} • ${selectedAsset.contentType || "Asset"}`
+            : undefined
+        }
+      >
+        {selectedAsset && (
+          <div className="flex flex-col gap-4">
+            <div className="w-full max-h-56 bg-[#FAF8F3] border border-[#E8E4DC] flex items-center justify-center overflow-hidden">
+              {isVideoAsset(selectedAsset) ? (
                 <video
                   src={selectedAsset.url}
                   controls
@@ -340,61 +355,70 @@ export function MediaAssetsGrid() {
               )}
             </div>
 
-            {/* Metadata specs */}
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-[#888888] bg-[#0A0A0A] p-2.5 border border-[#1E1E1E]">
-              <div>BOYUT: {formatSize(selectedAsset.size)}</div>
-              <div className="truncate">TİP: {selectedAsset.contentType || "N/A"}</div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2.5 pt-1">
+            <div className="flex flex-col gap-2.5">
               <button
+                type="button"
                 onClick={() => copyToClipboard(selectedAsset.url)}
-                className="min-h-[44px] w-full bg-[#1F1F1F] active:bg-[#2A2A2A] text-[#FAF8F3] border border-[#333333] text-xs uppercase font-bold tracking-wider flex items-center justify-center gap-2"
+                className="min-h-[44px] w-full bg-[#0A0A0A] text-[#FFFFFF] hover:bg-[#262626] text-xs uppercase font-medium tracking-wider flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
               >
-                {copiedUrl === selectedAsset.url ? "✓ URL PANOLANDI" : "[ GÖRSEL URL'SİNİ KOPYALA ]"}
+                {copiedUrl === selectedAsset.url ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>URL Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copy Asset URL</span>
+                  </>
+                )}
               </button>
 
               <a
                 href={selectedAsset.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[44px] w-full bg-transparent active:bg-[#1A1A1A] text-[#FAF8F3] border border-[#2E2E2E] text-xs uppercase font-bold tracking-wider flex items-center justify-center gap-2"
+                className="min-h-[44px] w-full bg-[#FFFFFF] border border-[#E8E4DC] hover:border-[#0A0A0A] text-[#0A0A0A] text-xs uppercase font-medium tracking-wider flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
               >
-                [ YENİ SEKMEDE ORİJİNALİ AÇ ↗ ]
+                <ExternalLink className="w-4 h-4" />
+                <span>Open Original</span>
               </a>
 
               {confirmDeleteUrl === selectedAsset.url ? (
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={async () => {
                       await handleDelete(selectedAsset.url);
                       setSelectedAsset(null);
                     }}
                     disabled={deletingUrl === selectedAsset.url}
-                    className="min-h-[44px] flex-1 bg-red-600 hover:bg-red-500 text-white text-xs uppercase font-bold tracking-wider flex items-center justify-center"
+                    className="min-h-[44px] flex-1 bg-red-700 hover:bg-red-800 text-[#FFFFFF] text-xs uppercase font-medium tracking-wider flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                   >
-                    {deletingUrl === selectedAsset.url ? "SİLİNİYOR..." : "[ EVET, KALICI OLARAK SİL ]"}
+                    {deletingUrl === selectedAsset.url ? "Deleting..." : "Confirm Delete"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => setConfirmDeleteUrl(null)}
-                    className="min-h-[44px] px-4 bg-[#1E1E1E] text-[#AAAAAA] hover:text-[#FAF8F3] border border-[#333333] text-xs uppercase"
+                    className="min-h-[44px] px-4 bg-[#FAF8F3] text-[#0A0A0A] border border-[#E8E4DC] text-xs uppercase font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                   >
-                    İPTAL
+                    Cancel
                   </button>
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setConfirmDeleteUrl(selectedAsset.url)}
-                  className="min-h-[44px] w-full bg-red-950/30 active:bg-red-950/60 text-red-400 border border-red-900/50 text-xs uppercase font-bold tracking-wider flex items-center justify-center"
+                  className="min-h-[44px] w-full bg-red-50 text-red-800 border border-red-300 hover:bg-red-100 text-xs uppercase font-medium tracking-wider flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A0A0A]"
                 >
-                  [ GÖRSELİ KALICI SİL ✕ ]
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete Permanently</span>
                 </button>
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AdminBottomSheet>
     </div>
   );
 }

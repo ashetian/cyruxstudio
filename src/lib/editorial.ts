@@ -42,7 +42,13 @@ function editorialUrl(file: string): string | null {
 
 export function resolveEditorialAssets(
   products: { slug: string; mediaUrls: string[] }[],
-  brandMetadata?: Record<string, unknown> | null
+  brandMetadata?: Record<string, unknown> | null,
+  lookbookCms?: {
+    card1?: { imageUrl?: string };
+    card2?: { imageUrl?: string };
+    videoUrl?: string;
+    posterUrl?: string;
+  } | null
 ): EditorialAssets {
   const meta = brandMetadata || {};
 
@@ -69,7 +75,7 @@ export function resolveEditorialAssets(
   const hero =
     heroDesktop ||
     editorialUrl("hero.jpg") ||
-    "/assets/brand/hero-cyber-portrait.webp";
+    "/assets/editorial/hero-desktop.jpg";
 
   const productImages: Record<string, string> = {};
   for (const p of products) {
@@ -80,7 +86,28 @@ export function resolveEditorialAssets(
   }
 
   const mainPoster =
-    editorialUrl("campaign-main.jpg") || "/assets/video/cyrux-campaign-poster.webp";
+    (lookbookCms?.posterUrl && lookbookCms.posterUrl.trim()) ||
+    (typeof meta.campaignPosterUrl === "string" && meta.campaignPosterUrl.trim()) ||
+    editorialUrl("campaign-main.jpg") ||
+    "/assets/video/cyrux-campaign-poster.webp";
+
+  const portrait =
+    (lookbookCms?.card1?.imageUrl && lookbookCms.card1.imageUrl.trim()) ||
+    (typeof meta.campaignPortraitUrl === "string" && meta.campaignPortraitUrl.trim()) ||
+    editorialUrl("campaign-portrait.jpg") ||
+    "/assets/campaign/campaign-card-puffer.webp";
+
+  const objectImg =
+    (lookbookCms?.card2?.imageUrl && lookbookCms.card2.imageUrl.trim()) ||
+    (typeof meta.campaignObjectUrl === "string" && meta.campaignObjectUrl.trim()) ||
+    editorialUrl("campaign-object.jpg") ||
+    "/assets/campaign/campaign-card-chrome-shoe.webp";
+
+  const video =
+    (lookbookCms?.videoUrl && lookbookCms.videoUrl.trim()) ||
+    (typeof meta.campaignVideoUrl === "string" && meta.campaignVideoUrl.trim()) ||
+    editorialUrl("campaign-video.mp4") ||
+    "/assets/video/cyrux-campaign-1080.mp4";
 
   return {
     hero,
@@ -91,15 +118,9 @@ export function resolveEditorialAssets(
     productImages,
     campaign: {
       main: mainPoster,
-      portrait:
-        editorialUrl("campaign-portrait.jpg") ||
-        "/assets/campaign/campaign-card-puffer.webp",
-      object:
-        editorialUrl("campaign-object.jpg") ||
-        "/assets/campaign/campaign-card-chrome-shoe.webp",
-      video:
-        editorialUrl("campaign-video.mp4") ||
-        "/assets/video/cyrux-campaign-1080.mp4",
+      portrait,
+      object: objectImg,
+      video,
       poster: mainPoster,
     },
   };

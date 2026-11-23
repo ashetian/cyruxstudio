@@ -24,6 +24,13 @@ export interface SeedProductInput {
   colorHex?: string;
   twinProductSlug?: string;
   isDiptych?: boolean;
+  discountPrice?: number | null;
+  category?: string;
+  badge?: string | null;
+  sku?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+  collectionId?: string | null;
 }
 
 export interface StoreSettingsInput {
@@ -31,19 +38,29 @@ export interface StoreSettingsInput {
   whatsappNumber: string;
   currency: string;
   brandMetadata: Record<string, unknown>;
+  freeShippingThreshold?: number | null;
+  shippingFee?: number;
+  lowStockThreshold?: number;
+  activeTheme?: string;
+  announcementEnabled?: boolean;
 }
 
 export const INITIAL_STORE_SETTINGS: StoreSettingsInput = {
   id: "default",
   whatsappNumber: "+905338737712",
   currency: "EUR",
+  freeShippingThreshold: 150,
+  shippingFee: 15,
+  lowStockThreshold: 3,
+  activeTheme: "white-atelier",
+  announcementEnabled: true,
   brandMetadata: {
     title: "cyrux studio",
     brandName: "cyrux studio",
     heroDisplayTitle: "cyrux",
     tagline: "wearable art & brutalist luxury",
     description:
-      "avant-garde cyberpunk streetwear, high-contrast monochrome silhouettes and brutalist physical garments",
+      "avant-garde archival streetwear, high-contrast monochrome silhouettes and brutalist physical garments",
     socialHandles: {
       instagram: "@cyruxstudio",
       twitter: "@cyruxstudio",
@@ -71,10 +88,17 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
     name: "CYRUX PRETTY CHAOS TEE",
     slug: "pretty-chaos-tee",
     description:
-      "Heavyweight 280 GSM cotton jersey oversized tee featuring signature cyber-tribal predator halftone screenprint in punk magenta and neon accents. Vintage acid wash finish with dropped shoulders and thick ribbed neck.",
+      "Heavyweight 280 GSM cotton jersey oversized tee featuring signature halftone screenprint in magenta accents. Vintage acid wash finish with dropped shoulders and thick ribbed neck.",
     price: 120.0,
+    discountPrice: null,
     stock: 45,
     isBestseller: true,
+    category: "t-shirts",
+    badge: "BESTSELLER",
+    sku: "CYX-PC-001",
+    sortOrder: 0,
+    isActive: true,
+    collectionId: "col-chapter-00",
     variants: [
       { id: "pc-s", name: "S", inStock: true, sku: "PC-TEE-S" },
       { id: "pc-m", name: "M", inStock: true, sku: "PC-TEE-M" },
@@ -93,8 +117,15 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
     description:
       "Boxy silhouette dropped-shoulder streetwear tee crafted from 300 GSM combed cotton. High-contrast albino viper screenprint and brutalist cyrux studio typography. Available in washed black and off-white colorways. Chapter 00 First Ascent release.",
     price: 95.0,
+    discountPrice: null,
     stock: 80,
     isBestseller: true,
+    category: "t-shirts",
+    badge: "BESTSELLER",
+    sku: "CYX-FA-002",
+    sortOrder: 1,
+    isActive: true,
+    collectionId: "col-chapter-00",
     color: "Black",
     colorHex: "#0A0A0A",
     variants: [
@@ -117,10 +148,17 @@ export const SEED_PRODUCTS: SeedProductInput[] = [
     name: "CYRUX STUDIO 099 — THE NEW ERA OF WEARABLE ART",
     slug: "cyrux-099-orbital-tee",
     description:
-      "Astronomical cybernetic motif tee in deep washed charcoal. Front features center orbital star constellation with specular chrome micro-stud effect. Back features cinematic 35mm letterbox eye gaze screenprint with brutalist studio text treatment. Chapter 00 release.",
+      "Orbital motif tee in deep washed charcoal. Front features center star constellation with metallic micro-stud detail. Back features 35mm letterbox eye gaze screenprint with brutalist studio typography. Chapter 00 release.",
     price: 110.0,
+    discountPrice: null,
     stock: 25,
     isBestseller: true,
+    category: "t-shirts",
+    badge: "BESTSELLER",
+    sku: "CYX-099-004",
+    sortOrder: 2,
+    isActive: true,
+    collectionId: "col-chapter-00",
     color: "Washed Charcoal",
     colorHex: "#222224",
     isDiptych: true,
@@ -190,4 +228,51 @@ export const INITIAL_DROPS: InitialDropInput[] = [
     totalPieces: 150,
   },
 ];
+
+export interface InitialCollectionInput {
+  id: string;
+  slug: string;
+  name: { tr: string; en: string };
+  description: { tr: string; en: string };
+  imageUrl: string | null;
+  isFeatured: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export const INITIAL_COLLECTIONS: InitialCollectionInput[] = [
+  {
+    id: "col-chapter-00",
+    slug: "chapter-00-first-ascent",
+    name: {
+      tr: "Bölüm 00 • First Ascent",
+      en: "Chapter 00 • First Ascent",
+    },
+    description: {
+      tr: "280-300 GSM taranmış pamuk ve sınırlı serigrafi baskılı ilk atölye arşivi.",
+      en: "Inaugural atelier archive crafted in 280-300 GSM combed cotton with limited serigraphy.",
+    },
+    imageUrl: "/assets/editorial/hero-desktop.jpg",
+    isFeatured: true,
+    isActive: true,
+    sortOrder: 0,
+  },
+];
+
+export interface InitialCouponInput {
+  id: string;
+  code: string;
+  title: { tr: string; en: string };
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  minOrderAmount: number | null;
+  maxUses: number | null;
+  usedCount: number;
+  isActive: boolean;
+  startsAt: Date | null;
+  expiresAt: Date | null;
+}
+
+export const INITIAL_COUPONS: InitialCouponInput[] = [];
+
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { setActiveDrop } from "@/lib/drops";
+import { revalidateStorefrontPaths } from "@/lib/revalidate";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -19,6 +20,8 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    revalidateStorefrontPaths(["/", "/drops", "/drops/latest"]);
 
     return NextResponse.json({
       success: true,

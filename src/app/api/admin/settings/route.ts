@@ -3,8 +3,8 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { INITIAL_STORE_SETTINGS } from "@/lib/seed-data";
 import { adminSettingsUpdateSchema } from "@/lib/validations";
-
 import { formatStoreSettings } from "@/lib/settings";
+import { revalidateStorefrontPaths } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,6 +30,10 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  return handleUpdateSettings(request);
+}
+
+export async function PATCH(request: NextRequest) {
   return handleUpdateSettings(request);
 }
 
@@ -65,11 +69,21 @@ async function handleUpdateSettings(request: NextRequest) {
       brandBio,
       announcement,
       socialLinks,
+      socialHandles,
       brandMetadata,
       heroDesktopImage,
       heroMobileImage,
       aboutDesktopImage,
       aboutMobileImage,
+      freeShippingThreshold,
+      shippingFee,
+      lowStockThreshold,
+      activeTheme,
+      announcementEnabled,
+      defaultLang,
+      supportEmail,
+      whatsappFormatted,
+      location,
     } = validation.data;
 
     const existing = await prisma.storeSettings.findFirst();
@@ -94,16 +108,37 @@ async function handleUpdateSettings(request: NextRequest) {
             },
           }
         : {}),
+      ...(socialHandles
+        ? {
+            socialHandles: {
+              ...((currentMeta.socialHandles as Record<string, string>) || {}),
+              ...socialHandles,
+            },
+          }
+        : {}),
       ...(heroDesktopImage !== undefined ? { heroDesktopImage } : {}),
       ...(heroMobileImage !== undefined ? { heroMobileImage } : {}),
       ...(aboutDesktopImage !== undefined ? { aboutDesktopImage } : {}),
       ...(aboutMobileImage !== undefined ? { aboutMobileImage } : {}),
+      ...(freeShippingThreshold !== undefined ? { freeShippingThreshold } : {}),
+      ...(shippingFee !== undefined ? { shippingFee: shippingFee ?? 0 } : {}),
+      ...(lowStockThreshold !== undefined ? { lowStockThreshold } : {}),
+      ...(activeTheme !== undefined ? { activeTheme } : {}),
+      ...(announcementEnabled !== undefined ? { announcementEnabled } : {}),
+      ...(defaultLang !== undefined ? { defaultLang } : {}),
+      ...(supportEmail !== undefined ? { supportEmail } : {}),
+      ...(whatsappFormatted !== undefined ? { whatsappFormatted } : {}),
+      ...(location !== undefined ? { location } : {}),
       ...(brandMetadata || {}),
     };
 
-    if (announcement !== undefined) {
-      mergedMeta.announcement = announcement;
-    }
+    const existingExtended = existing as unknown as {
+      freeShippingThreshold?: number | null;
+      shippingFee?: number;
+      lowStockThreshold?: number;
+      activeTheme?: string;
+      announcementEnabled?: boolean;
+    } | null;
 
     const updated = await prisma.storeSettings.upsert({
       where: { id: existing?.id || "default" },
@@ -116,13 +151,49 @@ async function handleUpdateSettings(request: NextRequest) {
         currency:
           currency || existing?.currency || INITIAL_STORE_SETTINGS.currency,
         brandMetadata: mergedMeta as Prisma.InputJsonObject,
+        freeShippingThreshold:
+          freeShippingThreshold !== undefined
+            ? freeShippingThreshold
+            : existingExtended?.freeShippingThreshold ??
+              INITIAL_STORE_SETTINGS.freeShippingThreshold ??
+              null,
+        shippingFee:
+          shippingFee !== undefined
+            ? shippingFee ?? 0
+            : existingExtended?.shippingFee ??
+              INITIAL_STORE_SETTINGS.shippingFee ??
+              0,
+        lowStockThreshold:
+          lowStockThreshold !== undefined
+            ? lowStockThreshold
+            : existingExtended?.lowStockThreshold ??
+              INITIAL_STORE_SETTINGS.lowStockThreshold ??
+              3,
+        activeTheme:
+          activeTheme ||
+          existingExtended?.activeTheme ||
+          INITIAL_STORE_SETTINGS.activeTheme ||
+          "white-atelier",
+        announcementEnabled:
+          announcementEnabled !== undefined
+            ? announcementEnabled
+            : existingExtended?.announcementEnabled ??
+              INITIAL_STORE_SETTINGS.announcementEnabled ??
+              true,
       },
       update: {
         ...(whatsappNumber ? { whatsappNumber } : {}),
         ...(currency ? { currency } : {}),
+        ...(freeShippingThreshold !== undefined ? { freeShippingThreshold } : {}),
+        ...(shippingFee !== undefined ? { shippingFee: shippingFee ?? 0 } : {}),
+        ...(lowStockThreshold !== undefined ? { lowStockThreshold } : {}),
+        ...(activeTheme !== undefined ? { activeTheme } : {}),
+        ...(announcementEnabled !== undefined ? { announcementEnabled } : {}),
         brandMetadata: mergedMeta as Prisma.InputJsonObject,
       },
     });
+
+    revalidateStorefrontPaths();
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminLoginSchema } from "@/lib/validations";
+import { adminFlexibleLoginSchema } from "@/lib/validations";
 import {
   verifyAdminCredentials,
   createAdminSessionToken,
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validation = adminLoginSchema.safeParse(rawBody);
+    const validation = adminFlexibleLoginSchema.safeParse(rawBody);
     if (!validation.success) {
       return NextResponse.json(
         {
@@ -27,8 +27,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validation.data;
-    const isValid = verifyAdminCredentials(email, password);
+    const identifier = (
+      validation.data.email ||
+      validation.data.username ||
+      ""
+    ).trim();
+    const { password } = validation.data;
+    const isValid = verifyAdminCredentials(identifier, password);
 
     if (!isValid) {
       return NextResponse.json(
@@ -38,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = await createAdminSessionToken({
-      email,
+      email: identifier,
       sub: "admin",
       role: "admin",
     });
@@ -47,7 +52,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       message: "Authentication successful",
-      email,
+      email: identifier,
     });
 
     response.cookies.set(cookieOptions);
