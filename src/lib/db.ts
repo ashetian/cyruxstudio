@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import {
   SEED_PRODUCTS,
@@ -114,11 +112,34 @@ export async function checkDbConnection(): Promise<{
 // Unified Resilient Store (globalThis + data/store-fallback.json)
 // ============================================================================
 
-const FALLBACK_SNAPSHOT_PATH = path.join(
-  process.cwd(),
-  "data",
-  "store-fallback.json"
-);
+type NodeFsLike = {
+  existsSync: (p: string) => boolean;
+  readFileSync: (p: string, enc: BufferEncoding) => string;
+  mkdirSync: (p: string, opts?: { recursive?: boolean }) => void;
+  writeFileSync: (p: string, data: string, enc: BufferEncoding) => void;
+  renameSync: (oldP: string, newP: string) => void;
+};
+type NodePathLike = {
+  join: (...parts: string[]) => string;
+  dirname: (p: string) => string;
+};
+
+function getServerFsAndPath(): {
+  fs: NodeFsLike;
+  path: NodePathLike;
+  snapshotPath: string;
+} | null {
+  if (typeof window !== "undefined") return null;
+  try {
+    const req = eval("require") as (mod: string) => unknown;
+    const fsMod = req("fs") as NodeFsLike;
+    const pathMod = req("path") as NodePathLike;
+    const snapshotPath = pathMod.join(process.cwd(), "data", "store-fallback.json");
+    return { fs: fsMod, path: pathMod, snapshotPath };
+  } catch {
+    return null;
+  }
+}
 
 export interface MockProductRecord {
   id: string;
@@ -348,11 +369,13 @@ function createInitialMockStore(): MockStoreState {
 
 function loadFallbackStore(): MockStoreState {
   const defaults = createInitialMockStore();
+  const srv = getServerFsAndPath();
+  if (!srv) return defaults;
   try {
-    if (!fs.existsSync(FALLBACK_SNAPSHOT_PATH)) {
+    if (!srv.fs.existsSync(srv.snapshotPath)) {
       return defaults;
     }
-    const raw = fs.readFileSync(FALLBACK_SNAPSHOT_PATH, "utf8");
+    const raw = srv.fs.readFileSync(srv.snapshotPath, "utf8");
     if (!raw.trim()) return defaults;
     const parsed = reviveDates(JSON.parse(raw)) as Partial<MockStoreState>;
 
@@ -442,14 +465,16 @@ const mockStore: MockStoreState =
 globalForMockStore.__cyruxMockStore = mockStore;
 
 function persistFallbackSnapshot(): void {
+  const srv = getServerFsAndPath();
+  if (!srv) return;
   try {
-    const dir = path.dirname(FALLBACK_SNAPSHOT_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    const dir = srv.path.dirname(srv.snapshotPath);
+    if (!srv.fs.existsSync(dir)) {
+      srv.fs.mkdirSync(dir, { recursive: true });
     }
-    const tmpPath = `${FALLBACK_SNAPSHOT_PATH}.tmp`;
-    fs.writeFileSync(tmpPath, JSON.stringify(mockStore, null, 2), "utf8");
-    fs.renameSync(tmpPath, FALLBACK_SNAPSHOT_PATH);
+    const tmpPath = `${srv.snapshotPath}.tmp`;
+    srv.fs.writeFileSync(tmpPath, JSON.stringify(mockStore, null, 2), "utf8");
+    srv.fs.renameSync(tmpPath, srv.snapshotPath);
   } catch (err) {
     console.warn("[DB Fallback] Failed to write store-fallback.json:", err);
   }
