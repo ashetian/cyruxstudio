@@ -125,7 +125,7 @@ export function DropModal({
                     {drop.title}
                   </h3>
                   <span className="text-[10px] text-neutral-400 uppercase tracking-widest mt-1">
-                    {drop.releaseDate[lang]} • {t({ tr: "KUZEY KIBRIS ATÖLYESİ", en: "NORTH CYPRUS ATELIER" })}
+                    {drop.releaseDate[lang]} • {t({ tr: "KUZEY KIBRIS ATÖLYESİ (35.1856° N)", en: "NORTH CYPRUS ATELIER (35.1856° N)" })}
                   </span>
                 </div>
               </div>

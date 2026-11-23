@@ -12,13 +12,7 @@ export interface SearchContextValue {
 
 const SearchContext = createContext<SearchContextValue | undefined>(undefined);
 
-export interface SearchProviderProps {
-  children: React.ReactNode;
-  currency?: string;
-  popularTags?: string[];
-}
-
-export function SearchProvider({ children, currency, popularTags }: SearchProviderProps) {
+export function SearchProvider({ children }: { children: React.ReactNode }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
 
@@ -80,8 +74,6 @@ export function SearchProvider({ children, currency, popularTags }: SearchProvid
         isOpen={isSearchOpen}
         onClose={closeSearch}
         initialQuery={initialQuery}
-        currency={currency}
-        popularTags={popularTags}
       />
     </SearchContext.Provider>
   );

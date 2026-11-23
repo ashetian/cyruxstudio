@@ -14,7 +14,6 @@ import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
 import { formatProductPrice } from "@/components/storefront/bestseller-grid";
 import { HeroThreeLogo } from "@/components/storefront/hero-three-logo";
-import { DEFAULT_STOREFRONT_CMS, type HeroCmsData } from "@/lib/cms";
 
 const dropdownContainerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -55,7 +54,6 @@ export interface HeroSectionProps {
   productImages?: Record<string, string>;
   currency?: string;
   announcement?: string;
-  heroCms?: HeroCmsData | null;
 }
 
 /**
@@ -81,7 +79,7 @@ export function HeroSection({
   onOpenCart,
   onOpenMenu,
   onSearchSubmit,
-  heroImage = "/assets/editorial/hero-desktop.jpg",
+  heroImage = "/assets/brand/hero-cyber-portrait.webp",
   heroDesktopImage,
   heroMobileImage,
   skipEntranceAnimation = false,
@@ -89,7 +87,6 @@ export function HeroSection({
   productImages = {},
   currency = "USD",
   announcement,
-  heroCms,
 }: HeroSectionProps) {
   const router = useRouter();
   const { lang, toggleLang, t } = useLanguage();
@@ -100,16 +97,6 @@ export function HeroSection({
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const touchMovedRef = useRef(false);
   const [lockedHeroHeight, setLockedHeroHeight] = useState<number | null>(null);
-
-  const cms = heroCms ?? DEFAULT_STOREFRONT_CMS.hero;
-  const enable3DLogo = cms.show3DLogo ?? true;
-  const showHeadlines = cms.showHeadlines ?? false;
-  const showCtas = cms.showCtas ?? false;
-  const showSearchPill = cms.showSearchPill ?? true;
-  const desktopSrc = heroDesktopImage || cms.desktopImage || heroImage;
-  const mobileSrc = heroMobileImage || cms.mobileImage || heroImage;
-  const videoSrc = cms.videoUrl?.trim() || "";
-  const heroAlt = t(cms.imageAlt);
 
   // Lock mobile hero height on client mount to prevent browser address bar collapse/expand from jittering hero size
   useEffect(() => {
@@ -161,9 +148,6 @@ export function HeroSection({
   }, [products, internalQuery]);
 
   const suggestedSearchTerms = useMemo(() => {
-    if (cms.suggestedSearchTerms && cms.suggestedSearchTerms.length > 0) {
-      return cms.suggestedSearchTerms.slice(0, 6);
-    }
     if (products && products.length > 0) {
       const terms: string[] = [];
       products.forEach((p) => {
@@ -173,7 +157,7 @@ export function HeroSection({
       return terms.slice(0, 4);
     }
     return ["T-Shirt", "Hoodie", "Oversize", "Pants"];
-  }, [cms.suggestedSearchTerms, products]);
+  }, [products]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -242,57 +226,43 @@ export function HeroSection({
           : {}),
       }}
     >
-      {/* 1. High-Contrast Editorial Background Media (Dynamic Desktop, Mobile, or Video) */}
+      {/* 1. High-Contrast Cyber-Noir Background Image (Dynamic Desktop & Mobile) */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {videoSrc ? (
-          <video
-            src={videoSrc}
-            poster={desktopSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        {/* Mobile View: Vertical Portrait - locked without zoom or stretch */}
+        <div className="block md:hidden absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
+          <Image
+            src={heroMobileImage || heroImage}
+            alt="Cyrux Studio Cyberpunk Editorial Model"
+            fill
+            priority
+            unoptimized
+            quality={100}
+            sizes="100vw"
+            className="object-cover object-center transform-none transition-none"
+            style={{
+              transform: "translate3d(0, 0, 0)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+            }}
           />
-        ) : (
-          <>
-            {/* Mobile View: Vertical Portrait - locked without zoom or stretch */}
-            <div className="block md:hidden absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
-              <Image
-                src={mobileSrc}
-                alt={heroAlt}
-                fill
-                priority
-                unoptimized
-                quality={100}
-                sizes="100vw"
-                className="object-cover object-center transform-none transition-none"
-                style={{
-                  transform: "translate3d(0, 0, 0)",
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                }}
-              />
-            </div>
-            {/* Desktop View: Widescreen Landscape */}
-            <div className="hidden md:block absolute inset-0 w-full h-full">
-              <Image
-                src={desktopSrc}
-                alt={heroAlt}
-                fill
-                priority
-                unoptimized
-                quality={100}
-                sizes="100vw"
-                className="object-cover object-center transform-none transition-none"
-                style={{
-                  transform: "translate3d(0, 0, 0)",
-                  backfaceVisibility: "hidden",
-                }}
-              />
-            </div>
-          </>
-        )}
+        </div>
+        {/* Desktop View: Widescreen Landscape */}
+        <div className="hidden md:block absolute inset-0 w-full h-full">
+          <Image
+            src={heroDesktopImage || heroImage}
+            alt="Cyrux Studio Cyberpunk Editorial Model"
+            fill
+            priority
+            unoptimized
+            quality={100}
+            sizes="100vw"
+            className="object-cover object-center transform-none transition-none"
+            style={{
+              transform: "translate3d(0, 0, 0)",
+              backfaceVisibility: "hidden",
+            }}
+          />
+        </div>
         {/* Cinematic Vignette & Bottom Fade to Dark */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#0A0A0A] to-transparent pointer-events-none" />
@@ -326,270 +296,262 @@ export function HeroSection({
           </button>
           <Link
             href="/drops/latest"
-            className="hidden sm:inline-flex items-center min-h-[44px] px-4 py-2 rounded-full border border-white/25 bg-black/40 backdrop-blur-md text-white font-mono text-[10px] md:text-[11px] font-bold uppercase tracking-widest hover:border-white hover:bg-white hover:text-black transition-all shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-mono text-[10px] md:text-[11px] font-bold uppercase tracking-widest hover:border-white hover:bg-white hover:text-black transition-all shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <span>{t(cms.latestDropPillLabel)}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{t({ tr: "SON DROP", en: "LATEST DROP" })}</span>
           </Link>
         </div>
 
         {/* Center: Search Pill Capsule (F04.2 Contract) with Live Dynamic Results Dropdown */}
-        {showSearchPill ? (
-          <div ref={searchContainerRef} className="relative flex justify-center flex-1 max-w-md min-w-0 mx-1 sm:mx-6">
-            <form
-              role="search"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (matches.length > 0 && selectedIndex >= 0 && matches[selectedIndex]) {
-                  setIsDropdownOpen(false);
-                  router.push(`/products/${matches[selectedIndex].slug}`);
-                  return;
-                }
+        <div ref={searchContainerRef} className="relative flex justify-center flex-1 max-w-md min-w-0 mx-1 sm:mx-6">
+          <form
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (matches.length > 0 && selectedIndex >= 0 && matches[selectedIndex]) {
                 setIsDropdownOpen(false);
-                onSearchSubmit?.(internalQuery);
+                router.push(`/products/${matches[selectedIndex].slug}`);
+                return;
+              }
+              setIsDropdownOpen(false);
+              onSearchSubmit?.(internalQuery);
+            }}
+            className="w-full relative flex items-center rounded-full border border-neutral-700/50 bg-black/40 backdrop-blur-md px-1 py-1 sm:py-1.5 shadow-lg transition-all duration-300 hover:border-neutral-500/60 focus-within:border-white/80 focus-within:bg-black/60"
+          >
+            <input
+              type="search"
+              role="searchbox"
+              value={internalQuery}
+              onChange={handleInputChange}
+              onTouchStart={() => {
+                touchMovedRef.current = false;
               }}
-              className="w-full relative flex items-center rounded-full border border-neutral-700/50 bg-black/40 backdrop-blur-md px-1 py-0.5 sm:py-1 shadow-lg transition-all duration-300 hover:border-neutral-500/60 focus-within:border-white/80 focus-within:bg-black/60"
-            >
-              <input
-                type="search"
-                role="searchbox"
-                value={internalQuery}
-                onChange={handleInputChange}
-                onTouchStart={() => {
-                  touchMovedRef.current = false;
-                }}
-                onTouchMove={() => {
-                  touchMovedRef.current = true;
-                }}
-                onClick={() => {
-                  if (touchMovedRef.current) return;
-                  if (typeof window !== "undefined" && window.innerWidth < 640) {
-                    openSearch(internalQuery);
-                  }
-                }}
-                onFocus={() => {
-                  if (touchMovedRef.current) return;
-                  if (typeof window !== "undefined" && window.innerWidth < 640) {
-                    openSearch(internalQuery);
-                  } else if (internalQuery.trim()) {
+              onTouchMove={() => {
+                touchMovedRef.current = true;
+              }}
+              onClick={() => {
+                if (touchMovedRef.current) return;
+                if (typeof window !== "undefined" && window.innerWidth < 640) {
+                  openSearch(internalQuery);
+                }
+              }}
+              onFocus={() => {
+                if (touchMovedRef.current) return;
+                if (typeof window !== "undefined" && window.innerWidth < 640) {
+                  openSearch(internalQuery);
+                } else if (internalQuery.trim()) {
+                  setIsDropdownOpen(true);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setIsDropdownOpen(false);
+                } else if (matches.length > 0) {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
                     setIsDropdownOpen(true);
+                    setSelectedIndex((prev) => (prev + 1) % matches.length);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setIsDropdownOpen(true);
+                    setSelectedIndex((prev) => (prev <= 0 ? matches.length - 1 : prev - 1));
                   }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setIsDropdownOpen(false);
-                  } else if (matches.length > 0) {
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                      setIsDropdownOpen(true);
-                      setSelectedIndex((prev) => (prev + 1) % matches.length);
-                    } else if (e.key === "ArrowUp") {
-                      e.preventDefault();
-                      setIsDropdownOpen(true);
-                      setSelectedIndex((prev) => (prev <= 0 ? matches.length - 1 : prev - 1));
-                    }
-                  }
-                }}
-                placeholder={t(cms.searchPlaceholder)}
-                aria-label={t({ tr: "Koleksiyon veya parça ara", en: "Search collection, garments, accessories" })}
-                className="w-full min-w-0 bg-transparent px-3 sm:px-4 text-base sm:text-sm font-mono text-white placeholder:text-neutral-400 focus:outline-none tracking-wide"
-              />
+                }
+              }}
+              placeholder={t({ tr: "ara...", en: "Search..." })}
+              aria-label={t({ tr: "Koleksiyon veya parça ara", en: "Search collection, garments, accessories" })}
+              className="w-full min-w-0 bg-transparent px-3 sm:px-4 text-base sm:text-sm font-mono text-white placeholder:text-neutral-400 focus:outline-none tracking-wide"
+            />
 
-              {/* Clear Search Button */}
-              {internalQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInternalQuery("");
-                    onSearchChange?.("");
-                    setIsDropdownOpen(false);
-                  }}
-                  aria-label="Clear search"
-                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-neutral-400 hover:text-white transition-colors shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-
-              {/* Global Shortcut Pill */}
+            {/* Clear Search Button */}
+            {internalQuery && (
               <button
                 type="button"
-                onClick={() => openSearch(internalQuery)}
-                aria-label="Open command search (⌘K)"
-                title="Dinamik Arama Modalı (⌘K)"
-                className="hidden sm:inline-flex items-center justify-center min-h-[44px] px-2.5 text-[9px] font-mono font-bold text-neutral-400 hover:text-white bg-neutral-900/90 border border-neutral-700/60 mr-1.5 transition-colors shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full"
+                onClick={() => {
+                  setInternalQuery("");
+                  onSearchChange?.("");
+                  setIsDropdownOpen(false);
+                }}
+                aria-label="Clear search"
+                className="p-1 text-neutral-400 hover:text-white transition-colors shrink-0 mr-1"
               >
-                ⌘K
+                <X className="w-3.5 h-3.5" />
               </button>
+            )}
 
-              <button
-                type="submit"
-                aria-label="Submit search"
-                className="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </form>
+            {/* Global Shortcut Pill */}
+            <button
+              type="button"
+              onClick={() => openSearch(internalQuery)}
+              aria-label="Open command search (⌘K)"
+              title="Dinamik Arama Modalı (⌘K)"
+              className="hidden sm:inline-flex items-center text-[9px] font-mono font-bold text-neutral-400 hover:text-white bg-neutral-900/90 px-1.5 py-0.5 border border-neutral-700/60 mr-1.5 transition-colors shrink-0"
+            >
+              ⌘K
+            </button>
 
-            {/* Desktop Live Dynamic Dropdown */}
-            {isDropdownOpen && internalQuery.trim() && (
-              <div
-                role="listbox"
-                aria-label={t({ tr: "Canlı Arama Sonuçları", en: "Live Search Results" })}
-                className="hidden sm:block absolute top-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-[520px] md:w-[600px] max-w-[95vw] z-50 border border-white/20 bg-[#0A0A0A] rounded-none shadow-[0_25px_70px_rgba(0,0,0,0.95)] p-3.5 max-h-[460px] overflow-y-auto [scrollbar-width:thin] text-left text-white"
-              >
-                {matches.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="px-1 py-1 font-mono text-[10px] uppercase tracking-widest text-neutral-400 flex items-center justify-between border-b border-white/10 pb-2">
-                      <span>{matches.length} {t({ tr: "ÜRÜN BULUNDU", en: "PRODUCTS FOUND" })}</span>
-                      <span className="text-neutral-500">[ENTER ↵]</span>
-                    </div>
+            <button
+              type="submit"
+              aria-label="Submit search"
+              className="shrink-0 w-8 h-8 sm:w-8 sm:h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+            >
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          </form>
 
-                    <motion.ul
-                      key={internalQuery}
-                      variants={dropdownContainerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1.5"
+          {/* Desktop Live Dynamic Dropdown */}
+          {isDropdownOpen && internalQuery.trim() && (
+            <div
+              role="listbox"
+              aria-label={t({ tr: "Canlı Arama Sonuçları", en: "Live Search Results" })}
+              className="hidden sm:block absolute top-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-[520px] md:w-[600px] max-w-[95vw] z-50 border border-white/20 bg-[#0A0A0A] rounded-none shadow-[0_25px_70px_rgba(0,0,0,0.95)] p-3.5 max-h-[460px] overflow-y-auto [scrollbar-width:thin] text-left text-white"
+            >
+              {matches.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="px-1 py-1 font-mono text-[10px] uppercase tracking-widest text-neutral-400 flex items-center justify-between border-b border-white/10 pb-2">
+                    <span>{matches.length} {t({ tr: "ÜRÜN BULUNDU", en: "PRODUCTS FOUND" })}</span>
+                    <span className="text-neutral-500">[ENTER ↵]</span>
+                  </div>
+
+                  <motion.ul
+                    key={internalQuery}
+                    variants={dropdownContainerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1.5"
+                  >
+                    {matches.slice(0, 6).map((product, idx) => {
+                      const isSelected = idx === selectedIndex;
+                      const image =
+                        productImages[product.slug] ||
+                        product.mediaUrls[0] ||
+                        "/assets/brand/logo-emblem-dark.png";
+                      const isOut = product.stock <= 0;
+
+                      return (
+                        <motion.li
+                          key={product.id}
+                          variants={dropdownCardVariants}
+                          role="option"
+                          aria-selected={isSelected}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            router.push(`/products/${product.slug}`);
+                          }}
+                          className={`group relative flex flex-col justify-between border bg-[#0D0D0D] p-2 transition-all duration-150 cursor-pointer rounded-none select-none ${isSelected
+                            ? "border-white ring-1 ring-white bg-[#141414] shadow-[0_0_20px_rgba(255,255,255,0.08)]"
+                            : "border-white/15 hover:border-white/80 hover:bg-[#111111]"
+                            }`}
+                        >
+                          {/* Top Tag */}
+                          <div className="flex items-center justify-between font-mono text-[8.5px] uppercase tracking-widest text-neutral-400 gap-1 mb-1.5">
+                            <span className="truncate">
+                              {(product as unknown as { category?: string }).category || "APPAREL"}
+                            </span>
+                            {product.isBestseller && (
+                              <span className="px-1 py-0.2 border border-white/30 bg-white/10 text-white text-[7.5px] font-mono shrink-0">
+                                BEST
+                              </span>
+                            )}
+                            {isOut && (
+                              <span className="px-1 py-0.2 border border-rose-500/50 bg-rose-500/10 text-rose-400 text-[7.5px] font-mono shrink-0">
+                                OUT
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Image */}
+                          <div className="relative aspect-[3/4] w-full bg-[#050505] overflow-hidden border border-white/5">
+                            <Image
+                              src={image}
+                              alt={product.name}
+                              fill
+                              unoptimized
+                              loading="lazy"
+                              sizes="180px"
+                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <span className="absolute bottom-1 right-1 font-mono text-[8.5px] text-neutral-400 bg-black/85 px-1 py-0.2 border border-white/10">
+                              #{String(idx + 1).padStart(2, "0")}
+                            </span>
+                          </div>
+
+                          {/* Details */}
+                          <div className="mt-2 flex flex-col gap-0.5">
+                            <div className="font-sans font-black text-xs uppercase tracking-tight text-white line-clamp-1 group-hover:text-neutral-200">
+                              {product.name}
+                            </div>
+                            <div className="flex items-center justify-between mt-0.5 pt-1 border-t border-white/10">
+                              <span className="font-mono font-bold text-xs text-white">
+                                {formatProductPrice(product.price, currency)}
+                              </span>
+                              <span className="font-mono text-[9px] text-neutral-500 group-hover:text-white transition-colors flex items-center gap-0.5">
+                                <span>[VIEW]</span>
+                                <ArrowRight className="w-2.5 h-2.5" />
+                              </span>
+                            </div>
+                          </div>
+                        </motion.li>
+                      );
+                    })}
+                  </motion.ul>
+
+                  {/* View All Matches Action */}
+                  <div className="pt-2 mt-1 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        onSearchSubmit?.(internalQuery);
+                      }}
+                      className="w-full py-2 px-3 bg-neutral-900 hover:bg-white hover:text-black border border-white/15 hover:border-white rounded-none transition-colors font-mono text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 text-neutral-200"
                     >
-                      {matches.slice(0, 6).map((product, idx) => {
-                        const isSelected = idx === selectedIndex;
-                        const image =
-                          productImages[product.slug] ||
-                          product.mediaUrls[0] ||
-                          "/assets/brand/logo-emblem-dark.png";
-                        const isOut = product.stock <= 0;
-                        const rawDp = (product as Product & { discountPrice?: number | null }).discountPrice;
-                        const effectivePrice =
-                          typeof rawDp === "number" && Number.isFinite(rawDp) && rawDp > 0 && rawDp < product.price
-                            ? rawDp
-                            : product.price;
-
-                        return (
-                          <motion.li
-                            key={product.id}
-                            variants={dropdownCardVariants}
-                            role="option"
-                            aria-selected={isSelected}
-                            onMouseEnter={() => setSelectedIndex(idx)}
-                            onClick={() => {
-                              setIsDropdownOpen(false);
-                              router.push(`/products/${product.slug}`);
-                            }}
-                            className={`group relative flex flex-col justify-between border bg-[#0D0D0D] p-2 transition-all duration-150 cursor-pointer rounded-none select-none ${isSelected
-                              ? "border-white ring-1 ring-white bg-[#141414]"
-                              : "border-white/15 hover:border-white/80 hover:bg-[#111111]"
-                              }`}
-                          >
-                            {/* Top Tag */}
-                            <div className="flex items-center justify-between font-mono text-[8.5px] uppercase tracking-widest text-neutral-400 gap-1 mb-1.5">
-                              <span className="truncate">
-                                {(product as unknown as { category?: string }).category || "APPAREL"}
-                              </span>
-                              {product.isBestseller && (
-                                <span className="px-1 py-0.2 border border-white/30 bg-white/10 text-white text-[7.5px] font-mono shrink-0">
-                                  BEST
-                                </span>
-                              )}
-                              {isOut && (
-                                <span className="px-1 py-0.2 border border-rose-500/50 bg-rose-500/10 text-rose-400 text-[7.5px] font-mono shrink-0">
-                                  OUT
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Image */}
-                            <div className="relative aspect-[3/4] w-full bg-[#050505] overflow-hidden border border-white/5">
-                              <Image
-                                src={image}
-                                alt={product.name}
-                                fill
-                                unoptimized
-                                loading="lazy"
-                                sizes="180px"
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              <span className="absolute bottom-1 right-1 font-mono text-[8.5px] text-neutral-400 bg-black/85 px-1 py-0.2 border border-white/10">
-                                #{String(idx + 1).padStart(2, "0")}
-                              </span>
-                            </div>
-
-                            {/* Details */}
-                            <div className="mt-2 flex flex-col gap-0.5">
-                              <div className="font-sans font-black text-xs uppercase tracking-tight text-white line-clamp-1 group-hover:text-neutral-200">
-                                {product.name}
-                              </div>
-                              <div className="flex items-center justify-between mt-0.5 pt-1 border-t border-white/10">
-                                <span className="font-mono font-bold text-xs text-white">
-                                  {formatProductPrice(effectivePrice, currency)}
-                                </span>
-                                <span className="font-mono text-[9px] text-neutral-500 group-hover:text-white transition-colors flex items-center gap-0.5">
-                                  <span>[VIEW]</span>
-                                  <ArrowRight className="w-2.5 h-2.5" />
-                                </span>
-                              </div>
-                            </div>
-                          </motion.li>
-                        );
-                      })}
-                    </motion.ul>
-
-                    {/* View All Matches Action */}
-                    <div className="pt-2 mt-1 border-t border-white/10">
+                      <span>
+                        {t({
+                          tr: `TÜM SONUÇLARI GÖR (${matches.length})`,
+                          en: `VIEW ALL RESULTS (${matches.length})`,
+                        })}
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 px-4 text-center border border-dashed border-white/15 my-1">
+                  <p className="font-mono text-xs font-bold uppercase tracking-wider text-white mb-1">
+                    {t({
+                      tr: `"${internalQuery}" İÇİN PARÇA BULUNAMADI`,
+                      en: `NO MATCH FOR "${internalQuery}"`,
+                    })}
+                  </p>
+                  <p className="font-mono text-[10px] text-neutral-400 mb-3 uppercase tracking-wider">
+                    {t({
+                      tr: "ÖNERİLEN ARAMALAR:",
+                      en: "SUGGESTED SEARCHES:",
+                    })}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    {suggestedSearchTerms.map((term) => (
                       <button
+                        key={term}
                         type="button"
                         onClick={() => {
-                          setIsDropdownOpen(false);
-                          onSearchSubmit?.(internalQuery);
+                          setInternalQuery(term);
+                          onSearchChange?.(term);
                         }}
-                        className="w-full min-h-[44px] py-2 px-3 bg-neutral-900 hover:bg-white hover:text-black border border-white/15 hover:border-white rounded-none transition-colors font-mono text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 text-neutral-200 cursor-pointer"
+                        className="px-2.5 py-1 bg-transparent hover:bg-white hover:text-black border border-white/20 rounded-none text-neutral-300 font-mono text-[11px] uppercase tracking-wider transition-colors"
                       >
-                        <span>
-                          {t({
-                            tr: `TÜM SONUÇLARI GÖR (${matches.length})`,
-                            en: `VIEW ALL RESULTS (${matches.length})`,
-                          })}
-                        </span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        [{term}]
                       </button>
-                    </div>
+                    ))}
                   </div>
-                ) : (
-                  <div className="py-8 px-4 text-center border border-dashed border-white/15 my-1">
-                    <p className="font-mono text-xs font-bold uppercase tracking-wider text-white mb-1">
-                      {t({
-                        tr: `"${internalQuery}" İÇİN PARÇA BULUNAMADI`,
-                        en: `NO MATCH FOR "${internalQuery}"`,
-                      })}
-                    </p>
-                    <p className="font-mono text-[10px] text-neutral-400 mb-3 uppercase tracking-wider">
-                      {t({
-                        tr: "ÖNERİLEN ARAMALAR:",
-                        en: "SUGGESTED SEARCHES:",
-                      })}
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-1.5">
-                      {suggestedSearchTerms.map((term) => (
-                        <button
-                          key={term}
-                          type="button"
-                          onClick={() => {
-                            setInternalQuery(term);
-                            onSearchChange?.(term);
-                          }}
-                          className="min-h-[44px] px-3 py-1 bg-transparent hover:bg-white hover:text-black border border-white/20 rounded-none text-neutral-300 font-mono text-[11px] uppercase tracking-wider transition-colors cursor-pointer"
-                        >
-                          [{term}]
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex-1" />
-        )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Right: Language Switcher & Shopping Bag */}
         <div className="flex items-center gap-2 sm:gap-3 text-white shrink-0">
@@ -597,7 +559,7 @@ export function HeroSection({
             type="button"
             onClick={toggleLang}
             aria-label={`Switch language. Current: ${lang.toUpperCase()}`}
-            className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-full border border-neutral-700/60 bg-black/40 backdrop-blur-md text-[10px] sm:text-xs font-mono font-bold tracking-widest text-white hover:border-white/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer flex items-center justify-center"
+            className="min-h-9 px-2 sm:px-2.5 py-1 rounded-full border border-neutral-700/60 bg-black/40 backdrop-blur-md text-[10px] sm:text-xs font-mono font-bold tracking-widest text-white hover:border-white/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             {lang.toUpperCase()}
           </button>
@@ -605,7 +567,7 @@ export function HeroSection({
             type="button"
             onClick={onOpenCart}
             aria-label={`Shopping bag, ${cartCount} items`}
-            className="relative min-w-11 min-h-11 -mr-1.5 flex items-center justify-center hover:text-neutral-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full cursor-pointer"
+            className="relative min-w-11 min-h-11 -mr-1.5 flex items-center justify-center hover:text-neutral-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 rounded-full"
           >
             <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
@@ -617,62 +579,14 @@ export function HeroSection({
         </div>
       </header>
 
-      {/* 3. Hero Centerpiece: 3D Rotating Chrome Logo, Editorial Headlines & CTAs */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center select-none py-2 sm:py-6 md:py-8 my-auto w-full px-3 sm:px-6 text-center">
-        {enable3DLogo ? (
-          <div className="char-split will-change-transform flex items-center justify-center w-full">
-            <div className="relative block w-[clamp(13rem,42vw,36rem)] max-w-[min(88vw,56vh)] max-h-[min(88vw,56vh)] aspect-square drop-shadow-[0_15px_45px_rgba(0,0,0,0.85)] sm:drop-shadow-[0_25px_80px_rgba(0,0,0,0.95)]">
-              <HeroThreeLogo />
-            </div>
+      {/* 3. Hero Centerpiece: 3D Rotating Three.js Solid Chrome Logo (Fully Responsive Across Mobile, Tablet, Desktop) */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center select-none py-2 sm:py-6 md:py-8 my-auto w-full px-3 sm:px-6">
+        <div className="char-split will-change-transform flex items-center justify-center w-full">
+          <div className="relative block w-[clamp(13rem,42vw,36rem)] max-w-[min(88vw,56vh)] max-h-[min(88vw,56vh)] aspect-square drop-shadow-[0_15px_45px_rgba(0,0,0,0.85)] sm:drop-shadow-[0_25px_80px_rgba(0,0,0,0.95)]">
+            <HeroThreeLogo />
           </div>
-        ) : !showHeadlines ? (
-          <div className="char-split will-change-transform flex items-center justify-center w-full">
-            <span className="font-sekuya text-[18vw] leading-none text-[#FAF8F3] tracking-tight">
-              cyrux
-            </span>
-          </div>
-        ) : null}
-
-        {showHeadlines ? (
-          <div className="mt-4 max-w-3xl mx-auto space-y-3">
-            {t(cms.eyebrow) && (
-              <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.22em] text-neutral-300">
-                {t(cms.eyebrow)}
-              </p>
-            )}
-            <h1 className="font-sekuya text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight leading-none text-[#FAF8F3]">
-              {t(cms.headline)}
-            </h1>
-            {t(cms.subcopy) && (
-              <p className="font-mono text-xs sm:text-sm text-neutral-300 max-w-xl mx-auto leading-relaxed">
-                {t(cms.subcopy)}
-              </p>
-            )}
-          </div>
-        ) : (
-          <h1 className="sr-only">{t(cms.headline)}</h1>
-        )}
-
-        {showCtas && (
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            {t(cms.primaryCtaLabel) && (
-              <Link
-                href={cms.primaryCtaHref || "#shop"}
-                className="min-h-[44px] inline-flex items-center justify-center px-6 py-3 bg-[#FAF8F3] text-black hover:bg-white font-mono text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                {t(cms.primaryCtaLabel)}
-              </Link>
-            )}
-            {t(cms.secondaryCtaLabel) && (
-              <Link
-                href={cms.secondaryCtaHref || "/drops/latest"}
-                className="min-h-[44px] inline-flex items-center justify-center px-6 py-3 border border-white/40 bg-black/50 text-[#FAF8F3] hover:bg-white hover:text-black font-mono text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                {t(cms.secondaryCtaLabel)}
-              </Link>
-            )}
-          </div>
-        )}
+        </div>
+        <h1 className="sr-only">cyrux studio</h1>
       </div>
     </section>
   );

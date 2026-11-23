@@ -25,8 +25,6 @@ export interface DynamicSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialQuery?: string;
-  currency?: string;
-  popularTags?: string[];
 }
 
 const POPULAR_TAGS = [
@@ -73,8 +71,6 @@ export function DynamicSearchModal({
   isOpen,
   onClose,
   initialQuery = "",
-  currency = "USD",
-  popularTags,
 }: DynamicSearchModalProps) {
   const { lang, t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
@@ -317,7 +313,7 @@ export function DynamicSearchModal({
                     }}
                     className={`group relative flex flex-col justify-between border bg-[#0D0D0D] p-2.5 sm:p-3 transition-all duration-150 cursor-pointer rounded-none select-none ${
                       isSelected
-                        ? "border-white ring-1 ring-white bg-[#141414]"
+                        ? "border-white ring-1 ring-white bg-[#141414] shadow-[0_0_25px_rgba(255,255,255,0.08)]"
                         : "border-white/15 hover:border-white/80 hover:bg-[#111111]"
                     }`}
                   >
@@ -363,7 +359,7 @@ export function DynamicSearchModal({
 
                       <div className="flex items-center justify-between mt-1 pt-1.5 border-t border-white/10">
                         <span className="font-mono font-bold text-xs sm:text-sm text-white">
-                          {formatProductPrice(product.price, currency)}
+                          {formatProductPrice(product.price)}
                         </span>
                         <span className="font-mono text-[10px] text-neutral-500 group-hover:text-white transition-colors flex items-center gap-0.5">
                           <span>[VIEW]</span>
@@ -396,12 +392,12 @@ export function DynamicSearchModal({
 
               {/* Brutalist Popular Tags */}
               <div className="flex flex-wrap items-center justify-center gap-2 max-w-md">
-                {(popularTags && popularTags.length > 0 ? popularTags : POPULAR_TAGS).map((tag) => (
+                {POPULAR_TAGS.map((tag) => (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => setQuery(tag)}
-                    className="min-h-[44px] px-3 py-1 font-mono text-[11px] uppercase tracking-wider border border-white/20 hover:border-white hover:bg-white hover:text-black text-neutral-300 transition-all rounded-none cursor-pointer"
+                    className="px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider border border-white/20 hover:border-white hover:bg-white hover:text-black text-neutral-300 transition-all rounded-none"
                   >
                     [{tag}]
                   </button>

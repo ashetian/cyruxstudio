@@ -8,12 +8,6 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
 import { DROPS_CATALOG, type DropData } from "@/lib/drops";
-import {
-  DEFAULT_STOREFRONT_CMS,
-  type BilingualText,
-  type NavigationCmsData,
-  type NavigationDrawerLinkCms,
-} from "@/lib/cms";
 
 export interface MenuDrawerProps {
   isOpen: boolean;
@@ -22,14 +16,11 @@ export interface MenuDrawerProps {
   instagramUrl?: string;
   onOpenPastDrops?: () => void;
   drops?: DropData[];
-  navigation?: NavigationCmsData | null;
-  drawerLinks?: NavigationDrawerLinkCms[];
-  footerStamp?: BilingualText | string;
 }
 
-const LINKS: NavigationDrawerLinkCms[] = [
-  { id: "shop", label: { tr: "Mağaza", en: "Shop" }, href: "#shop" },
-  { id: "about", label: { tr: "Hakkında", en: "About" }, href: "#about" },
+const LINKS = [
+  { label: { tr: "Mağaza", en: "Shop" }, id: "shop" },
+  { label: { tr: "Hakkında", en: "About" }, id: "about" },
 ];
 
 export function MenuDrawer({
@@ -38,25 +29,11 @@ export function MenuDrawer({
   whatsappNumber,
   instagramUrl = "https://instagram.com/cyruxstudio",
   drops,
-  navigation,
-  drawerLinks,
-  footerStamp,
 }: MenuDrawerProps) {
   const { lang, setLang, t } = useLanguage();
   const { openSearch } = useSearch();
   const reduce = useReducedMotion();
   const [dropsList, setDropsList] = useState<DropData[]>(drops || DROPS_CATALOG);
-
-  const resolvedDrawerLinks: NavigationDrawerLinkCms[] =
-    drawerLinks && drawerLinks.length > 0
-      ? drawerLinks
-      : navigation?.drawerLinks && navigation.drawerLinks.length > 0
-      ? navigation.drawerLinks
-      : DEFAULT_STOREFRONT_CMS.navigation.drawerLinks.length > 0
-      ? DEFAULT_STOREFRONT_CMS.navigation.drawerLinks
-      : LINKS;
-
-  const hasDropsRouteInDrawer = resolvedDrawerLinks.some((l) => l.href === "/drops");
 
   useEffect(() => {
     if (drops && drops.length > 0) {
@@ -129,11 +106,6 @@ export function MenuDrawer({
     })
   )}`;
 
-  const resolvedStamp =
-    typeof footerStamp === "string"
-      ? footerStamp
-      : t(footerStamp ?? navigation?.drawerFooterStamp ?? DEFAULT_STOREFRONT_CMS.navigation.drawerFooterStamp);
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -151,7 +123,7 @@ export function MenuDrawer({
             role="dialog"
             aria-modal="true"
             aria-label="Main menu"
-            className="absolute left-0 top-0 h-[100dvh] w-full max-w-sm bg-black text-[#FAF8F3] flex flex-col justify-between px-6 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] overflow-y-auto"
+            className="absolute left-0 top-0 h-[100dvh] w-full max-w-sm bg-black text-[#FAF8F3] flex flex-col justify-between px-6 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
@@ -160,12 +132,12 @@ export function MenuDrawer({
             <div>
               <div className="flex items-center justify-between">
                 {/* Language Switcher in Menu */}
-                <div className="flex items-center gap-1.5 font-mono text-xs">
+                <div className="flex items-center gap-1 font-mono text-xs">
                   <button
                     type="button"
                     onClick={() => setLang("tr")}
                     className={cn(
-                      "min-w-[44px] min-h-[44px] px-3 py-2 border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white flex items-center justify-center",
+                      "px-2.5 py-1 border transition-colors",
                       lang === "tr"
                         ? "border-white bg-white text-black font-bold"
                         : "border-neutral-800 text-neutral-400 hover:text-white"
@@ -177,7 +149,7 @@ export function MenuDrawer({
                     type="button"
                     onClick={() => setLang("en")}
                     className={cn(
-                      "min-w-[44px] min-h-[44px] px-3 py-2 border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white flex items-center justify-center",
+                      "px-2.5 py-1 border transition-colors",
                       lang === "en"
                         ? "border-white bg-white text-black font-bold"
                         : "border-neutral-800 text-neutral-400 hover:text-white"
@@ -191,7 +163,7 @@ export function MenuDrawer({
                   type="button"
                   onClick={onClose}
                   aria-label="Close menu"
-                  className="min-w-11 min-h-11 -mr-2 flex items-center justify-center rounded-full hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
+                  className="min-w-11 min-h-11 -mr-2 flex items-center justify-center rounded-full hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -205,7 +177,7 @@ export function MenuDrawer({
                     onClose();
                     openSearch();
                   }}
-                  className="w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white transition-all text-xs font-mono cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white transition-all text-xs font-mono"
                 >
                   <span className="flex items-center gap-2">
                     <Search className="w-4 h-4 text-neutral-400" />
@@ -217,77 +189,53 @@ export function MenuDrawer({
                 </button>
               </div>
 
-              <ul className="mt-6 sm:mt-8 space-y-1.5 sm:space-y-2">
-                {resolvedDrawerLinks.map((l) => {
-                  const href = l.href.trim() || "/";
-                  const isHash = href.startsWith("#");
-                  const isExternal = href.startsWith("http");
-
-                  return (
-                    <li key={l.id || href}>
-                      {isHash ? (
-                        <a
-                          href={href}
-                          onClick={(e) => go(e, href.slice(1))}
-                          className="min-h-[44px] flex items-center py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline cursor-pointer"
-                        >
-                          {t(l.label)}
-                        </a>
-                      ) : isExternal ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="min-h-[44px] flex items-center py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline cursor-pointer"
-                        >
-                          {t(l.label)} ↗
-                        </a>
-                      ) : (
-                        <Link
-                          href={href}
-                          onClick={onClose}
-                          className="min-h-[44px] flex items-center py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline cursor-pointer"
-                        >
-                          {t(l.label)}
-                        </Link>
-                      )}
-                    </li>
-                  );
-                })}
+              <ul className="mt-6 sm:mt-8 space-y-4 sm:space-y-5">
+                {LINKS.map((l) => (
+                  <li key={l.id}>
+                    <a
+                      href={`#${l.id}`}
+                      onClick={(e) => go(e, l.id)}
+                      className="inline-block py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline"
+                    >
+                      {l.label[lang]}
+                    </a>
+                  </li>
+                ))}
                 <li>
                   <Link
                     href="/drops/latest"
                     onClick={onClose}
-                    className="w-full min-h-[44px] text-left py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-white transition-colors focus:outline-none focus-visible:underline flex items-center justify-between group cursor-pointer"
+                    className="w-full text-left py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-white transition-colors focus:outline-none focus-visible:underline flex items-center justify-between group"
                   >
-                    <span>{t({ tr: "Son Drop", en: "Latest Drop" })}</span>
+                    <span className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span>{t({ tr: "Son Drop", en: "Latest Drop" })}</span>
+                    </span>
                     <span className="text-xs px-2.5 py-1 bg-white text-black font-bold uppercase tracking-wider group-hover:bg-neutral-200">
                       {activeDrop ? `DROP ${activeDrop.number}` : "LIVE"}
                     </span>
                   </Link>
                 </li>
-                {!hasDropsRouteInDrawer && (
-                  <li>
-                    <Link
-                      href="/drops"
-                      onClick={onClose}
-                      className="w-full min-h-[44px] text-left py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-white transition-colors focus:outline-none focus-visible:underline flex items-center justify-between cursor-pointer"
-                    >
-                      <span>{t({ tr: "Tüm Droplar", en: "Drops & Archive" })}</span>
-                      {dropsRangeBadge && (
-                        <span className="text-xs px-2 py-0.5 border border-white/20 text-neutral-400 font-normal">
-                          {dropsRangeBadge}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
-                )}
+                <li>
+                  <Link
+                    href="/drops"
+                    onClick={onClose}
+                    className="w-full text-left py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-white transition-colors focus:outline-none focus-visible:underline flex items-center justify-between"
+                  >
+                    <span>{t({ tr: "Tüm Droplar", en: "Drops & Archive" })}</span>
+                    {dropsRangeBadge && (
+                      <span className="text-xs px-2 py-0.5 border border-white/20 text-neutral-400 font-normal">
+                        {dropsRangeBadge}
+                      </span>
+                    )}
+                  </Link>
+                </li>
                 <li>
                   <a
                     href={wa}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-h-[44px] flex items-center py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline cursor-pointer"
+                    className="inline-block py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline"
                   >
                     WhatsApp ↗
                   </a>
@@ -297,7 +245,7 @@ export function MenuDrawer({
                     href={instagramUrl.startsWith("http") ? instagramUrl : `https://instagram.com/${instagramUrl.replace(/^@/, "").replace(/^instagram\.com\//, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="min-h-[44px] flex items-center py-1.5 font-mono text-xl sm:text-2xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline cursor-pointer"
+                    className="inline-block py-1 font-mono text-2xl sm:text-3xl font-bold uppercase tracking-tight hover:text-neutral-400 transition-colors focus:outline-none focus-visible:underline"
                   >
                     Instagram ↗
                   </a>
@@ -306,7 +254,7 @@ export function MenuDrawer({
             </div>
 
             <div className="pt-6 border-t border-neutral-800 font-mono text-[11px] text-neutral-500 uppercase tracking-widest">
-              {resolvedStamp}
+              NORTH CYPRUS ATELIER • CYRUX STUDIO
             </div>
           </motion.nav>
         </div>

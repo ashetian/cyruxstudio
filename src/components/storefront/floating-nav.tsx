@@ -7,7 +7,6 @@ import { BRAND_TOKENS } from "@/lib/constants";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useSearch } from "@/components/providers/search-provider";
 import { cn } from "@/lib/utils";
-import { DEFAULT_STOREFRONT_CMS, type NavigationCmsData } from "@/lib/cms";
 
 export interface NavItem {
   id: string;
@@ -49,29 +48,13 @@ export function computeFloatingNavPosition(windowWidth: number) {
 export interface FloatingNavProps {
   cartCount?: number;
   onOpenCart?: () => void;
-  navigation?: NavigationCmsData | null;
-  navLinks?: NavItem[];
 }
 
-export function FloatingNav({
-  cartCount = 0,
-  onOpenCart,
-  navigation,
-  navLinks,
-}: FloatingNavProps = {}) {
+export function FloatingNav({ cartCount = 0, onOpenCart }: FloatingNavProps = {}) {
   const { lang } = useLanguage();
   const { openSearch } = useSearch();
   const [activeSection, setActiveSection] = useState<NavSection>("hero");
   const [isFooterVisible, setIsFooterVisible] = useState(false);
-
-  const items: NavItem[] =
-    navLinks && navLinks.length > 0
-      ? navLinks
-      : navigation?.floatingItems && navigation.floatingItems.length > 0
-      ? navigation.floatingItems
-      : DEFAULT_STOREFRONT_CMS.navigation.floatingItems.length > 0
-      ? DEFAULT_STOREFRONT_CMS.navigation.floatingItems
-      : FLOATING_NAV_ITEMS;
 
   // High-performance scrollspy to sync active link and handle footer visibility
   useEffect(() => {
@@ -171,11 +154,11 @@ export function FloatingNav({
       role="navigation"
       aria-label="Floating Main Navigation"
       className={cn(
-        "fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-1.5rem)] whitespace-nowrap rounded-full border border-neutral-300/40 bg-black/85 backdrop-blur-md px-2 sm:px-3 py-0.5 sm:py-1 flex items-center gap-0.5 sm:gap-1.5 text-[9.5px] sm:text-xs font-mono tracking-normal sm:tracking-widest text-white shadow-2xl transition-all duration-300",
+        "fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:bottom-8 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-1.5rem)] whitespace-nowrap rounded-full border border-neutral-300/40 bg-black/85 backdrop-blur-md px-2 sm:px-3 py-1.5 sm:py-2 flex items-center gap-0.5 sm:gap-2 text-[9.5px] sm:text-xs font-mono tracking-normal sm:tracking-widest text-white shadow-2xl transition-all duration-300",
         isFooterVisible && "opacity-0 pointer-events-none translate-y-8"
       )}
     >
-      {items.map((item) => {
+      {FLOATING_NAV_ITEMS.map((item) => {
         const isRoute = item.href.startsWith("/");
         const targetId = item.href.replace("#", "");
         const isActive = activeSection === targetId;
@@ -185,17 +168,17 @@ export function FloatingNav({
         if (item.isBrand) {
           return (
             <a
-              key={item.id || item.href}
+              key={item.href}
               href={item.href}
               onClick={(e) => handleNavClick(e, item.href)}
               aria-current={isActive ? "page" : undefined}
-              className="group shrink-0 min-h-[44px] inline-flex items-center rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+              className="group shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             >
               <span
                 className={cn(
-                  "inline-block px-2.5 sm:px-3.5 py-1.5 rounded-full font-bold text-[9.5px] sm:text-[11px] tracking-normal sm:tracking-wider uppercase transition-all duration-200 group-hover:scale-105 group-active:scale-95 shadow-sm",
+                  "inline-block px-2.5 sm:px-3.5 py-1 rounded-full font-bold text-[9.5px] sm:text-[11px] tracking-normal sm:tracking-wider uppercase transition-all duration-200 group-hover:scale-105 group-active:scale-95 shadow-sm",
                   isActive
-                    ? "opacity-100 ring-1 ring-white/70"
+                    ? "opacity-100 ring-1 ring-white/60 shadow-[0_0_12px_rgba(255,255,255,0.3)]"
                     : "opacity-75 hover:opacity-100"
                 )}
                 style={{
@@ -215,7 +198,7 @@ export function FloatingNav({
           : { href: item.href, onClick: (e: React.MouseEvent<HTMLAnchorElement>) => handleNavClick(e, item.href) };
 
         return (
-          <React.Fragment key={item.id || item.href}>
+          <React.Fragment key={item.href}>
             {/* Minimalist vertical divider */}
             <span className="text-neutral-500/40 select-none text-[9px] sm:text-[10px] px-0.5 sm:px-1 shrink-0">|</span>
 
@@ -223,7 +206,7 @@ export function FloatingNav({
               {...linkProps}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative shrink-0 min-h-[44px] inline-flex items-center px-2 sm:px-2.5 text-[9.5px] sm:text-[11px] uppercase tracking-normal sm:tracking-wider transition-colors duration-200 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer",
+                "relative shrink-0 px-2 sm:px-2.5 py-1 text-[9.5px] sm:text-[11px] uppercase tracking-normal sm:tracking-wider transition-colors duration-200 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 cursor-pointer",
                 isActive
                   ? "text-white font-bold"
                   : "text-neutral-400 hover:text-white"
@@ -231,7 +214,7 @@ export function FloatingNav({
             >
               {labelText}
               {isActive && (
-                <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-white" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
               )}
             </LinkTag>
           </React.Fragment>
@@ -247,7 +230,7 @@ export function FloatingNav({
         onClick={() => openSearch()}
         aria-label="Open search (⌘K)"
         title="Dinamik Arama (⌘K)"
-        className="relative shrink-0 min-w-[44px] min-h-[44px] p-2 rounded-full text-neutral-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center cursor-pointer"
+        className="relative shrink-0 p-1.5 sm:p-2 rounded-full text-neutral-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center"
       >
         <Search className="w-3.5 h-3.5" />
       </button>
@@ -259,11 +242,11 @@ export function FloatingNav({
             type="button"
             onClick={onOpenCart}
             aria-label={`Shopping bag, ${cartCount} items`}
-            className="relative shrink-0 min-w-[44px] min-h-[44px] p-2 rounded-full text-neutral-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center cursor-pointer"
+            className="relative shrink-0 p-1.5 sm:p-2 rounded-full text-neutral-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 flex items-center justify-center"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             {cartCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[13px] h-[13px] sm:min-w-[14px] sm:h-[14px] px-0.5 rounded-full bg-white text-black text-[8.5px] sm:text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1 -right-0.5 min-w-[13px] h-[13px] sm:min-w-[14px] sm:h-[14px] px-0.5 rounded-full bg-white text-black text-[8.5px] sm:text-[9px] font-bold flex items-center justify-center">
                 {cartCount}
               </span>
             )}
