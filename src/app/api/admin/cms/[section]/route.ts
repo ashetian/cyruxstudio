@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
+import prisma from "@/lib/db";
 import {
   getCmsSection,
   getStorefrontCms,
@@ -93,6 +94,48 @@ async function handleUpdateSection(
         : bodyRecord;
 
     const updatedData = await updateCmsSection(section, payload);
+
+    // Also sync hero & about image URLs into storeSettings.brandMetadata so resolveEditorialAssets picks them up
+    if (section === "hero" || section === "about") {
+      try {
+        const existingSettings = await prisma.storeSettings.findFirst();
+        if (existingSettings) {
+          const currentMeta =
+            (existingSettings.brandMetadata as Record<string, unknown>) || {};
+          const sectionRec = updatedData as unknown as {
+            desktopImage?: string;
+            mobileImage?: string;
+          };
+          const nextMeta: Record<string, unknown> = {
+            ...currentMeta,
+            ...(section === "hero"
+              ? {
+                  ...(sectionRec.desktopImage
+                    ? { heroDesktopImage: sectionRec.desktopImage }
+                    : {}),
+                  ...(sectionRec.mobileImage
+                    ? { heroMobileImage: sectionRec.mobileImage }
+                    : {}),
+                }
+              : {
+                  ...(sectionRec.desktopImage
+                    ? { aboutDesktopImage: sectionRec.desktopImage }
+                    : {}),
+                  ...(sectionRec.mobileImage
+                    ? { aboutMobileImage: sectionRec.mobileImage }
+                    : {}),
+                }),
+          };
+          await prisma.storeSettings.update({
+            where: { id: existingSettings.id },
+            data: { brandMetadata: nextMeta as never },
+          });
+        }
+      } catch (syncErr) {
+        console.warn("[CMS Section PUT] Non-fatal brandMetadata image sync warning:", syncErr);
+      }
+    }
+
     revalidateStorefrontPaths();
     const cms = await getStorefrontCms();
 

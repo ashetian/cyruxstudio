@@ -40,6 +40,16 @@ function editorialUrl(file: string): string | null {
   }
 }
 
+function isValidEditorialImageUrl(val: unknown): val is string {
+  if (typeof val !== "string") return false;
+  const trimmed = val.trim();
+  if (!trimmed) return false;
+  if (trimmed.includes("cyrux-store.public.blob.vercel-storage.com")) {
+    return false;
+  }
+  return true;
+}
+
 export function resolveEditorialAssets(
   products: { slug: string; mediaUrls: string[] }[],
   brandMetadata?: Record<string, unknown> | null,
@@ -53,22 +63,22 @@ export function resolveEditorialAssets(
   const meta = brandMetadata || {};
 
   const heroDesktop =
-    (typeof meta.heroDesktopImage === "string" && meta.heroDesktopImage.trim()) ||
+    (isValidEditorialImageUrl(meta.heroDesktopImage) && meta.heroDesktopImage.trim()) ||
     editorialUrl("hero-desktop.jpg") ||
     "/assets/editorial/hero-desktop.jpg";
 
   const heroMobile =
-    (typeof meta.heroMobileImage === "string" && meta.heroMobileImage.trim()) ||
+    (isValidEditorialImageUrl(meta.heroMobileImage) && meta.heroMobileImage.trim()) ||
     editorialUrl("hero-mobile.jpg") ||
     "/assets/editorial/hero-mobile.jpg";
 
   const aboutDesktop =
-    (typeof meta.aboutDesktopImage === "string" && meta.aboutDesktopImage.trim()) ||
+    (isValidEditorialImageUrl(meta.aboutDesktopImage) && meta.aboutDesktopImage.trim()) ||
     editorialUrl("about-desktop.jpg") ||
     "/assets/editorial/about-desktop.jpg";
 
   const aboutMobile =
-    (typeof meta.aboutMobileImage === "string" && meta.aboutMobileImage.trim()) ||
+    (isValidEditorialImageUrl(meta.aboutMobileImage) && meta.aboutMobileImage.trim()) ||
     editorialUrl("about-mobile.jpg") ||
     "/assets/editorial/about-mobile.jpg";
 

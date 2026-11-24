@@ -282,7 +282,7 @@ export function HeroSection({
 
       {/* 2. Top Header Navigation Bar (F04.5 Contract) */}
       <header className="relative z-30 w-full flex items-center justify-between gap-2 px-3 sm:px-8 md:px-12 py-3.5 sm:py-5 md:py-7">
-        {/* Left: Hamburger Menu Trigger & Desktop Latest Drop Nav Link */}
+        {/* Left: Hamburger Menu Trigger */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <button
             type="button"
@@ -294,13 +294,6 @@ export function HeroSection({
             <span className="w-4 h-[1.5px] bg-white transition-all duration-300 group-hover:w-7" />
             <span className="w-5 h-[1.5px] bg-white transition-all duration-300 group-hover:w-7" />
           </button>
-          <Link
-            href="/drops/latest"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-white font-mono text-[10px] md:text-[11px] font-bold uppercase tracking-widest hover:border-white hover:bg-white hover:text-black transition-all shadow-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{t({ tr: "SON DROP", en: "LATEST DROP" })}</span>
-          </Link>
         </div>
 
         {/* Center: Search Pill Capsule (F04.2 Contract) with Live Dynamic Results Dropdown */}

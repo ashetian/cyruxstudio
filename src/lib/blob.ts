@@ -150,16 +150,38 @@ export async function uploadBlob(
   const pathname = `uploads/${Date.now()}-${sanitizedFilename}`;
 
   if (isVercelBlobConfigured()) {
-    const blob = await put(pathname, file, {
-      access: "public",
-      contentType,
-    });
-    return {
-      url: blob.url,
-      pathname: blob.pathname,
+    try {
+      const blob = await put(pathname, file, {
+        access: "public",
+        contentType,
+      });
+      return {
+        url: blob.url,
+        pathname: blob.pathname,
+        contentType,
+        size,
+      };
+    } catch (blobErr) {
+      console.warn("[uploadBlob] Vercel Blob put() failed, falling back:", blobErr);
+    }
+  }
+
+  const buf = Buffer.isBuffer(file)
+    ? file
+    : Buffer.from(await (file as Blob).arrayBuffer());
+
+  // On Vercel serverless without BLOB_READ_WRITE_TOKEN, the filesystem is read-only/ephemeral.
+  // Return a self-contained data URL for images so uploaded hero/editorial images render immediately instead of 404 black.
+  if (process.env.VERCEL && !contentType.startsWith("video/")) {
+    const dataUrl = `data:${contentType};base64,${buf.toString("base64")}`;
+    const result: BlobUploadResult = {
+      url: dataUrl,
+      pathname,
       contentType,
       size,
     };
+    mockBlobRegistry.set(dataUrl, { ...result, uploadedAt: new Date() });
+    return result;
   }
 
   // Local / offline fallback: persist file to public/uploads for direct browser availability
@@ -170,9 +192,6 @@ export async function uploadBlob(
     }
     const localFilename = `${Date.now()}-${sanitizedFilename}`;
     const filePath = path.join(uploadsDir, localFilename);
-    const buf = Buffer.isBuffer(file)
-      ? file
-      : Buffer.from(await (file as Blob).arrayBuffer());
     fs.writeFileSync(filePath, buf);
     const localUrl = `/uploads/${localFilename}`;
     const result: BlobUploadResult = {
@@ -184,7 +203,18 @@ export async function uploadBlob(
     mockBlobRegistry.set(localUrl, { ...result, uploadedAt: new Date() });
     return result;
   } catch (err) {
-    console.warn("[uploadBlob] Local write failed, falling back to mock URL", err);
+    console.warn("[uploadBlob] Local write failed, falling back to data/mock URL", err);
+    if (!contentType.startsWith("video/") && process.env.NODE_ENV === "production") {
+      const dataUrl = `data:${contentType};base64,${buf.toString("base64")}`;
+      const result: BlobUploadResult = {
+        url: dataUrl,
+        pathname,
+        contentType,
+        size,
+      };
+      mockBlobRegistry.set(dataUrl, { ...result, uploadedAt: new Date() });
+      return result;
+    }
     const mockUrl = `https://cyrux-store.public.blob.vercel-storage.com/${Date.now()}-${sanitizedFilename}`;
     const result: BlobUploadResult = {
       url: mockUrl,

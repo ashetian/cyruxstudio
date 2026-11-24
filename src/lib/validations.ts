@@ -251,6 +251,9 @@ export function sanitizeAdminText(input: string): string {
 export function sanitizeCmsUrl(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) return "";
+  if (/^data:(image\/(jpeg|png|webp|avif|gif)|video\/(mp4|quicktime|webm));base64,[a-zA-Z0-9+/=]+$/i.test(trimmed)) {
+    return trimmed;
+  }
   if (/^(javascript|data|vbscript):/i.test(trimmed)) {
     return "";
   }
