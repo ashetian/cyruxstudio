@@ -24,6 +24,67 @@ const ALLOWED_TYPES = [
 
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+// Vercel Serverless Function request body limit is 4.5MB; compress images above 2MB automatically to high-quality WebP
+const VERCEL_SAFE_IMAGE_BYTES = 2 * 1024 * 1024;
+
+async function optimizeImageForUpload(file: File): Promise<File> {
+  if (
+    typeof window === "undefined" ||
+    !file.type.startsWith("image/") ||
+    file.size <= VERCEL_SAFE_IMAGE_BYTES
+  ) {
+    return file;
+  }
+
+  return new Promise<File>((resolve) => {
+    const img = new window.Image();
+    const objUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl);
+      const maxDim = 2560;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file);
+            return;
+          }
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          const optimized = new File([blob], `${baseName}.webp`, {
+            type: "image/webp",
+            lastModified: Date.now(),
+          });
+          resolve(optimized);
+        },
+        "image/webp",
+        0.88
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objUrl);
+      resolve(file);
+    };
+    img.src = objUrl;
+  });
+}
 
 export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderProps) {
   const [dragActive, setDragActive] = useState(false);
@@ -43,23 +104,26 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
     let successCount = 0;
     try {
       for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        const rawFile = fileList[i];
+        if (!ALLOWED_TYPES.includes(rawFile.type)) {
           throw new Error(
-            `Unsupported media type: ${file.type || "unknown"}. Allowed: WebP, PNG, JPEG, AVIF, MP4, MOV.`
+            `Unsupported media type: ${rawFile.type || "unknown"}. Allowed: WebP, PNG, JPEG, AVIF, MP4, MOV.`
           );
         }
 
-        const isVideo = file.type.startsWith("video/");
+        const isVideo = rawFile.type.startsWith("video/");
         const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
-        if (file.size > limit) {
+        if (rawFile.size > limit) {
           const limitMb = isVideo ? 50 : 15;
           throw new Error(
-            `File ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds limit of ${limitMb}MB.`
+            `File ${rawFile.name} (${(rawFile.size / (1024 * 1024)).toFixed(1)}MB) exceeds limit of ${limitMb}MB.`
           );
         }
 
-        setProgress(Math.round(((i + 0.3) / fileList.length) * 100));
+        setProgress(Math.round(((i + 0.2) / fileList.length) * 100));
+        const file = isVideo ? rawFile : await optimizeImageForUpload(rawFile);
+
+        setProgress(Math.round(((i + 0.4) / fileList.length) * 100));
         const formData = new FormData();
         formData.append("file", file);
 
@@ -78,7 +142,12 @@ export function BlobUploader({ onUploadSuccess, compact = false }: BlobUploaderP
         };
 
         if (!res.ok || !data.success || !data.url) {
-          throw new Error(data.error || `Upload failed for ${file.name}`);
+          throw new Error(
+            data.error ||
+              (res.status === 413
+                ? `File ${rawFile.name} is too large for serverless upload.`
+                : `Upload failed for ${rawFile.name} (HTTP ${res.status})`)
+          );
         }
 
         successCount++;

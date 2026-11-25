@@ -25,6 +25,15 @@ export interface FormattedStoreSettings {
   updatedAt: string;
 }
 
+function cleanEditorialImageUrl(val: unknown, fallback: string): string {
+  if (typeof val !== "string") return fallback;
+  const trimmed = val.trim();
+  if (!trimmed || trimmed.includes("cyrux-store.public.blob.vercel-storage.com")) {
+    return fallback;
+  }
+  return trimmed;
+}
+
 export function formatStoreSettings(record: {
   id: string;
   whatsappNumber: string;
@@ -130,18 +139,22 @@ export function formatStoreSettings(record: {
       (brandMeta.location as string) ||
       (INITIAL_STORE_SETTINGS.brandMetadata.location as string) ||
       "Kuzey Kıbrıs • Global Express Dispatch",
-    heroDesktopImage:
-      (brandMeta.heroDesktopImage as string) ||
-      "/assets/editorial/hero-desktop.jpg",
-    heroMobileImage:
-      (brandMeta.heroMobileImage as string) ||
-      "/assets/editorial/hero-mobile.jpg",
-    aboutDesktopImage:
-      (brandMeta.aboutDesktopImage as string) ||
-      "/assets/editorial/about-desktop.jpg",
-    aboutMobileImage:
-      (brandMeta.aboutMobileImage as string) ||
-      "/assets/editorial/about-mobile.jpg",
+    heroDesktopImage: cleanEditorialImageUrl(
+      brandMeta.heroDesktopImage,
+      "/assets/editorial/hero-desktop.jpg"
+    ),
+    heroMobileImage: cleanEditorialImageUrl(
+      brandMeta.heroMobileImage,
+      "/assets/editorial/hero-mobile.jpg"
+    ),
+    aboutDesktopImage: cleanEditorialImageUrl(
+      brandMeta.aboutDesktopImage,
+      "/assets/editorial/about-desktop.jpg"
+    ),
+    aboutMobileImage: cleanEditorialImageUrl(
+      brandMeta.aboutMobileImage,
+      "/assets/editorial/about-mobile.jpg"
+    ),
     freeShippingThreshold,
     shippingFee: Number.isFinite(rawShippingFee) ? rawShippingFee : 0,
     lowStockThreshold: Number.isFinite(rawLowStock) ? rawLowStock : 3,
