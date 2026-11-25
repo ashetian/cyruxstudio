@@ -95,42 +95,48 @@ async function handleUpdateSection(
 
     const updatedData = await updateCmsSection(section, payload);
 
-    // Also sync hero & about image URLs into storeSettings.brandMetadata so resolveEditorialAssets picks them up
+    // Always sync hero & about image URLs into storeSettings.brandMetadata so resolveEditorialAssets picks them up from Postgres
     if (section === "hero" || section === "about") {
       try {
         const existingSettings = await prisma.storeSettings.findFirst();
-        if (existingSettings) {
-          const currentMeta =
-            (existingSettings.brandMetadata as Record<string, unknown>) || {};
-          const sectionRec = updatedData as unknown as {
-            desktopImage?: string;
-            mobileImage?: string;
-          };
-          const nextMeta: Record<string, unknown> = {
-            ...currentMeta,
-            ...(section === "hero"
-              ? {
-                  ...(sectionRec.desktopImage
-                    ? { heroDesktopImage: sectionRec.desktopImage }
-                    : {}),
-                  ...(sectionRec.mobileImage
-                    ? { heroMobileImage: sectionRec.mobileImage }
-                    : {}),
-                }
-              : {
-                  ...(sectionRec.desktopImage
-                    ? { aboutDesktopImage: sectionRec.desktopImage }
-                    : {}),
-                  ...(sectionRec.mobileImage
-                    ? { aboutMobileImage: sectionRec.mobileImage }
-                    : {}),
-                }),
-          };
-          await prisma.storeSettings.update({
-            where: { id: existingSettings.id },
-            data: { brandMetadata: nextMeta as never },
-          });
-        }
+        const currentMeta =
+          (existingSettings?.brandMetadata as Record<string, unknown>) || {};
+        const sectionRec = updatedData as unknown as {
+          desktopImage?: string;
+          mobileImage?: string;
+        };
+        const nextMeta: Record<string, unknown> = {
+          ...currentMeta,
+          ...(section === "hero"
+            ? {
+                ...(sectionRec.desktopImage
+                  ? { heroDesktopImage: sectionRec.desktopImage }
+                  : {}),
+                ...(sectionRec.mobileImage
+                  ? { heroMobileImage: sectionRec.mobileImage }
+                  : {}),
+              }
+            : {
+                ...(sectionRec.desktopImage
+                  ? { aboutDesktopImage: sectionRec.desktopImage }
+                  : {}),
+                ...(sectionRec.mobileImage
+                  ? { aboutMobileImage: sectionRec.mobileImage }
+                  : {}),
+              }),
+        };
+        await prisma.storeSettings.upsert({
+          where: { id: existingSettings?.id || "default" },
+          create: {
+            id: "default",
+            whatsappNumber: existingSettings?.whatsappNumber || "+905338737712",
+            currency: existingSettings?.currency || "EUR",
+            brandMetadata: nextMeta as never,
+          },
+          update: {
+            brandMetadata: nextMeta as never,
+          },
+        });
       } catch (syncErr) {
         console.warn("[CMS Section PUT] Non-fatal brandMetadata image sync warning:", syncErr);
       }

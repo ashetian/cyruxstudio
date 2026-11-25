@@ -32,7 +32,7 @@ export const bilingualTextSchema = z.object({
 const safeUrlStringSchema = z
   .string()
   .trim()
-  .max(500)
+  .max(15000000)
   .transform((v) => (v === "" ? "" : sanitizeCmsUrl(v)));
 
 const safeTextSchema = (max = 500) =>

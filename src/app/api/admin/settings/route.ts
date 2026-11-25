@@ -140,58 +140,102 @@ async function handleUpdateSettings(request: NextRequest) {
       announcementEnabled?: boolean;
     } | null;
 
-    const updated = await prisma.storeSettings.upsert({
-      where: { id: existing?.id || "default" },
-      create: {
-        id: "default",
-        whatsappNumber:
-          whatsappNumber ||
-          existing?.whatsappNumber ||
-          INITIAL_STORE_SETTINGS.whatsappNumber,
-        currency:
-          currency || existing?.currency || INITIAL_STORE_SETTINGS.currency,
-        brandMetadata: mergedMeta as Prisma.InputJsonObject,
-        freeShippingThreshold:
-          freeShippingThreshold !== undefined
-            ? freeShippingThreshold
-            : existingExtended?.freeShippingThreshold ??
-              INITIAL_STORE_SETTINGS.freeShippingThreshold ??
-              null,
-        shippingFee:
-          shippingFee !== undefined
-            ? shippingFee ?? 0
-            : existingExtended?.shippingFee ??
-              INITIAL_STORE_SETTINGS.shippingFee ??
-              0,
-        lowStockThreshold:
-          lowStockThreshold !== undefined
-            ? lowStockThreshold
-            : existingExtended?.lowStockThreshold ??
-              INITIAL_STORE_SETTINGS.lowStockThreshold ??
-              3,
-        activeTheme:
-          activeTheme ||
-          existingExtended?.activeTheme ||
-          INITIAL_STORE_SETTINGS.activeTheme ||
-          "white-atelier",
-        announcementEnabled:
-          announcementEnabled !== undefined
-            ? announcementEnabled
-            : existingExtended?.announcementEnabled ??
-              INITIAL_STORE_SETTINGS.announcementEnabled ??
-              true,
-      },
-      update: {
-        ...(whatsappNumber ? { whatsappNumber } : {}),
-        ...(currency ? { currency } : {}),
-        ...(freeShippingThreshold !== undefined ? { freeShippingThreshold } : {}),
-        ...(shippingFee !== undefined ? { shippingFee: shippingFee ?? 0 } : {}),
-        ...(lowStockThreshold !== undefined ? { lowStockThreshold } : {}),
-        ...(activeTheme !== undefined ? { activeTheme } : {}),
-        ...(announcementEnabled !== undefined ? { announcementEnabled } : {}),
-        brandMetadata: mergedMeta as Prisma.InputJsonObject,
-      },
-    });
+    const baseCreate = {
+      id: "default",
+      whatsappNumber:
+        whatsappNumber ||
+        existing?.whatsappNumber ||
+        INITIAL_STORE_SETTINGS.whatsappNumber,
+      currency:
+        currency || existing?.currency || INITIAL_STORE_SETTINGS.currency,
+      brandMetadata: mergedMeta as Prisma.InputJsonObject,
+    };
+
+    const baseUpdate = {
+      ...(whatsappNumber ? { whatsappNumber } : {}),
+      ...(currency ? { currency } : {}),
+      brandMetadata: mergedMeta as Prisma.InputJsonObject,
+    };
+
+    let updated;
+    try {
+      updated = await prisma.storeSettings.upsert({
+        where: { id: existing?.id || "default" },
+        create: {
+          ...baseCreate,
+          freeShippingThreshold:
+            freeShippingThreshold !== undefined
+              ? freeShippingThreshold
+              : existingExtended?.freeShippingThreshold ??
+                INITIAL_STORE_SETTINGS.freeShippingThreshold ??
+                null,
+          shippingFee:
+            shippingFee !== undefined
+              ? shippingFee ?? 0
+              : existingExtended?.shippingFee ??
+                INITIAL_STORE_SETTINGS.shippingFee ??
+                0,
+          lowStockThreshold:
+            lowStockThreshold !== undefined
+              ? lowStockThreshold
+              : existingExtended?.lowStockThreshold ??
+                INITIAL_STORE_SETTINGS.lowStockThreshold ??
+                3,
+          activeTheme:
+            activeTheme ||
+            existingExtended?.activeTheme ||
+            INITIAL_STORE_SETTINGS.activeTheme ||
+            "white-atelier",
+          announcementEnabled:
+            announcementEnabled !== undefined
+              ? announcementEnabled
+              : existingExtended?.announcementEnabled ??
+                INITIAL_STORE_SETTINGS.announcementEnabled ??
+                true,
+        },
+        update: {
+          ...baseUpdate,
+          ...(freeShippingThreshold !== undefined ? { freeShippingThreshold } : {}),
+          ...(shippingFee !== undefined ? { shippingFee: shippingFee ?? 0 } : {}),
+          ...(lowStockThreshold !== undefined ? { lowStockThreshold } : {}),
+          ...(activeTheme !== undefined ? { activeTheme } : {}),
+          ...(announcementEnabled !== undefined ? { announcementEnabled } : {}),
+        },
+      });
+    } catch {
+      // Fallback for production databases where only the core StoreSettings columns exist
+      updated = await prisma.storeSettings.upsert({
+        where: { id: existing?.id || "default" },
+        create: baseCreate,
+        update: baseUpdate,
+      });
+    }
+
+    // Also sync hero & about image URLs into CMS sections if updated from Settings
+    if (
+      heroDesktopImage !== undefined ||
+      heroMobileImage !== undefined ||
+      aboutDesktopImage !== undefined ||
+      aboutMobileImage !== undefined
+    ) {
+      try {
+        const { updateCmsSection } = await import("@/lib/cms");
+        if (heroDesktopImage !== undefined || heroMobileImage !== undefined) {
+          await updateCmsSection("hero", {
+            ...(heroDesktopImage !== undefined ? { desktopImage: heroDesktopImage } : {}),
+            ...(heroMobileImage !== undefined ? { mobileImage: heroMobileImage } : {}),
+          });
+        }
+        if (aboutDesktopImage !== undefined || aboutMobileImage !== undefined) {
+          await updateCmsSection("about", {
+            ...(aboutDesktopImage !== undefined ? { desktopImage: aboutDesktopImage } : {}),
+            ...(aboutMobileImage !== undefined ? { mobileImage: aboutMobileImage } : {}),
+          });
+        }
+      } catch {
+        // Non-fatal CMS sync
+      }
+    }
 
     revalidateStorefrontPaths();
 
